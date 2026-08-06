@@ -1,6 +1,7 @@
 const { MESSAGES: M } = require('../config/messages');
 const { getSession, updateSession } = require('../db/sessions');
 const { appendRecord } = require('../db/excel');
+const { sendNotificationEmail } = require('../senders/email');
 const { handlePsico } = require('./psicologica');
 const { handleLegal } = require('./legal');
 const { handleBio, handleStandup, handleEmpEco, handleServicios, handleEmpresarial, handleDonativos, handleRRHH } = require('./otrosFlujos');
@@ -43,8 +44,22 @@ async function dispatchFlow(session, userMessage) {
   // menú y no se debe duplicar el registro.
   const stepAfter = session.step;
   const recienLlegoAFin = stepAfter && stepAfter.endsWith('_fin') && stepBefore !== stepAfter;
+
   if (recienLlegoAFin) {
     await appendRecord(flow, session.data, session.userId);
+
+    const targetEmail = session.data.correo || 'contacto@casagaviota.org.mx';
+    const htmlBody = `
+      <h2>Registro de prueba :D, (nuevo)(${flow.toUpperCase()}) </h2>
+      <p><strong>UserId:</strong> ${session.userId}</p>
+      <p><strong>Nombre: </strong> ${session.data.nombre || 'N/A'}</p>
+      <p><strong>Teléfono: <strong> ${session.data.telefono || 'N/A'}</p>
+      <p><strong> Detalles guardados: </strong></p>
+      <pre>${JSON.stringify(session.data, null, 2)}</pre>
+    `;
+
+    await sendNotificationEmail(targetEmail, `[Casa Gaviota] Nuevo registro: ${flow}`,
+    htmlBody);
   }
 
   return response;
