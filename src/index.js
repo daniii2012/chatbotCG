@@ -4,6 +4,9 @@ const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const { processMessage } = require('./flows/menu');
 const { getSession, getAllSessions, resetSession } = require('./db/sessions');
+const { FILE_PATH: EXCEL_PATH } = require('./db/excel');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 app.use(cors());
@@ -26,7 +29,6 @@ function requireApiKey(req, res, next) {
 }
 
 // ─── POST /api/message ────────────────────────────────────────────────────
-// Recibe un mensaje del simulador y devuelve la respuesta del bot
 app.post('/api/message', async (req, res) => {
   const { userId, message, channel = 'simulator' } = req.body;
 
@@ -38,7 +40,6 @@ app.post('/api/message', async (req, res) => {
     const botResponse = await processMessage(userId, message);
     const session = getSession(userId);
 
-    // Log de lo que haría cada canal real
     const channelLogs = buildChannelLogs(channel, userId, message, botResponse);
 
     res.json({
@@ -75,8 +76,20 @@ app.get('/api/sessions', requireApiKey, (req, res) => {
   res.json(getAllSessions());
 });
 
+// ─── GET /api/registros ────────────────────────────────────────────────────
+// Descarga el archivo Excel con todos los registros
+app.get('/api/registros', requireApiKey, (req, res) => {
+  if (!fs.existsSync(EXCEL_PATH)) {
+    return res.status(404).json({ error: 'Aún no hay registros guardados.' });
+  }
+  res.download(EXCEL_PATH, 'registros.xlsx', (err) => {
+    if (err) {
+      console.error('⚠️ Error enviando el archivo Excel:', err.message);
+    }
+  });
+});
+
 // ─── GET /api/new-user ────────────────────────────────────────────────────
-// Genera un userId aleatorio para simular nueva usuaria
 app.get('/api/new-user', (req, res) => {
   res.json({ userId: uuidv4() });
 });
