@@ -143,7 +143,7 @@ function buildChannelLogs(channel, userId, userMsg, botMsg) {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Casa Gaviota Chatbot corriendo en http://localhost:${PORT}`);
+  console.log(`Casa Gaviota Chatbot corriendo en http://localhost:${PORT}`);
 });
 
 module.exports = app;

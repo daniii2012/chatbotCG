@@ -1,4 +1,7 @@
 const { MESSAGES: M } = require('../config/messages');
+const {sendNotificationEmail} = require('../senders/email');
+const {getNewRegisterTemplate} = require('../utils/emailTemplates/newRegister');
+
 const { getSession, updateSession } = require('../db/sessions');
 const { appendRecord } = require('../db/excel');
 const { handlePsico } = require('./psicologica');
@@ -43,8 +46,19 @@ async function dispatchFlow(session, userMessage) {
   // menú y no se debe duplicar el registro.
   const stepAfter = session.step;
   const recienLlegoAFin = stepAfter && stepAfter.endsWith('_fin') && stepBefore !== stepAfter;
+
   if (recienLlegoAFin) {
     await appendRecord(flow, session.data, session.userId);
+
+    if (session.data.correo) {
+      const htmlBody = getNewRegisterTemplate(flow, session);
+      await sendNotificationEmail(
+        session.data.correo, 
+        `[Casa Gaviota] Confirmación de tu solicitud: ${session.data.servicioSolicita || flow}`,
+        htmlBody
+      );
+    }
+    
   }
 
   return response;
