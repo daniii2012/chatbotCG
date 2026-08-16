@@ -1,22 +1,21 @@
 const { MESSAGES: M } = require('../config/messages');
 const { getSession, updateSession } = require('../db/sessions');
 const { appendRecord } = require('../db/excel');
-const { sendNotificationEmail } = require('../senders/email');
 const { handlePsico } = require('./psicologica');
 const { handleLegal } = require('./legal');
 const { handleBio, handleStandup, handleEmpEco, handleServicios, handleEmpresarial, handleDonativos, handleRRHH } = require('./otrosFlujos');
 
 // Primer step de cada flujo al seleccionar del menú
 const MENU_MAP = {
-  '1': { flow: 'psico', step: 'psico_nombre', msg: M.psico.pedirNombre },
-  '2': { flow: 'legal', step: 'legal_nombre', msg: M.legal.pedirNombre },
-  '3': { flow: 'bio', step: 'bio_nombre', msg: M.bio.pedirNombre },
-  '4': { flow: 'standup', step: 'standup_grupo', msg: M.standup.intro },
-  '5': { flow: 'empeco', step: 'empeco_programa', msg: M.empEco.inicio },
-  '6': { flow: 'servicios', step: 'servicios_nombre', msg: M.servicios.inicio },
-  '7': { flow: 'empresarial', step: 'empresarial_empresa', msg: M.empresarial.inicio },
-  '8': { flow: 'donativos', step: 'donativos_tipo', msg: M.donativos.inicio },
-  '9': { flow: 'rrhh', step: 'rrhh_opcion', msg: M.rrhh.inicio },
+  '1': { flow: 'psico', step: 'psico_nombre', msg: M.psico.pedirNombre, servicio: 'Atención psicológica' },
+  '2': { flow: 'legal', step: 'legal_nombre', msg: M.legal.pedirNombre, servicio: 'Asesoría legal' },
+  '3': { flow: 'bio', step: 'bio_nombre', msg: M.bio.pedirNombre, servicio: 'Biodescodificación biológica' },
+  '4': { flow: 'standup', step: 'standup_grupo', msg: M.standup.intro, servicio: 'Stand Up' },
+  '5': { flow: 'empeco', step: 'empeco_programa', msg: M.empEco.inicio, servicio: 'Empoderamiento económico' },
+  '6': { flow: 'servicios', step: 'servicios_nombre', msg: M.servicios.inicio, servicio: 'Servicios del centro' },
+  '7': { flow: 'empresarial', step: 'empresarial_empresa', msg: M.empresarial.inicio, servicio: 'Servicios empresariales' },
+  '8': { flow: 'donativos', step: 'donativos_tipo', msg: M.donativos.inicio, servicio: 'Donativos' },
+  '9': { flow: 'rrhh', step: 'rrhh_opcion', msg: M.rrhh.inicio, servicio: 'Recursos Humanos' },
 };
 
 async function dispatchFlow(session, userMessage) {
@@ -44,22 +43,8 @@ async function dispatchFlow(session, userMessage) {
   // menú y no se debe duplicar el registro.
   const stepAfter = session.step;
   const recienLlegoAFin = stepAfter && stepAfter.endsWith('_fin') && stepBefore !== stepAfter;
-
   if (recienLlegoAFin) {
     await appendRecord(flow, session.data, session.userId);
-
-    const targetEmail = session.data.correo || 'contacto@casagaviota.org.mx';
-    const htmlBody = `
-      <h2>Registro de prueba :D, (nuevo)(${flow.toUpperCase()}) </h2>
-      <p><strong>UserId:</strong> ${session.userId}</p>
-      <p><strong>Nombre: </strong> ${session.data.nombre || 'N/A'}</p>
-      <p><strong>Teléfono: <strong> ${session.data.telefono || 'N/A'}</p>
-      <p><strong> Detalles guardados: </strong></p>
-      <pre>${JSON.stringify(session.data, null, 2)}</pre>
-    `;
-
-    await sendNotificationEmail(targetEmail, `[Casa Gaviota] Nuevo registro: ${flow}`,
-    htmlBody);
   }
 
   return response;
@@ -72,7 +57,7 @@ async function processMessage(userId, userMessage) {
   if (!session.flow || session.step === 'menu') {
     const option = MENU_MAP[trimmed];
     if (option) {
-      updateSession(userId, { flow: option.flow, step: option.step, data: {} });
+      updateSession(userId, { flow: option.flow, step: option.step, data: { servicioSolicita: option.servicio } });
       return option.msg;
     }
     return M.bienvenida;

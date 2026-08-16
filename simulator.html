@@ -6,618 +6,567 @@
 <title>Casa Gaviota — Simulador de Chatbot</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg: #0f0f13;
-    --surface: #16161d;
-    --surface2: #1e1e28;
-    --border: #2a2a38;
-    --accent: #c8a96e;
-    --accent2: #7b9ea8;
-    --danger: #e07070;
-    --success: #6ecaa0;
-    --text: #e8e4dc;
-    --text2: #9090a8;
-    --bot-bubble: #1e1e2e;
-    --user-bubble: #2a2a1e;
-    --font-display: 'DM Serif Display', serif;
-    --font-body: 'DM Sans', sans-serif;
-    --font-mono: 'DM Mono', monospace;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-body);
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  /* ── HEADER ── */
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 24px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .logo-icon {
-    width: 36px; height: 36px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-  }
-  .logo h1 { font-family: var(--font-display); font-size: 1.1rem; font-weight: 400; color: var(--text); }
-  .logo span { font-size: 0.7rem; color: var(--text2); letter-spacing: 0.08em; text-transform: uppercase; }
-  .header-actions { display: flex; gap: 10px; align-items: center; }
-
-  .btn {
-    font-family: var(--font-body);
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 7px 14px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    cursor: pointer;
-    transition: all 0.15s;
-    background: transparent;
-    color: var(--text2);
-  }
-  .btn:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-primary { background: var(--accent); color: #1a1200; border-color: var(--accent); font-weight: 600; }
-  .btn-primary:hover { background: #d4b87a; color: #1a1200; }
-  .btn-danger { border-color: var(--danger); color: var(--danger); }
-  .btn-danger:hover { background: var(--danger); color: #fff; }
-
-  /* ── CHANNEL SELECTOR ── */
-  .channel-bar {
-    display: flex;
-    gap: 6px;
-    padding: 10px 24px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .channel-tab {
-    display: flex; align-items: center; gap: 6px;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.72rem;
-    font-weight: 500;
-    cursor: pointer;
-    border: 1px solid transparent;
-    color: var(--text2);
-    transition: all 0.15s;
-    background: transparent;
-    font-family: var(--font-body);
-  }
-  .channel-tab.active { color: var(--text); border-color: var(--border); background: var(--surface2); }
-  .channel-tab:hover:not(.active) { color: var(--text); }
-
-  /* ── LAYOUT ── */
-  .layout {
-    display: grid;
-    grid-template-columns: 1fr 320px 340px;
-    flex: 1;
-    overflow: hidden;
-    gap: 0;
-  }
-
-  /* ── CHAT ── */
-  .chat-panel {
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid var(--border);
-    overflow: hidden;
-  }
-  .chat-header {
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 10px;
-    flex-shrink: 0;
-  }
-  .chat-header .avatar {
-    width: 32px; height: 32px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px;
-  }
-  .chat-header .info h3 { font-size: 0.85rem; font-weight: 600; }
-  .chat-header .info p { font-size: 0.7rem; color: var(--text2); }
-  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); display: inline-block; margin-right: 4px; }
-
-  .messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    scroll-behavior: smooth;
-  }
-  .messages::-webkit-scrollbar { width: 4px; }
-  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-  .bubble {
-    max-width: 85%;
-    padding: 11px 15px;
-    border-radius: 14px;
-    font-size: 0.82rem;
-    line-height: 1.55;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    animation: fadeUp 0.2s ease;
-  }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .bubble.bot {
-    background: var(--bot-bubble);
-    border: 1px solid var(--border);
-    border-bottom-left-radius: 4px;
-    align-self: flex-start;
-    color: var(--text);
-  }
-  .bubble.user {
-    background: var(--user-bubble);
-    border: 1px solid #38381e;
-    border-bottom-right-radius: 4px;
-    align-self: flex-end;
-    color: var(--accent);
-  }
-  .bubble .ts {
-    font-size: 0.62rem;
-    color: var(--text2);
-    margin-top: 5px;
-    display: block;
-  }
-  .typing-indicator {
-    display: none;
-    align-self: flex-start;
-    padding: 10px 15px;
-    background: var(--bot-bubble);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    border-bottom-left-radius: 4px;
-    gap: 4px;
-  }
-  .typing-indicator.show { display: flex; }
-  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text2); animation: bounce 1.2s infinite; }
-  .dot:nth-child(2) { animation-delay: 0.2s; }
-  .dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes bounce {
-    0%, 80%, 100% { transform: translateY(0); }
-    40% { transform: translateY(-6px); }
-  }
-
-  .chat-input-area {
-    padding: 16px 20px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    gap: 10px;
-    flex-shrink: 0;
-  }
-  #messageInput {
-    flex: 1;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 14px;
-    color: var(--text);
-    font-family: var(--font-body);
-    font-size: 0.83rem;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  #messageInput:focus { border-color: var(--accent); }
-  #messageInput::placeholder { color: var(--text2); }
-
-  /* ── SESSION PANEL ── */
-  .session-panel {
-    border-right: 1px solid var(--border);
-    overflow-y: auto;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .session-panel::-webkit-scrollbar { width: 4px; }
-  .session-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-  .panel-title {
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text2);
-    margin-bottom: 2px;
-  }
-  .session-card {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px;
-  }
-  .session-card h4 { font-size: 0.78rem; color: var(--accent); margin-bottom: 10px; font-weight: 600; }
-  .kv { display: flex; justify-content: space-between; margin-bottom: 6px; gap: 8px; }
-  .kv .k { font-size: 0.7rem; color: var(--text2); white-space: nowrap; }
-  .kv .v { font-size: 0.72rem; font-family: var(--font-mono); color: var(--text); text-align: right; word-break: break-all; }
-  .tag {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.68rem;
-    font-family: var(--font-mono);
-  }
-  .tag.flow { background: #1e2a22; color: var(--success); border: 1px solid #2a4030; }
-  .tag.step { background: #2a2212; color: var(--accent); border: 1px solid #3a3010; }
-  .tag.menu { background: #1e1e2e; color: var(--accent2); border: 1px solid #2a2a4a; }
-
-  .data-fields { margin-top: 8px; }
-  .data-fields .field {
-    display: flex; justify-content: space-between;
-    padding: 5px 8px;
-    background: var(--surface);
-    border-radius: 6px;
-    margin-bottom: 4px;
-    gap: 8px;
-  }
-  .data-fields .field .fk { font-size: 0.68rem; color: var(--text2); }
-  .data-fields .field .fv { font-size: 0.68rem; font-family: var(--font-mono); color: var(--success); word-break: break-all; }
-
-  .history-list { list-style: none; }
-  .history-list li {
-    display: flex; align-items: center; gap: 8px;
-    padding: 4px 0;
-    font-size: 0.68rem;
-    color: var(--text2);
-    border-bottom: 1px solid var(--border);
-  }
-  .history-list li:last-child { border-bottom: none; color: var(--text); }
-  .history-list li::before { content: '→'; color: var(--accent); font-size: 0.6rem; }
-
-  /* ── LOGS PANEL ── */
-  .logs-panel {
-    overflow-y: auto;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .logs-panel::-webkit-scrollbar { width: 4px; }
-  .logs-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-  .log-card {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-  }
-  .log-header {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 14px;
-    cursor: pointer;
-    user-select: none;
-    border-bottom: 1px solid transparent;
-    transition: background 0.1s;
-  }
-  .log-header:hover { background: var(--surface); }
-  .log-header.open { border-bottom-color: var(--border); }
-  .log-channel-icon { font-size: 16px; }
-  .log-channel-name { font-size: 0.75rem; font-weight: 600; flex: 1; }
-  .log-status {
-    font-size: 0.65rem;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-weight: 500;
-  }
-  .log-status.ready { background: #1e2a1e; color: var(--success); border: 1px solid #2a4a2a; }
-  .log-status.waiting { background: #2a1e1e; color: var(--text2); border: 1px solid #3a2a2a; }
-  .log-chevron { font-size: 0.6rem; color: var(--text2); transition: transform 0.2s; }
-  .log-header.open .log-chevron { transform: rotate(90deg); }
-
-  .log-body {
-    display: none;
-    padding: 12px 14px;
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    line-height: 1.6;
-    color: var(--text2);
-    overflow-x: auto;
-  }
-  .log-body.show { display: block; }
-  .log-body pre { white-space: pre-wrap; word-wrap: break-word; }
-  .log-key { color: var(--accent2); }
-  .log-val { color: var(--text); }
-  .log-url { color: var(--accent); }
-  .log-note { color: var(--danger); font-size: 0.63rem; margin-top: 6px; }
-
-  .empty-state {
-    text-align: center;
-    color: var(--text2);
-    font-size: 0.78rem;
-    padding: 30px 20px;
-    opacity: 0.6;
-  }
-  .user-id-display {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    color: var(--text2);
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 3px 8px;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .user-id-display span { color: var(--accent); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+ :root {
+ --bg: #0f0f13;
+ --surface: #16161d;
+ --surface2: #1e1e28;
+ --border: #2a2a38;
+ --accent: #c8a96e;
+ --accent2: #7b9ea8;
+ --danger: #e07070;
+ --success: #6ecaa0;
+ --text: #e8e4dc;
+ --text2: #9090a8;
+ --bot-bubble: #1e1e2e;
+ --user-bubble: #2a2a1e;
+ --font-display: 'DM Serif Display', serif;
+ --font-body: 'DM Sans', sans-serif;
+ --font-mono: 'DM Mono', monospace;
+ }
+ * { box-sizing: border-box; margin: 0; padding: 0; }
+ body {
+ background: var(--bg);
+ color: var(--text);
+ font-family: var(--font-body);
+ height: 100vh;
+ display: flex; flex-direction: column;
+ overflow: hidden;
+ }
+ header {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ padding: 14px 24px;
+ background: var(--surface);
+ border-bottom: 1px solid var(--border);
+ flex-shrink: 0;
+ }
+ .logo {
+ display: flex;
+ align-items: center;
+ gap: 12px;
+ }
+ .logo-icon {
+ width: 36px; height: 36px;
+ background: linear-gradient(135deg, var(--accent), var(--accent2));
+ border-radius: 10px;
+ display: flex; align-items: center; justify-content: center;
+ font-size: 18px;
+ }
+ .logo h1 { font-family: var(--font-display); font-size: 1.1rem; font-weight: 400; color: var(--text); }
+ .logo span { font-size: 0.7rem; color: var(--text2); letter-spacing: 0.08em; text-transform: uppercase; }
+ .header-actions { display: flex; gap: 10px; align-items: center; }
+ .btn {
+ font-family: var(--font-body);
+ font-size: 0.75rem;
+ font-weight: 500;
+ padding: 7px 14px;
+ border-radius: 8px;
+ border: 1px solid var(--border);
+ cursor: pointer;
+ transition: all 0.15s;
+ background: transparent;
+ color: var(--text2);
+ }
+ .btn:hover { border-color: var(--accent); color: var(--accent); }
+ .btn-primary { background: var(--accent); color: #1a1200; border-color: var(--accent); font-weight: 600; }
+ .btn-primary:hover { background: #d4b87a; color: #1a1200; }
+ .btn-danger { border-color: var(--danger); color: var(--danger); }
+ .btn-danger:hover { background: var(--danger); color: #fff; }
+ .channel-bar {
+ display: flex;
+ gap: 6px;
+ padding: 10px 24px;
+ background: var(--surface);
+ border-bottom: 1px solid var(--border);
+ flex-shrink: 0;
+ }
+ .channel-tab {
+ display: flex; align-items: center; gap: 6px;
+ padding: 5px 12px;
+ border-radius: 20px;
+ font-size: 0.72rem;
+ font-weight: 500;
+ cursor: pointer;
+ border: 1px solid transparent;
+ color: var(--text2);
+ transition: all 0.15s;
+ background: transparent;
+ font-family: var(--font-body);
+ }
+ .channel-tab.active { color: var(--text); border-color: var(--border); background: var(--surface2); }
+ .channel-tab:hover:not(.active) { color: var(--text); }
+ .layout {
+ display: grid;
+ grid-template-columns: 1fr 320px 340px;
+ flex: 1;
+ overflow: hidden;
+ gap: 0;
+ }
+ .chat-panel {
+ display: flex;
+ flex-direction: column;
+ border-right: 1px solid var(--border);
+ overflow: hidden;
+ }
+ .chat-header {
+ padding: 14px 20px;
+ border-bottom: 1px solid var(--border);
+ display: flex; align-items: center; gap: 10px;
+ flex-shrink: 0;
+ }
+ .chat-header .avatar {
+ width: 32px; height: 32px;
+ background: linear-gradient(135deg, var(--accent), var(--accent2));
+ border-radius: 50%;
+ display: flex; align-items: center; justify-content: center;
+ font-size: 14px;
+ }
+ .chat-header .info h3 { font-size: 0.85rem; font-weight: 600; }
+ .chat-header .info p { font-size: 0.7rem; color: var(--text2); }
+ .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); display: inline-block; margin-right: 4px; }
+ .messages {
+ flex: 1;
+ overflow-y: auto;
+ padding: 20px;
+ display: flex;
+ flex-direction: column;
+ gap: 12px;
+ scroll-behavior: smooth;
+ }
+ .messages::-webkit-scrollbar { width: 4px; }
+ .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+ .bubble {
+ max-width: 85%;
+ padding: 11px 15px;
+ border-radius: 14px;
+ font-size: 0.82rem; line-height: 1.55;
+ white-space: pre-wrap;
+ word-wrap: break-word;
+ animation: fadeUp 0.2s ease;
+ }
+ @keyframes fadeUp {
+ from { opacity: 0; transform: translateY(6px); }
+ to { opacity: 1; transform: translateY(0); }
+ }
+ .bubble.bot {
+ background: var(--bot-bubble);
+ border: 1px solid var(--border);
+ border-bottom-left-radius: 4px;
+ align-self: flex-start;
+ color: var(--text);
+ }
+ .bubble.user {
+ background: var(--user-bubble);
+ border: 1px solid #38381e;
+ border-bottom-right-radius: 4px;
+ align-self: flex-end;
+ color: var(--accent);
+ }
+ .bubble .ts {
+ font-size: 0.62rem;
+ color: var(--text2);
+ margin-top: 5px;
+ display: block;
+ }
+ .typing-indicator {
+ display: none;
+ align-self: flex-start;
+ padding: 10px 15px;
+ background: var(--bot-bubble);
+ border: 1px solid var(--border);
+ border-radius: 14px;
+ border-bottom-left-radius: 4px;
+ gap: 4px;
+ }
+ .typing-indicator.show { display: flex; }
+ .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text2); animation: bounce 1.2s infinite; }
+ .dot:nth-child(2) { animation-delay: 0.2s; }
+ .dot:nth-child(3) { animation-delay: 0.4s; }
+ @keyframes bounce {
+ 0%, 80%, 100% { transform: translateY(0); }
+ 40% { transform: translateY(-6px); }
+ }
+ .chat-input-area {
+ padding: 16px 20px;
+ border-top: 1px solid var(--border);
+ display: flex;
+ gap: 10px;
+ flex-shrink: 0;
+ }
+ #messageInput {
+ flex: 1;
+ background: var(--surface2);
+ border: 1px solid var(--border);
+ border-radius: 10px;
+ padding: 10px 14px;
+ color: var(--text);
+ font-family: var(--font-body);
+ font-size: 0.83rem;
+ outline: none;
+ transition: border-color 0.15s;
+ }
+ #messageInput:focus { border-color: var(--accent); }
+ #messageInput::placeholder { color: var(--text2); }
+ .session-panel {
+ border-right: 1px solid var(--border);
+ overflow-y: auto;
+ padding: 16px;
+ display: flex;
+ flex-direction: column;
+ gap: 14px;
+ }
+ .session-panel::-webkit-scrollbar { width: 4px; }
+ .session-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+ .panel-title {
+ font-size: 0.65rem; font-weight: 600;
+ letter-spacing: 0.1em;
+ text-transform: uppercase;
+ color: var(--text2);
+ margin-bottom: 2px;
+ }
+ .session-card {
+ background: var(--surface2);
+ border: 1px solid var(--border);
+ border-radius: 10px;
+ padding: 14px;
+ }
+ .session-card h4 { font-size: 0.78rem; color: var(--accent); margin-bottom: 10px; font-weight: 600; }
+ .kv { display: flex; justify-content: space-between; margin-bottom: 6px; gap: 8px; }
+ .kv .k { font-size: 0.7rem; color: var(--text2); white-space: nowrap; }
+ .kv .v { font-size: 0.72rem; font-family: var(--font-mono); color: var(--text); text-align: right; word-break: break-all; }
+ .tag {
+ display: inline-block;
+ padding: 2px 8px;
+ border-radius: 4px;
+ font-size: 0.68rem;
+ font-family: var(--font-mono);
+ }
+ .tag.flow { background: #1e2a22; color: var(--success); border: 1px solid #2a4030; }
+ .tag.step { background: #2a2212; color: var(--accent); border: 1px solid #3a3010; }
+ .tag.menu { background: #1e1e2e; color: var(--accent2); border: 1px solid #2a2a4a; }
+ .data-fields { margin-top: 8px; }
+ .data-fields .field {
+ display: flex; justify-content: space-between;
+ padding: 5px 8px;
+ background: var(--surface);
+ border-radius: 6px;
+ margin-bottom: 4px;
+ gap: 8px;
+ }
+ .data-fields .field .fk { font-size: 0.68rem; color: var(--text2); }
+ .data-fields .field .fv { font-size: 0.68rem; font-family: var(--font-mono); color: var(--success); word-break: break-all; }
+ .history-list { list-style: none; }
+ .history-list li {
+ display: flex; align-items: center; gap: 8px;
+ padding: 4px 0;
+ font-size: 0.68rem;
+ color: var(--text2);
+ border-bottom: 1px solid var(--border);
+ }
+ .history-list li:last-child { border-bottom: none; color: var(--text); }
+ .history-list li::before { content: '→'; color: var(--accent); font-size: 0.6rem; }
+ .logs-panel {
+ overflow-y: auto;
+ padding: 16px;
+ display: flex;
+ flex-direction: column;
+ gap: 10px;
+ }
+ .logs-panel::-webkit-scrollbar { width: 4px; }
+ .logs-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+ .log-card {
+ background: var(--surface2);
+ border: 1px solid var(--border);
+ border-radius: 10px;
+ overflow: hidden;
+ }
+ .log-header {
+ display: flex; align-items: center; gap: 8px;
+ padding: 10px 14px;
+ cursor: pointer;
+ user-select: none;
+ border-bottom: 1px solid transparent;
+ transition: background 0.1s;
+ }
+ .log-header:hover { background: var(--surface); }
+ .log-header.open { border-bottom-color: var(--border); }
+ .log-channel-icon { font-size: 16px; }
+ .log-channel-name { font-size: 0.75rem; font-weight: 600; flex: 1; }
+ .log-status {
+ font-size: 0.65rem;
+ padding: 2px 8px;
+ border-radius: 10px;
+ font-weight: 500;
+ }
+ .log-status.ready { background: #1e2a1e; color: var(--success); border: 1px solid #2a4a2a; }
+ .log-status.waiting { background: #2a1e1e; color: var(--text2); border: 1px solid #3a2a2a; }
+ .log-chevron { font-size: 0.6rem; color: var(--text2); transition: transform 0.2s; }
+ .log-header.open .log-chevron { transform: rotate(90deg); }
+ .log-body {
+ display: none;
+ padding: 12px 14px;
+ font-family: var(--font-mono);
+ font-size: 0.65rem;
+ line-height: 1.6;
+ color: var(--text2);
+ overflow-x: auto;
+ }
+ .log-body.show { display: block; }
+ .log-body pre { white-space: pre-wrap; word-wrap: break-word; }
+ .log-key { color: var(--accent2); }
+ .log-val { color: var(--text); }
+ .log-url { color: var(--accent); }
+ .log-note { color: var(--danger); font-size: 0.63rem; margin-top: 6px; }
+ .empty-state {
+ text-align: center;
+ color: var(--text2);
+ font-size: 0.78rem;
+ padding: 30px 20px;
+ opacity: 0.6;
+ }
+ .user-id-display {
+ font-family: var(--font-mono);
+ font-size: 0.62rem;
+ color: var(--text2);
+ background: var(--surface2);
+ border: 1px solid var(--border);
+ border-radius: 6px;
+ padding: 3px 8px;
+ display: flex; align-items: center; gap: 6px;
+ }
+ .user-id-display span { color: var(--accent); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 </style>
 </head>
 <body>
-
 <header>
-  <div class="logo">
-    <div class="logo-icon">🕊️</div>
-    <div>
-      <h1>Casa Gaviota</h1>
-      <span>Simulador de Chatbot</span>
-    </div>
-  </div>
-  <div class="header-actions">
-    <div class="user-id-display">userId: <span id="userIdDisplay">—</span></div>
-    <button class="btn btn-danger" onclick="resetSession()">↺ Nueva sesión</button>
-    <button class="btn btn-primary" onclick="sendMessage()">Enviar ↵</button>
-  </div>
+ <div class="logo">
+ <div class="logo-icon">🕊</div>
+ <div>
+ <h1>Casa Gaviota</h1>
+ <span>Simulador de Chatbot</span>
+ </div>
+ </div>
+ <div class="header-actions">
+ <div class="user-id-display">userId: <span id="userIdDisplay">—</span></div>
+ <button class="btn btn-danger" onclick="resetSession()">↺ Nueva sesión</button>
+ <button class="btn btn-primary" onclick="sendMessage()">Enviar ↵</button>
+ </div>
 </header>
 
 <div class="channel-bar">
-  <span style="font-size:0.7rem; color:var(--text2); align-self:center; margin-right:4px;">Canal simulado:</span>
-  <button class="channel-tab active" onclick="setChannel('simulator', this)" id="tab-simulator">🖥️ Simulador</button>
-  <button class="channel-tab" onclick="setChannel('whatsapp', this)" id="tab-whatsapp">📱 WhatsApp</button>
-  <button class="channel-tab" onclick="setChannel('instagram', this)" id="tab-instagram">📸 Instagram</button>
-  <button class="channel-tab" onclick="setChannel('facebook', this)" id="tab-facebook">📘 Facebook</button>
-  <button class="channel-tab" onclick="setChannel('tiktok', this)" id="tab-tiktok">🎵 TikTok</button>
+ <span style="font-size:0.7rem; color:var(--text2); align-self:center; margin-right:4px;">Canal simulado:</span>
+ <button class="channel-tab active" onclick="setChannel('simulator', this)" id="tab-simulator">🖥 Simulador</button>
+ <button class="channel-tab" onclick="setChannel('whatsapp', this)" id="tab-whatsapp">📱 WhatsApp</button>
+ <button class="channel-tab" onclick="setChannel('instagram', this)" id="tab-instagram">📸 Instagram</button>
+ <button class="channel-tab" onclick="setChannel('facebook', this)" id="tab-facebook">📘 Facebook</button>
+ <button class="channel-tab" onclick="setChannel('tiktok', this)" id="tab-tiktok">🎵 TikTok</button>
 </div>
 
 <div class="layout">
+ <div class="chat-panel">
+ <div class="chat-header">
+ <div class="avatar">🕊</div>
+ <div class="info">
+ <h3>Casa Gaviota Bot</h3>
+ <p><span class="status-dot"></span>En línea · <span id="currentChannel">Simulador</span></p>
+ </div>
+ </div>
+ <div class="messages" id="messages">
+ <div class="empty-state">Escribe "hola" para iniciar la conversación</div>
+ </div>
+ <div class="typing-indicator" id="typingIndicator">
+ <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+ </div>
+ <div class="chat-input-area">
+ <input id="messageInput" type="text" placeholder="Escribe un mensaje..." autocomplete="off"
+ onkeydown="if(event.key==='Enter') sendMessage()"/>
+ <button class="btn btn-primary" onclick="sendMessage()">Enviar</button>
+ </div>
+ </div>
 
-  <!-- CHAT -->
-  <div class="chat-panel">
-    <div class="chat-header">
-      <div class="avatar">🕊️</div>
-      <div class="info">
-        <h3>Casa Gaviota Bot</h3>
-        <p><span class="status-dot"></span>En línea · <span id="currentChannel">Simulador</span></p>
-      </div>
-    </div>
-    <div class="messages" id="messages">
-      <div class="empty-state">Escribe "hola" para iniciar la conversación</div>
-    </div>
-    <div class="typing-indicator" id="typingIndicator">
-      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-    </div>
-    <div class="chat-input-area">
-      <input id="messageInput" type="text" placeholder="Escribe un mensaje..." autocomplete="off"
-        onkeydown="if(event.key==='Enter') sendMessage()"/>
-      <button class="btn btn-primary" onclick="sendMessage()">Enviar</button>
-    </div>
-  </div>
+ <div class="session-panel">
+ <div class="panel-title">Estado de sesión</div>
+ <div class="session-card">
+ <h4>Contexto actual</h4>
+ <div class="kv"><span class="k">Flujo activo</span><span class="v" id="sFlow"><span class="tag menu">ninguno</span></span></div>
+ <div class="kv"><span class="k">Paso</span><span class="v" id="sStep"><span class="tag menu">—</span></span></div>
+ </div>
+ <div class="session-card">
+ <h4>Datos recopilados</h4>
+ <div class="data-fields" id="sData"><span style="font-size:0.7rem; color:var(--text2)">Aún sin datos</span></div>
+ </div>
+ <div class="session-card">
+ <h4>Historial de pasos</h4>
+ <ul class="history-list" id="sHistory">
+ <li style="color:var(--text2); font-size:0.7rem; list-style:none; padding:4px 0;">Sin historial</li>
+ </ul>
+ </div>
+ </div>
 
-  <!-- SESSION -->
-  <div class="session-panel">
-    <div class="panel-title">Estado de sesión</div>
-
-    <div class="session-card">
-      <h4>Contexto actual</h4>
-      <div class="kv"><span class="k">Flujo activo</span><span class="v" id="sFlow"><span class="tag menu">ninguno</span></span></div>
-      <div class="kv"><span class="k">Paso</span><span class="v" id="sStep"><span class="tag menu">—</span></span></div>
-    </div>
-
-    <div class="session-card">
-      <h4>Datos recopilados</h4>
-      <div class="data-fields" id="sData"><span style="font-size:0.7rem; color:var(--text2)">Aún sin datos</span></div>
-    </div>
-
-    <div class="session-card">
-      <h4>Historial de pasos</h4>
-      <ul class="history-list" id="sHistory">
-        <li style="color:var(--text2); font-size:0.7rem; list-style:none; padding:4px 0;">Sin historial</li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- LOGS -->
-  <div class="logs-panel">
-    <div class="panel-title">Logs por canal</div>
-    <div id="logsContainer">
-      <div class="empty-state">Los logs aparecerán aquí<br/>después de cada mensaje</div>
-    </div>
-  </div>
-
+ <div class="logs-panel">
+ <div class="panel-title">Logs por canal</div>
+ <div id="logsContainer">
+ <div class="empty-state">Los logs aparecerán aquí<br/>después de cada mensaje</div>
+ </div>
+ </div>
 </div>
 
 <script>
-const API = 'http://localhost:3000';
+const API = 'https://casa-gaviota-chatbot.onrender.com';
 let userId = null;
 let activeChannel = 'simulator';
 
 async function init() {
-  const res = await fetch(`${API}/api/new-user`);
-  const { userId: id } = await res.json();
-  userId = id;
-  document.getElementById('userIdDisplay').textContent = id.substring(0, 16) + '...';
+ const res = await fetch(`${API}/api/new-user`);
+ const { userId: id } = await res.json();
+ userId = id;
+ document.getElementById('userIdDisplay').textContent = id.substring(0, 16) + '...';
 }
 
 function setChannel(ch, el) {
-  activeChannel = ch;
-  document.querySelectorAll('.channel-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('currentChannel').textContent = el.textContent.replace(/^./, '').trim();
+ activeChannel = ch;
+ document.querySelectorAll('.channel-tab').forEach(t => t.classList.remove('active'));
+ el.classList.add('active');
+ document.getElementById('currentChannel').textContent = el.textContent.replace(/^./, '').trim();
 }
 
 async function sendMessage() {
-  const input = document.getElementById('messageInput');
-  const msg = input.value.trim();
-  if (!msg || !userId) return;
-  input.value = '';
+ const input = document.getElementById('messageInput');
+ const msg = input.value.trim();
+ if (!msg || !userId) return;
+ input.value = '';
+ appendBubble('user', msg);
+ showTyping(true);
 
-  appendBubble('user', msg);
-  showTyping(true);
-
-  try {
-    const res = await fetch(`${API}/api/message`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, message: msg, channel: activeChannel }),
-    });
-    const data = await res.json();
-
-    setTimeout(() => {
-      showTyping(false);
-      appendBubble('bot', data.response);
-      updateSession(data.session);
-      updateLogs(data.channelLogs);
-    }, 600);
-  } catch (err) {
-    showTyping(false);
-    appendBubble('bot', '⚠️ Error al conectar con el servidor. ¿Está corriendo Node en localhost:3000?');
-  }
+ try {
+ const res = await fetch(`${API}/api/message`, {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ userId, message: msg, channel: activeChannel }),
+ });
+ const data = await res.json();
+ setTimeout(() => {
+ showTyping(false);
+ appendBubble('bot', data.response);
+ updateSession(data.session);
+ updateLogs(data.channelLogs);
+ }, 600);
+ } catch (err) {
+ showTyping(false);
+ appendBubble('bot', '⚠️ Error al conectar con el servidor. ¿Está corriendo Node en localhost:3000?');
+ }
 }
 
 function appendBubble(type, text) {
-  const msgs = document.getElementById('messages');
-  const empty = msgs.querySelector('.empty-state');
-  if (empty) empty.remove();
-
-  const div = document.createElement('div');
-  div.className = `bubble ${type}`;
-  div.textContent = text;
-  const ts = document.createElement('span');
-  ts.className = 'ts';
-  ts.textContent = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-  div.appendChild(ts);
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
+ const msgs = document.getElementById('messages');
+ const empty = msgs.querySelector('.empty-state');
+ if (empty) empty.remove();
+ const div = document.createElement('div');
+ div.className = `bubble ${type}`;
+ div.textContent = text;
+ const ts = document.createElement('span');
+ ts.className = 'ts';
+ ts.textContent = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+ div.appendChild(ts);
+ msgs.appendChild(div);
+ msgs.scrollTop = msgs.scrollHeight;
 }
 
 function showTyping(show) {
-  const t = document.getElementById('typingIndicator');
-  t.classList.toggle('show', show);
-  if (show) document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+ const t = document.getElementById('typingIndicator');
+ t.classList.toggle('show', show);
+ if (show) document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
 }
 
 function updateSession(s) {
-  if (!s) return;
+ if (!s) return;
+ const flowEl = document.getElementById('sFlow');
+ const stepEl = document.getElementById('sStep');
+ if (s.flow) {
+ flowEl.innerHTML = `<span class="tag flow">${s.flow}</span>`;
+ stepEl.innerHTML = `<span class="tag step">${s.step}</span>`;
+ } else {
+ flowEl.innerHTML = `<span class="tag menu">menú</span>`;
+ stepEl.innerHTML = `<span class="tag menu">${s.step || '—'}</span>`;
+ }
 
-  // Flow + step
-  const flowEl = document.getElementById('sFlow');
-  const stepEl = document.getElementById('sStep');
+ const dataEl = document.getElementById('sData');
+ const entries = Object.entries(s.data || {});
+ if (entries.length === 0) {
+ dataEl.innerHTML = '<span style="font-size:0.7rem; color:var(--text2)">Aún sin datos</span>';
+ } else {
+ dataEl.innerHTML = entries.map(([k, v]) =>
+ `<div class="field"><span class="fk">${k}</span><span class="fv">${v}</span></div>`
+ ).join('');
+ }
 
-  if (s.flow) {
-    flowEl.innerHTML = `<span class="tag flow">${s.flow}</span>`;
-    stepEl.innerHTML = `<span class="tag step">${s.step}</span>`;
-  } else {
-    flowEl.innerHTML = `<span class="tag menu">menú</span>`;
-    stepEl.innerHTML = `<span class="tag menu">${s.step || '—'}</span>`;
-  }
-
-  // Data
-  const dataEl = document.getElementById('sData');
-  const entries = Object.entries(s.data || {});
-  if (entries.length === 0) {
-    dataEl.innerHTML = '<span style="font-size:0.7rem; color:var(--text2)">Aún sin datos</span>';
-  } else {
-    dataEl.innerHTML = entries.map(([k, v]) =>
-      `<div class="field"><span class="fk">${k}</span><span class="fv">${v}</span></div>`
-    ).join('');
-  }
-
-  // History
-  const histEl = document.getElementById('sHistory');
-  const hist = s.history || [];
-  if (hist.length === 0) {
-    histEl.innerHTML = '<li style="color:var(--text2); font-size:0.7rem; border:none;">Sin historial</li>';
-  } else {
-    histEl.innerHTML = hist.slice(-8).map(h =>
-      `<li>${h.step}</li>`
-    ).join('');
-  }
+ const histEl = document.getElementById('sHistory');
+ const hist = s.history || [];
+ if (hist.length === 0) {
+ histEl.innerHTML = '<li style="color:var(--text2); font-size:0.7rem; border:none;">Sin historial</li>';
+ } else {
+ histEl.innerHTML = hist.slice(-8).map(h => `<li>${h.step}</li>`).join('');
+ }
 }
 
 function updateLogs(logs) {
-  if (!logs) return;
-  const container = document.getElementById('logsContainer');
-  container.innerHTML = '';
-
-  const channels = [
-    { key: 'whatsapp', name: 'WhatsApp', icon: '📱', ready: true },
-    { key: 'instagram', name: 'Instagram', icon: '📸', ready: true },
-    { key: 'facebook', name: 'Facebook', icon: '📘', ready: true },
-    { key: 'tiktok', name: 'TikTok', icon: '🎵', ready: false },
-  ];
-
-  channels.forEach(ch => {
-    const log = logs[ch.key];
-    const card = document.createElement('div');
-    card.className = 'log-card';
-
-    const header = document.createElement('div');
-    header.className = `log-header${ch.key === activeChannel ? ' open' : ''}`;
-    header.innerHTML = `
-      <span class="log-channel-icon">${ch.icon}</span>
-      <span class="log-channel-name">${ch.name}</span>
-      <span class="log-status ${ch.ready ? 'ready' : 'waiting'}">${ch.ready ? 'API disponible' : 'requiere aprobación'}</span>
-      <span class="log-chevron">▶</span>
-    `;
-
-    const body = document.createElement('div');
-    body.className = `log-body${ch.key === activeChannel ? ' show' : ''}`;
-
-    const formatted = formatLog(log);
-    body.innerHTML = `<pre>${formatted}</pre><div class="log-note">📌 ${log.note}</div>`;
-
-    header.onclick = () => {
-      header.classList.toggle('open');
-      body.classList.toggle('show');
-    };
-
-    card.appendChild(header);
-    card.appendChild(body);
-    container.appendChild(card);
-  });
+ if (!logs) return;
+ const container = document.getElementById('logsContainer');
+ container.innerHTML = '';
+ const channels = [
+ { key: 'whatsapp', name: 'WhatsApp', icon: '📱', ready: true },
+ { key: 'instagram', name: 'Instagram', icon: '📸', ready: true },
+ { key: 'facebook', name: 'Facebook', icon: '📘', ready: true },
+ { key: 'tiktok', name: 'TikTok', icon: '🎵', ready: false },
+ ];
+ channels.forEach(ch => {
+ const log = logs[ch.key];
+ const card = document.createElement('div');
+ card.className = 'log-card';
+ const header = document.createElement('div');
+ header.className = `log-header${ch.key === activeChannel ? ' open' : ''}`;
+ header.innerHTML = `
+ <span class="log-channel-icon">${ch.icon}</span>
+ <span class="log-channel-name">${ch.name}</span>
+ <span class="log-status ${ch.ready ? 'ready' : 'waiting'}">${ch.ready ? 'API disponible' : 'requiere aprobación'}</span>
+ <span class="log-chevron">▶</span>
+ `;
+ const body = document.createElement('div');
+ body.className = `log-body${ch.key === activeChannel ? ' show' : ''}`;
+ const formatted = formatLog(log);
+ body.innerHTML = `<pre>${formatted}</pre><div class="log-note">📌 ${log.note}</div>`;
+ header.onclick = () => {
+ header.classList.toggle('open');
+ body.classList.toggle('show');
+ };
+ card.appendChild(header);
+ card.appendChild(body);
+ container.appendChild(card);
+ });
 }
 
 function formatLog(log) {
-  const { endpoint, headers, body, note, timestamp } = log;
-  let out = `<span class="log-url">${endpoint}</span>\n\n`;
-  out += `<span class="log-key">Headers:</span>\n`;
-  Object.entries(headers).forEach(([k, v]) => {
-    out += `  <span class="log-key">${k}:</span> <span class="log-val">${v}</span>\n`;
-  });
-  out += `\n<span class="log-key">Body:</span>\n`;
-  out += `<span class="log-val">${JSON.stringify(body, null, 2)}</span>\n`;
-  return out;
+ const { endpoint, headers, body, note, timestamp } = log;
+ let out = `<span class="log-url">${endpoint}</span>\n\n`;
+ out += `<span class="log-key">Headers:</span>\n`;
+ Object.entries(headers).forEach(([k, v]) => {
+ out += ` <span class="log-key">${k}:</span> <span class="log-val">${v}</span>\n`;
+ });
+ out += `\n<span class="log-key">Body:</span>\n`;
+ out += `<span class="log-val">${JSON.stringify(body, null, 2)}</span>\n`;
+ return out;
 }
 
 async function resetSession() {
-  if (!userId) return;
-  await fetch(`${API}/api/session/${userId}`, { method: 'DELETE' });
-  document.getElementById('messages').innerHTML = '<div class="empty-state">Sesión reiniciada. Escribe "hola" para comenzar.</div>';
-  document.getElementById('sFlow').innerHTML = '<span class="tag menu">ninguno</span>';
-  document.getElementById('sStep').innerHTML = '<span class="tag menu">—</span>';
-  document.getElementById('sData').innerHTML = '<span style="font-size:0.7rem; color:var(--text2)">Aún sin datos</span>';
-  document.getElementById('sHistory').innerHTML = '<li style="color:var(--text2); font-size:0.7rem; border:none;">Sin historial</li>';
-  document.getElementById('logsContainer').innerHTML = '<div class="empty-state">Los logs aparecerán aquí<br/>después de cada mensaje</div>';
+ if (!userId) return;
+ await fetch(`${API}/api/session/${userId}`, { method: 'DELETE' });
+ document.getElementById('messages').innerHTML = '<div class="empty-state">Sesión reiniciada. Escribe "hola" para comenzar.</div>';
+ document.getElementById('sFlow').innerHTML = '<span class="tag menu">ninguno</span>';
+ document.getElementById('sStep').innerHTML = '<span class="tag menu">—</span>';
+ document.getElementById('sData').innerHTML = '<span style="font-size:0.7rem; color:var(--text2)">Aún sin datos</span>';
+ document.getElementById('sHistory').innerHTML = '<li style="color:var(--text2); font-size:0.7rem; border:none;">Sin historial</li>';
+ document.getElementById('logsContainer').innerHTML = '<div class="empty-state">Los logs aparecerán aquí<br/>después de cada mensaje</div>';
 }
 
 init();

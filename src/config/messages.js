@@ -1,10 +1,6 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// LINKS DE FORMULARIOS
-// ─────────────────────────────────────────────────────────────────────────────
-const FORMS = {
-  socioeconomico: 'https://docs.google.com/forms/d/e/1FAIpQLSc_XK651Q0VA3XGrkak3E6LrTucaXeW_h7gCTgTYimeJ5e69w/viewform',
-  legal:          'https://docs.google.com/forms/d/e/1FAIpQLScQVTjiPFvsZu8SwIlj3QNLtxd0Qcm1MP8p1U4gg6iWvMz02Q/viewform',
-};
+// ─────────────────────────────────────────────────────────────────────
+// MENSAJES DEL CHATBOT — Casa Gaviota
+// ─────────────────────────────────────────────────────────────────────
 
 const MESSAGES = {
   bienvenida: `¡Hola! 👋 Te estamos comunicando al chat bot de *Casa Gaviota — Un vuelo sin violencia A.C.*
@@ -29,6 +25,11 @@ Escribe el número de tu opción.`,
 
   menuRepeat: `Por favor escribe el número de la opción que deseas (1-9).`,
 
+  // ─── Mensajes compartidos entre flujos (cuestionarios largos) ─────────
+  socioeconomicoIntro: `Entendemos tu situación, no te preocupes. 💙\n\nVamos a hacerte algunas preguntas para valorar tu cuota.`,
+  legalFamiliarIntro: `¡Recibido! Antes de continuar, necesito algunos datos sobre tu caso legal.`,
+  empoderamientoIntro: `Para conocerte mejor y darte un mejor acompañamiento, te compartimos un breve cuestionario. No hay respuestas correctas o incorrectas, solo responde con lo que más se acerque a cómo te sientes. 💪`,
+
   psico: {
     pedirNombre: `Para brindarte un mejor servicio, proporcióname tus datos:\n\n📝 Por favor escribe tu *nombre completo*:`,
     pedirTelefono: `Escribe tu *número de teléfono*:`,
@@ -39,10 +40,9 @@ Escribe el número de tu opción.`,
     enviarCuenta: `✅ Perfecto. Te enviamos los datos para el pago:\n\n🏦 *Datos bancarios:*\nBanco: BBVA\nTitular: Fundación Casa Gaviota A.C.\nCLABE: 012 180 00123456789 0\n\nUna vez realizado el pago, envíanos tu *comprobante* por este medio.`,
     confirmarPago: `¿Ya realizaste el pago?\n\n1️⃣ Sí, ya pagué\n2️⃣ Aún no he pagado`,
     pedirModalidad: `¡Recibido! 🎉 ¿En qué modalidad prefieres tu terapia?\n\n1️⃣ Presencial\n2️⃣ En línea (videollamada)`,
-    asignacion: `Perfecto. En breve una terapeuta con horario disponible se pondrá en contacto contigo para confirmar tu cita. 💙\n\nTambién recibirás:\n📄 Reglamento\n📄 Carta compromiso\n📄 Cuestionario de empoderamiento\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
-    formularioSocioeconomico: (url) => `Entendemos tu situación, no te preocupes. 💙\n\nPor favor llena el formulario de estudio socioeconómico:\n\n📋 ${url}\n\nUna vez que lo hayas llenado, nuestro equipo valorará tu cuota personalizada.\n\n¿Ya llenaste el formulario?\n1️⃣ Sí, ya lo llené\n2️⃣ Aún no lo he llenado`,
-    valoracionCuota: `¡Gracias! Hemos recibido tu solicitud.\n\nNuestro equipo revisará tu información. Si la cuota resultara menor a $100, te ofrecemos los *Círculos de Reflexión*:\n\n🌸 Espacios seguros donde podrás expresarte y descubrir que más mujeres están pasando por lo mismo.\n• Costo: $50 · 1 vez a la semana · 2 hrs\n\n¿Te interesa?\n1️⃣ Sí, quiero más información sobre los Círculos\n2️⃣ Solo espero la valoración`,
-    circulosInfo: (url) => `🌸 *Círculos de Reflexión*\n\nPara inscribirte:\n📋 ${url}\n\nEn breve te contactamos con horarios disponibles. 💙\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
+    asignacion: `Perfecto. En breve una terapeuta con horario disponible se pondrá en contacto contigo para confirmar tu cita. 💙\n\nTambién recibirás:\n📄 Reglamento\n📄 Carta compromiso\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
+    valoracionCuota: `¡Gracias! Hemos recibido tu información.\n\nNuestro equipo la revisará para asignarte una cuota personalizada. Si resultara menor a $100, te ofrecemos los *Círculos de Reflexión*:\n\n🌸 Espacios seguros donde podrás expresarte y descubrir que más mujeres están pasando por lo mismo.\n• Costo: $50 · 1 vez a la semana · 2 hrs\n\n¿Te interesa?\n1️⃣ Sí, quiero inscribirme\n2️⃣ Solo espero la valoración`,
+    circulosInfo: (nombre) => `🌸 *Círculos de Reflexión*\n\n¡Listo, ${nombre}! Registramos tu inscripción con los datos que ya nos diste. En breve te contactamos con horarios disponibles. 💙\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
     soloValoracion: `Entendido. En cuanto tengamos tu valoración nos ponemos en contacto. 💙\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
   },
 
@@ -57,7 +57,6 @@ Escribe el número de tu opción.`,
     confirmarPago: `¿Ya realizaste el pago?\n\n1️⃣ Sí, ya pagué\n2️⃣ Aún no he pagado`,
     pedirModalidad: `¡Recibido! 🎉 ¿En qué modalidad prefieres la asesoría?\n\n1️⃣ Presencial\n2️⃣ En línea (videollamada)`,
     asignacion: `Perfecto. En breve una abogada se pondrá en contacto contigo para confirmar tu cita. 💙\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
-    formularioSocioeconomico: (url) => `Entendemos tu situación. 💙\n\nPor favor llena el formulario:\n\n📋 ${url}\n\nNuestro equipo valorará tu cuota personalizada.\n\n¿Ya llenaste el formulario?\n1️⃣ Sí, ya lo llené\n2️⃣ Aún no lo he llenado`,
     valoracionCuota: `¡Gracias! Nuestro equipo revisará tu información. Si la cuota resultara muy baja, emitiremos una *carta de canalización* con opciones de apoyo gratuito.\n\nNos pondremos en contacto pronto.\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
   },
 
@@ -95,8 +94,7 @@ Escribe el número de tu opción.`,
 
   empresarial: {
     inicio: `🏢 *Servicios Empresariales*\n\nTalleres y diplomados con perspectiva de género.\n\nEscribe el *nombre de tu empresa u organización*:`,
-    pedirContacto: `Escribe el *nombre y teléfono* de la persona de contacto:`,
-    confirmacion: (empresa) => `✅ ¡Gracias!\n\nHemos registrado el interés de *${empresa}*. Una representante se pondrá en contacto pronto.\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
+    confirmacion: (empresa, nombrePersona) => `✅ ¡Gracias, ${nombrePersona}!\n\nHemos registrado el interés de *${empresa}*. Una representante se pondrá en contacto pronto.\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
   },
 
   donativos: {
@@ -120,4 +118,4 @@ Escribe el número de tu opción.`,
   noEntiendo: `No entendí tu respuesta. Por favor elige una opción escribiendo el número correspondiente.`,
 };
 
-module.exports = { MESSAGES, FORMS };
+module.exports = { MESSAGES };

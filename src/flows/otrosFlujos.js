@@ -1,5 +1,8 @@
 const { MESSAGES: M } = require('../config/messages');
 const { updateSession } = require('../db/sessions');
+const { runQuestionnaire } = require('./questionnaireEngine');
+const { EMPRESARIAL_PREGUNTAS } = require('../config/questionnaires');
+const { esCorreoValido, esTelefonoValido, esEdadValida } = require('../utils/validators');
 
 const PROGRAMAS_EMPECO = { '1': 'Capacitación para el trabajo', '2': 'Belleza por un futuro', '3': 'Microemprendimiento', '4': 'Vinculación laboral' };
 
@@ -9,20 +12,54 @@ async function handleBio(session, userMessage) {
   let response = '', nextStep = step;
 
   switch (step) {
-    case 'bio_nombre':     data.nombre = userMessage; nextStep = 'bio_telefono';   response = M.bio.pedirTelefono; break;
-    case 'bio_telefono':   data.telefono = userMessage; nextStep = 'bio_correo';   response = M.bio.pedirCorreo; break;
-    case 'bio_correo':     data.correo = userMessage; nextStep = 'bio_residencia'; response = M.bio.pedirResidencia; break;
-    case 'bio_residencia': data.residencia = userMessage; nextStep = 'bio_edad';   response = M.bio.pedirEdad; break;
+    case 'bio_nombre':
+      data.nombre = userMessage;
+      nextStep = 'bio_telefono';
+      response = M.bio.pedirTelefono;
+      break;
+
+    case 'bio_telefono':
+      if (!esTelefonoValido(userMessage)) {
+        response = '⚠️ Ese teléfono no parece válido, debe tener 10 dígitos.\n\n' + M.bio.pedirTelefono;
+        break;
+      }
+      data.telefono = userMessage;
+      nextStep = 'bio_correo';
+      response = M.bio.pedirCorreo;
+      break;
+
+    case 'bio_correo':
+      if (!esCorreoValido(userMessage)) {
+        response = '⚠️ Ese correo no parece válido.\n\n' + M.bio.pedirCorreo;
+        break;
+      }
+      data.correo = userMessage;
+      nextStep = 'bio_residencia';
+      response = M.bio.pedirResidencia;
+      break;
+
+    case 'bio_residencia':
+      data.residencia = userMessage;
+      nextStep = 'bio_edad';
+      response = M.bio.pedirEdad;
+      break;
+
     case 'bio_edad':
+      if (!esEdadValida(userMessage)) {
+        response = '⚠️ Escribe tu edad solo con números (entre 12 y 100).\n\n' + M.bio.pedirEdad;
+        break;
+      }
       data.edad = userMessage;
       nextStep = 'bio_agendar';
       response = M.bio.preguntarAgendar(data.nombre);
       break;
+
     case 'bio_agendar':
       if (userMessage === '1') { nextStep = 'bio_fin'; response = M.bio.agendarSi; }
       else if (userMessage === '2') { nextStep = 'bio_fin'; response = M.bio.agendarNo; }
       else { response = M.noEntiendo + '\n\n' + M.bio.preguntarAgendar(data.nombre); }
       break;
+
     case 'bio_fin': nextStep = 'menu'; response = M.bienvenida; break;
     default: nextStep = 'menu'; response = M.bienvenida;
   }
@@ -70,8 +107,23 @@ async function handleEmpEco(session, userMessage) {
         response = M.noEntiendo + '\n\n' + M.empEco.inicio;
       }
       break;
-    case 'empeco_nombre':   data.nombre = userMessage; nextStep = 'empeco_telefono'; response = M.empEco.pedirTelefono; break;
-    case 'empeco_telefono': data.telefono = userMessage; nextStep = 'empeco_fin'; response = M.empEco.confirmacion(data.nombre, data.programa); break;
+
+    case 'empeco_nombre':
+      data.nombre = userMessage;
+      nextStep = 'empeco_telefono';
+      response = M.empEco.pedirTelefono;
+      break;
+
+    case 'empeco_telefono':
+      if (!esTelefonoValido(userMessage)) {
+        response = '⚠️ Ese teléfono no parece válido, debe tener 10 dígitos.\n\n' + M.empEco.pedirTelefono;
+        break;
+      }
+      data.telefono = userMessage;
+      nextStep = 'empeco_fin';
+      response = M.empEco.confirmacion(data.nombre, data.programa);
+      break;
+
     case 'empeco_fin': nextStep = 'menu'; response = M.bienvenida; break;
     default: nextStep = 'menu'; response = M.bienvenida;
   }
@@ -86,9 +138,28 @@ async function handleServicios(session, userMessage) {
   let response = '', nextStep = step;
 
   switch (step) {
-    case 'servicios_nombre':   data.nombre = userMessage; nextStep = 'servicios_telefono'; response = M.servicios.pedirTelefono; break;
-    case 'servicios_telefono': data.telefono = userMessage; nextStep = 'servicios_interes'; response = M.servicios.pedirInteres; break;
-    case 'servicios_interes':  data.interes = userMessage; nextStep = 'servicios_fin'; response = M.servicios.confirmacion(data.nombre); break;
+    case 'servicios_nombre':
+      data.nombre = userMessage;
+      nextStep = 'servicios_telefono';
+      response = M.servicios.pedirTelefono;
+      break;
+
+    case 'servicios_telefono':
+      if (!esTelefonoValido(userMessage)) {
+        response = '⚠️ Ese teléfono no parece válido, debe tener 10 dígitos.\n\n' + M.servicios.pedirTelefono;
+        break;
+      }
+      data.telefono = userMessage;
+      nextStep = 'servicios_interes';
+      response = M.servicios.pedirInteres;
+      break;
+
+    case 'servicios_interes':
+      data.interes = userMessage;
+      nextStep = 'servicios_fin';
+      response = M.servicios.confirmacion(data.nombre);
+      break;
+
     case 'servicios_fin': nextStep = 'menu'; response = M.bienvenida; break;
     default: nextStep = 'menu'; response = M.bienvenida;
   }
@@ -103,8 +174,30 @@ async function handleEmpresarial(session, userMessage) {
   let response = '', nextStep = step;
 
   switch (step) {
-    case 'empresarial_empresa':  data.empresa = userMessage; nextStep = 'empresarial_contacto'; response = M.empresarial.pedirContacto; break;
-    case 'empresarial_contacto': data.contacto = userMessage; nextStep = 'empresarial_fin'; response = M.empresarial.confirmacion(data.empresa); break;
+    case 'empresarial_empresa':
+      data.empresa = userMessage;
+      nextStep = 'empresarial_cuestionario';
+      {
+        const primera = runQuestionnaire(session, null, EMPRESARIAL_PREGUNTAS, 'empresarialIndex');
+        response = primera.response;
+      }
+      break;
+
+    case 'empresarial_cuestionario': {
+      const resultado = runQuestionnaire(session, userMessage, EMPRESARIAL_PREGUNTAS, 'empresarialIndex');
+      if (resultado.finished) {
+        // Mapea los campos del cuestionario a las columnas conocidas del Excel
+        data.nombre = data.nombrePersona;
+        data.telefono = data.celular;
+
+        nextStep = 'empresarial_fin';
+        response = M.empresarial.confirmacion(data.empresa, data.nombrePersona);
+      } else {
+        response = resultado.response;
+      }
+      break;
+    }
+
     case 'empresarial_fin': nextStep = 'menu'; response = M.bienvenida; break;
     default: nextStep = 'menu'; response = M.bienvenida;
   }
@@ -125,7 +218,11 @@ async function handleDonativos(session, userMessage) {
       else if (userMessage === '3') { nextStep = 'donativos_voluntariado'; response = M.donativos.voluntariado; }
       else { response = M.noEntiendo + '\n\n' + M.donativos.inicio; }
       break;
-    case 'donativos_voluntariado': data.contacto = userMessage; nextStep = 'donativos_fin'; response = M.donativos.confirmVoluntariado(userMessage.split(' ')[0]); break;
+    case 'donativos_voluntariado':
+      data.contacto = userMessage;
+      nextStep = 'donativos_fin';
+      response = M.donativos.confirmVoluntariado(userMessage.split(' ')[0]);
+      break;
     case 'donativos_fin': nextStep = 'menu'; response = M.bienvenida; break;
     default: nextStep = 'menu'; response = M.bienvenida;
   }
@@ -147,8 +244,23 @@ async function handleRRHH(session, userMessage) {
       else if (userMessage === '4') { nextStep = 'rrhh_dato'; data.tipo = 'consulta'; response = M.rrhh.vacantes; }
       else { response = M.noEntiendo + '\n\n' + M.rrhh.inicio; }
       break;
-    case 'rrhh_dato':   data.info = userMessage; nextStep = 'rrhh_correo'; response = M.rrhh.pedirCorreo; break;
-    case 'rrhh_correo': data.correo = userMessage; nextStep = 'rrhh_fin'; response = M.rrhh.confirmacion(data.info?.split(' ')[0] || 'candidata'); break;
+
+    case 'rrhh_dato':
+      data.info = userMessage;
+      nextStep = 'rrhh_correo';
+      response = M.rrhh.pedirCorreo;
+      break;
+
+    case 'rrhh_correo':
+      if (!esCorreoValido(userMessage)) {
+        response = '⚠️ Ese correo no parece válido.\n\n' + M.rrhh.pedirCorreo;
+        break;
+      }
+      data.correo = userMessage;
+      nextStep = 'rrhh_fin';
+      response = M.rrhh.confirmacion(data.info?.split(' ')[0] || 'candidata');
+      break;
+
     case 'rrhh_fin': nextStep = 'menu'; response = M.bienvenida; break;
     default: nextStep = 'menu'; response = M.bienvenida;
   }
