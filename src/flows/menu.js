@@ -3,7 +3,10 @@ const {sendNotificationEmail} = require('../senders/email');
 const {getNewRegisterTemplate} = require('../utils/emailTemplates/newRegister');
 
 const { getSession, updateSession } = require('../db/sessions');
+
 const { appendRecord } = require('../db/excel');
+const {saveBotRecord} = require('../db/mongo');
+
 const { handlePsico } = require('./psicologica');
 const { handleLegal } = require('./legal');
 const { handleBio, handleStandup, handleEmpEco, handleServicios, handleEmpresarial, handleDonativos, handleRRHH } = require('./otrosFlujos');
@@ -48,7 +51,18 @@ async function dispatchFlow(session, userMessage) {
   const recienLlegoAFin = stepAfter && stepAfter.endsWith('_fin') && stepBefore !== stepAfter;
 
   if (recienLlegoAFin) {
-    await appendRecord(flow, session.data, session.userId);
+    try{
+      await appendRecord(flow, session.data, session.userId);
+    } catch(err){
+      console.error('Error al guardar en excel', err.message);
+    }
+
+    try {
+      await saveBotRecord(flow, session.data, session.userId);
+    } catch (err) {
+      console.error('Error al guardar en Mongo:', err.message);
+    }
+    
 
     if (session.data.correo) {
       const htmlBody = getNewRegisterTemplate(flow, session);
