@@ -6,63 +6,139 @@
   <title>Casa Gaviota — Envíos Masivos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #2b5b84;
-      --primary-hover: #1f4362;
-      --bg: #f4f7f9;
+      --primary: #123249;
+      --primary-hover: #0C2434;
+      --teal: #2E8C82;
+      --teal-hover: #278077;
+      --teal-pale: #DCEEEA;
+      --bg: #F5F3EC;
       --card-bg: #ffffff;
-      --text: #2d3748;
-      --text-muted: #718096;
-      --border: #e2e8f0;
-      --radius: 12px;
+      --text: #16283A;
+      --text-muted: #6D8089;
+      --border: #DDE4E1;
+      --radius: 10px;
+      --font-display: 'DM Serif Display', serif;
+      --font-body: 'DM Sans', sans-serif;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: var(--font-body);
       background-color: var(--bg);
       color: var(--text);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 38% 62%;
       min-height: 100vh;
-      padding: 20px;
     }
 
-    .card {
-      background: var(--card-bg);
-      width: 100%;
-      max-width: 520px;
-      padding: 35px;
-      border-radius: var(--radius);
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-      border: 1px solid var(--border);
+    /* ---------- Panel izquierdo: bloque navy ---------- */
+    .side {
+      background: var(--primary);
+      color: #F5F3EC;
+      padding: 56px 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
     }
-
-    .brand-header {
-      text-align: center;
+    .side-top .mark {
+      width: 46px; height: 46px;
+      border-radius: 12px;
+      background: rgba(245,243,236,0.1);
+      border: 1px solid rgba(245,243,236,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
       margin-bottom: 28px;
     }
-    .brand-header h1 {
-      color: var(--primary);
-      font-size: 1.5rem;
-      font-weight: 700;
+    .side-top .eyebrow {
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #8FCFC5;
+      margin-bottom: 14px;
     }
-    .brand-header p {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      margin-top: 4px;
+    .side-top h1 {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 2.1rem;
+      line-height: 1.2;
+      margin-bottom: 18px;
+    }
+    .side-top p {
+      font-size: 0.92rem;
+      line-height: 1.65;
+      color: rgba(245,243,236,0.72);
+      max-width: 34ch;
+    }
+    .side-flight {
+      position: absolute;
+      right: -40px;
+      bottom: -30px;
+      opacity: 0.9;
+    }
+    .side-stats {
+      display: flex;
+      gap: 28px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(245,243,236,0.18);
+      position: relative;
+      z-index: 1;
+    }
+    .side-stats .stat .num {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      color: #fff;
+    }
+    .side-stats .stat .lbl {
+      font-size: 0.68rem;
+      color: rgba(245,243,236,0.6);
+      margin-top: 2px;
     }
 
-    .form-group {
-      margin-bottom: 20px;
+    /* ---------- Panel derecho: formulario ---------- */
+    .main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 56px 48px;
+      overflow-y: auto;
     }
+    .main-inner { width: 100%; max-width: 440px; }
+
+    .main-head { margin-bottom: 28px; }
+    .main-head .kicker {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--teal-hover);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .main-head h2 {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 1.6rem;
+      color: var(--primary);
+    }
+    .main-head p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-top: 6px;
+    }
+
+    .form-group { margin-bottom: 20px; }
     label {
       display: block;
       font-weight: 600;
-      font-size: 0.88rem;
+      font-size: 0.85rem;
       margin-bottom: 8px;
       color: var(--text);
     }
@@ -73,152 +149,184 @@
       width: 100%;
       padding: 12px 14px;
       border: 1.5px solid var(--border);
-      border-radius: 8px;
+      border-radius: var(--radius);
       font-family: inherit;
       font-size: 0.95rem;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
+      color: var(--text);
+      background: #fff;
     }
     input:focus, textarea:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(43, 91, 132, 0.15);
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(46, 140, 130, 0.15);
     }
 
-    /* Subida de Imagen */
     .file-dropzone {
       border: 2px dashed var(--border);
-      border-radius: 8px;
+      border-radius: var(--radius);
       padding: 20px;
       text-align: center;
       cursor: pointer;
-      background: #fafbfc;
+      background: #FAFBF8;
       transition: background 0.2s, border-color 0.2s;
       position: relative;
     }
     .file-dropzone:hover {
-      background: #f0f4f8;
-      border-color: var(--primary);
+      background: var(--teal-pale);
+      border-color: var(--teal);
     }
     .file-dropzone input[type="file"] {
       position: absolute;
-      width: 100%;
-      height: 100%;
-      top: 0;
-      left: 0;
+      width: 100%; height: 100%;
+      top: 0; left: 0;
       opacity: 0;
       cursor: pointer;
     }
-    .dropzone-text {
-      color: var(--text-muted);
-      font-size: 0.88rem;
-    }
-    .dropzone-text strong {
-      color: var(--primary);
-    }
+    .dropzone-text { color: var(--text-muted); font-size: 0.86rem; }
+    .dropzone-text strong { color: var(--teal-hover); }
 
-    /* Previsualización de Imagen */
-    .image-preview {
-      margin-top: 12px;
-      display: none;
-      text-align: center;
-    }
+    .image-preview { margin-top: 12px; display: none; text-align: center; }
     .image-preview img {
-      max-width: 100%;
-      max-height: 200px;
-      border-radius: 8px;
+      max-width: 100%; max-height: 200px;
+      border-radius: var(--radius);
       border: 1px solid var(--border);
       object-fit: cover;
     }
 
-    /* Botón */
     .btn {
       width: 100%;
-      background-color: var(--primary);
+      background-color: var(--teal);
       color: white;
       border: none;
       padding: 14px;
-      border-radius: 8px;
+      border-radius: var(--radius);
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
       transition: background-color 0.2s;
     }
-    .btn:hover { background-color: var(--primary-hover); }
+    .btn:hover { background-color: var(--teal-hover); }
     .btn:disabled { background-color: #cbd5e1; cursor: not-allowed; }
 
     .hidden { display: none !important; }
     .alert {
       padding: 12px 16px;
-      border-radius: 8px;
+      border-radius: var(--radius);
       font-size: 0.9rem;
       margin-bottom: 20px;
       display: none;
     }
-    .alert-error { background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-    .alert-success { background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .alert-error { background-color: #FBEEEE; color: #8C3A35; border: 1px solid #E3C6C4; }
+    .alert-success { background-color: var(--teal-pale); color: #1F6E65; border: 1px solid #B8DAD4; }
+
+    @media (max-width: 840px) {
+      .shell { grid-template-columns: 1fr; }
+      .side { padding: 40px 32px; }
+      .side-flight { display: none; }
+      .side-stats { display: none; }
+      .main { padding: 40px 24px; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- CARD 1: INICIO DE SESIÓN -->
-  <div id="loginCard" class="card">
-    <div class="brand-header">
-      <h1>Casa Gaviota A.C.</h1>
-      <p>Panel de Envíos Masivos</p>
-    </div>
-    
-    <div id="loginAlert" class="alert alert-error"></div>
+<div class="shell">
 
-    <form id="loginForm" onsubmit="handleLogin(event)">
-      <div class="form-group">
-        <label for="adminPass">Contraseña de acceso:</label>
-        <input type="password" id="adminPass" required placeholder="Ingresa la contraseña">
+  <!-- BLOQUE IZQUIERDO: identidad -->
+  <div class="side">
+    <div class="side-top">
+      <div class="mark">🕊</div>
+      <div class="eyebrow">Casa Gaviota A.C.</div>
+      <h1>Un vuelo sin<br/>violencia</h1>
+      <p>Panel interno para enviar comunicados por correo a la comunidad registrada de Casa Gaviota.</p>
+    </div>
+    <svg class="side-flight" width="220" height="180" viewBox="0 0 220 180" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M10 130 C 55 90, 85 150, 110 100 C 135 50, 165 110, 210 60" stroke="#2E8C82" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+      <path d="M30 150 C 70 120, 95 165, 120 125 C 145 85, 175 130, 205 95" stroke="#F5F3EC" stroke-width="1.5" stroke-linecap="round" opacity="0.25"/>
+    </svg>
+    <div class="side-stats">
+      <div class="stat">
+        <div class="num">9</div>
+        <div class="lbl">Servicios de atención</div>
       </div>
-      <button type="submit" class="btn">Ingresar al Panel</button>
-    </form>
+      <div class="stat">
+        <div class="num">3</div>
+        <div class="lbl">Canales activos</div>
+      </div>
+    </div>
   </div>
 
-  <!-- CARD 2: FORMULARIO DE ENVÍO -->
-  <div id="panelCard" class="card hidden">
-    <div class="brand-header">
-      <h1>Redactar Comunicado</h1>
-      <p>El mensaje se enviará a la lista de MongoDB</p>
-    </div>
+  <!-- BLOQUE DERECHO: contenido -->
+  <div class="main">
+    <div class="main-inner">
 
-    <div id="statusAlert" class="alert"></div>
+      <!-- CARD 1: INICIO DE SESIÓN -->
+      <div id="loginCard">
+        <div class="main-head">
+          <div class="kicker">Acceso</div>
+          <h2>Entra al panel</h2>
+          <p>Introduce la contraseña de administración para continuar.</p>
+        </div>
 
-    <form id="campaignForm" onsubmit="handleSendCampaign(event)">
-      <div class="form-group">
-        <label for="asunto">Asunto del Correo *</label>
-        <input type="text" id="asunto" name="asunto" required placeholder="Ej. ¡Nueva convocatoria de talleres de apoyo!">
-      </div>
+        <div id="loginAlert" class="alert alert-error"></div>
 
-      <div class="form-group">
-        <label for="mensaje">Mensaje / Comunicado *</label>
-        <textarea id="mensaje" name="mensaje" rows="4" required placeholder="Escribe aquí el texto principal del comunicado..."></textarea>
-      </div>
-
-      <div class="form-group">
-        <label>Imagen o Flyer del Comunicado</label>
-        <div class="file-dropzone">
-          <input type="file" id="imagenInput" name="imagen" accept="image/*" onchange="previewImage(event)">
-          <div class="dropzone-text">
-            <span>📷 <strong>Haz clic aquí</strong> o arrastra una imagen (.jpg, .png)</span>
+        <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label for="adminPass">Contraseña de acceso</label>
+            <input type="password" id="adminPass" required placeholder="Ingresa la contraseña">
           </div>
-        </div>
-        <div id="imagePreviewContainer" class="image-preview">
-          <img id="imagePreview" src="" alt="Previsualización">
-        </div>
+          <button type="submit" class="btn">Ingresar al panel</button>
+        </form>
       </div>
 
-      <div class="form-group">
-        <label for="enlace">Enlace de botón (Opcional)</label>
-        <input type="url" id="enlace" name="enlace" placeholder="https://casagaviota.org.mx/registro">
+      <!-- CARD 2: FORMULARIO DE ENVÍO -->
+      <div id="panelCard" class="hidden">
+        <div class="main-head">
+          <div class="kicker">Comunicados</div>
+          <h2>Redactar comunicado</h2>
+          <p>El mensaje se enviará por correo a la lista de usuarias.</p>
+        </div>
+
+        <div id="statusAlert" class="alert"></div>
+
+        <form id="campaignForm" onsubmit="handleSendCampaign(event)">
+          <div class="form-group">
+            <label for="asunto">Asunto del correo *</label>
+            <input type="text" id="asunto" name="asunto" required placeholder="Ej. ¡Nueva convocatoria de talleres de apoyo!">
+          </div>
+
+          <div class="form-group">
+            <label for="mensaje">Mensaje / comunicado *</label>
+            <textarea id="mensaje" name="mensaje" rows="4" required placeholder="Escribe aquí el texto principal del comunicado..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Imagen o flyer del comunicado</label>
+            <div class="file-dropzone">
+              <input type="file" id="imagenInput" name="imagen" accept="image/*" onchange="previewImage(event)">
+              <div class="dropzone-text">
+                <span>📷 <strong>Haz clic aquí</strong> o arrastra una imagen (.jpg, .png)</span>
+              </div>
+            </div>
+            <div id="imagePreviewContainer" class="image-preview">
+              <img id="imagePreview" src="" alt="Previsualización">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="enlace">Enlace de botón (opcional)</label>
+            <input type="url" id="enlace" name="enlace" placeholder="https://casagaviota.org.mx/registro">
+          </div>
+
+          <button type="submit" id="submitBtn" class="btn">Enviar comunicado</button>
+        </form>
       </div>
 
-      <button type="submit" id="submitBtn" class="btn"> Enviar Comunicado</button>
-    </form>
+    </div>
   </div>
+
+</div>
 
   <script>
     // Manejo de inicio de sesión
@@ -308,7 +416,7 @@
         statusAlert.style.display = 'block';
       } finally {
         submitBtn.disabled = false;
-        submitBtn.innerText = ' Enviar Comunicado';
+        submitBtn.innerText = 'Enviar comunicado';
       }
     }
   </script>

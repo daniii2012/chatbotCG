@@ -48,31 +48,45 @@ async function dispatchFlow(session, userMessage) {
   // antes de procesar este mensaje, significa que solo está regresando al
   // menú y no se debe duplicar el registro.
   const stepAfter = session.step;
-  const recienLlegoAFin = stepAfter && stepAfter.endsWith('_fin') && stepBefore !== stepAfter;
+  const recienLlegoAFin = stepAfter && (stepAfter.endsWith('_fin') || stepAfter === 'fin') && stepBefore !== stepAfter;
 
   if (recienLlegoAFin) {
-    try{
+    console.log('[INFO] Fin de flujo detectado. Iniciando guardado y envio...');
+
+    try {
       await appendRecord(flow, session.data, session.userId);
-    } catch(err){
-      console.error('Error al guardar en excel', err.message);
+    } catch(err) {
+      console.error('[ERROR] Guardado en Excel:', err.message);
     }
 
     try {
       await saveBotRecord(flow, session.data, session.userId);
     } catch (err) {
-      console.error('Error al guardar en Mongo:', err.message);
+      console.error('[ERROR] Guardado en Mongo:', err.message);
     }
-    
 
     if (session.data.correo) {
-      const htmlBody = getNewRegisterTemplate(flow, session);
-      await sendNotificationEmail(
-        session.data.correo, 
-        `[Casa Gaviota] Confirmación de tu solicitud: ${session.data.servicioSolicita || flow}`,
-        htmlBody
-      );
+      console.log('[INFO] Intentando enviar correo a:', session.data.correo);
+      try {
+        let htmlBody = `<p>Hola ${session.data.nombre || ''}, tu solicitud para ${session.data.servicioSolicita || flow} ha sido recibida con exito.</p>`;
+        
+        try {
+          htmlBody = getNewRegisterTemplate(flow, session);
+        } catch (templateErr) {
+          console.error('[WARN] Error en plantilla HTML, usando respaldo:', templateErr.message);
+        }
+
+        await sendNotificationEmail(
+          session.data.correo, 
+          `[Casa Gaviota] Confirmacion de tu solicitud: ${session.data.servicioSolicita || flow}`,
+          htmlBody
+        );
+      } catch (emailErr) {
+        console.error('[ERROR] Proceso de envio de correo:', emailErr.message);
+      }
+    } else {
+      console.log('[WARN] Correo vacio en session.data.correo');
     }
-    
   }
 
   return response;
