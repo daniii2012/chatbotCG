@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Casa Gaviota — Envíos Masivos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #123249;
+      --primary-hover: #0C2434;
+      --teal: #2E8C82;
+      --teal-hover: #278077;
+      --teal-pale: #DCEEEA;
+      --bg: #F5F3EC;
+      --card-bg: #ffffff;
+      --text: #16283A;
+      --text-muted: #6D8089;
+      --border: #DDE4E1;
+      --radius: 10px;
+      --font-display: 'DM Serif Display', serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 38% 62%;
+      min-height: 100vh;
+    }
+
+    /* ---------- Panel izquierdo: bloque navy ---------- */
+    .side {
+      background: var(--primary);
+      color: #F5F3EC;
+      padding: 56px 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    .side-top .mark {
+      width: 46px; height: 46px;
+      border-radius: 12px;
+      background: rgba(245,243,236,0.1);
+      border: 1px solid rgba(245,243,236,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      margin-bottom: 28px;
+    }
+    .side-top .eyebrow {
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #8FCFC5;
+      margin-bottom: 14px;
+    }
+    .side-top h1 {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 2.1rem;
+      line-height: 1.2;
+      margin-bottom: 18px;
+    }
+    .side-top p {
+      font-size: 0.92rem;
+      line-height: 1.65;
+      color: rgba(245,243,236,0.72);
+      max-width: 34ch;
+    }
+    .side-flight {
+      position: absolute;
+      right: -40px;
+      bottom: -30px;
+      opacity: 0.9;
+    }
+    .side-stats {
+      display: flex;
+      gap: 28px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(245,243,236,0.18);
+      position: relative;
+      z-index: 1;
+    }
+    .side-stats .stat .num {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      color: #fff;
+    }
+    .side-stats .stat .lbl {
+      font-size: 0.68rem;
+      color: rgba(245,243,236,0.6);
+      margin-top: 2px;
+    }
+
+    /* ---------- Panel derecho: formulario ---------- */
+    .main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 56px 48px;
+      overflow-y: auto;
+    }
+    .main-inner { width: 100%; max-width: 440px; }
+
+    .main-head { margin-bottom: 28px; }
+    .main-head .kicker {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--teal-hover);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .main-head h2 {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 1.6rem;
+      color: var(--primary);
+    }
+    .main-head p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-top: 6px;
+    }
+
+    .form-group { margin-bottom: 20px; }
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    input[type="text"],
+    input[type="password"],
+    input[type="url"],
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      color: var(--text);
+      background: #fff;
+    }
+    input:focus, textarea:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(46, 140, 130, 0.15);
+    }
+
+    .file-dropzone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      background: #FAFBF8;
+      transition: background 0.2s, border-color 0.2s;
+      position: relative;
+    }
+    .file-dropzone:hover {
+      background: var(--teal-pale);
+      border-color: var(--teal);
+    }
+    .file-dropzone input[type="file"] {
+      position: absolute;
+      width: 100%; height: 100%;
+      top: 0; left: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .dropzone-text { color: var(--text-muted); font-size: 0.86rem; }
+    .dropzone-text strong { color: var(--teal-hover); }
+
+    .image-preview { margin-top: 12px; display: none; text-align: center; }
+    .image-preview img {
+      max-width: 100%; max-height: 200px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      object-fit: cover;
+    }
+
+    .btn {
+      width: 100%;
+      background-color: var(--teal);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .btn:hover { background-color: var(--teal-hover); }
+    .btn:disabled { background-color: #cbd5e1; cursor: not-allowed; }
+
+    .hidden { display: none !important; }
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .alert-error { background-color: #FBEEEE; color: #8C3A35; border: 1px solid #E3C6C4; }
+    .alert-success { background-color: var(--teal-pale); color: #1F6E65; border: 1px solid #B8DAD4; }
+
+    @media (max-width: 840px) {
+      .shell { grid-template-columns: 1fr; }
+      .side { padding: 40px 32px; }
+      .side-flight { display: none; }
+      .side-stats { display: none; }
+      .main { padding: 40px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- BLOQUE IZQUIERDO: identidad -->
+  <div class="side">
+    <div class="side-top">
+      <div class="mark">🕊</div>
+      <div class="eyebrow">Casa Gaviota A.C.</div>
+      <h1>Un vuelo sin<br/>violencia</h1>
+      <p>Panel interno para enviar comunicados por correo a la comunidad registrada de Casa Gaviota.</p>
+    </div>
+    <svg class="side-flight" width="220" height="180" viewBox="0 0 220 180" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M10 130 C 55 90, 85 150, 110 100 C 135 50, 165 110, 210 60" stroke="#2E8C82" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+      <path d="M30 150 C 70 120, 95 165, 120 125 C 145 85, 175 130, 205 95" stroke="#F5F3EC" stroke-width="1.5" stroke-linecap="round" opacity="0.25"/>
+    </svg>
+    <div class="side-stats">
+      <div class="stat">
+        <div class="num">9</div>
+        <div class="lbl">Servicios de atención</div>
+      </div>
+      <div class="stat">
+        <div class="num">3</div>
+        <div class="lbl">Canales activos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOQUE DERECHO: contenido -->
+  <div class="main">
+    <div class="main-inner">
+
+      <!-- CARD 1: INICIO DE SESIÓN -->
+      <div id="loginCard">
+        <div class="main-head">
+          <div class="kicker">Acceso</div>
+          <h2>Entra al panel</h2>
+          <p>Introduce la contraseña de administración para continuar.</p>
+        </div>
+
+        <div id="loginAlert" class="alert alert-error"></div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label for="adminPass">Contraseña de acceso</label>
+            <input type="password" id="adminPass" required placeholder="Ingresa la contraseña">
+          </div>
+          <button type="submit" class="btn">Ingresar al panel</button>
+        </form>
+      </div>
+
+      <!-- CARD 2: FORMULARIO DE ENVÍO -->
+      <div id="panelCard" class="hidden">
+        <div class="main-head">
+          <div class="kicker">Comunicados</div>
+          <h2>Redactar comunicado</h2>
+          <p>El mensaje se enviará por correo a la lista de usuarias.</p>
+        </div>
+
+        <div id="statusAlert" class="alert"></div>
+
+        <form id="campaignForm" onsubmit="handleSendCampaign(event)">
+          <div class="form-group">
+            <label for="asunto">Asunto del correo *</label>
+            <input type="text" id="asunto" name="asunto" required placeholder="Ej. ¡Nueva convocatoria de talleres de apoyo!">
+          </div>
+
+          <div class="form-group">
+            <label for="mensaje">Mensaje / comunicado *</label>
+            <textarea id="mensaje" name="mensaje" rows="4" required placeholder="Escribe aquí el texto principal del comunicado..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Imagen o flyer del comunicado</label>
+            <div class="file-dropzone">
+              <input type="file" id="imagenInput" name="imagen" accept="image/*" onchange="previewImage(event)">
+              <div class="dropzone-text">
+                <span>📷 <strong>Haz clic aquí</strong> o arrastra una imagen (.jpg, .png)</span>
+              </div>
+            </div>
+            <div id="imagePreviewContainer" class="image-preview">
+              <img id="imagePreview" src="" alt="Previsualización">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="enlace">Enlace de botón (opcional)</label>
+            <input type="url" id="enlace" name="enlace" placeholder="https://casagaviota.org.mx/registro">
+          </div>
+
+          <button type="submit" id="submitBtn" class="btn">Enviar comunicado</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+  <script>
+    // Manejo de inicio de sesión
+    async function handleLogin(e) {
+      e.preventDefault();
+      const password = document.getElementById('adminPass').value;
+      const alertBox = document.getElementById('loginAlert');
+      
+      alertBox.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+        
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById('loginCard').classList.add('hidden');
+          document.getElementById('panelCard').classList.remove('hidden');
+        } else {
+          alertBox.innerText = data.error || 'Contraseña incorrecta';
+          alertBox.style.display = 'block';
+        }
+      } catch (err) {
+        alertBox.innerText = 'Error de conexión con el servidor';
+        alertBox.style.display = 'block';
+      }
+    }
+
+    // Previsualizar la imagen antes de subirla
+    function previewImage(event) {
+      const file = event.target.files[0];
+      const previewContainer = document.getElementById('imagePreviewContainer');
+      const previewImg = document.getElementById('imagePreview');
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          previewImg.src = e.target.result;
+          previewContainer.style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+      } else {
+        previewContainer.style.display = 'none';
+      }
+    }
+
+    // Envío del formulario
+    async function handleSendCampaign(e) {
+      e.preventDefault();
+      
+      const form = document.getElementById('campaignForm');
+      const submitBtn = document.getElementById('submitBtn');
+      const statusAlert = document.getElementById('statusAlert');
+      
+      const formData = new FormData(form);
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Enviando comunicado...';
+      statusAlert.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/admin/send-campaign', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          statusAlert.className = 'alert alert-success';
+          statusAlert.innerText = `¡Campaña enviada con éxito a ${data.total} usuarias!`;
+          statusAlert.style.display = 'block';
+          form.reset();
+          document.getElementById('imagePreviewContainer').style.display = 'none';
+        } else {
+          statusAlert.className = 'alert alert-error';
+          statusAlert.innerText = 'Error: ' + (data.error || 'No se pudo enviar el comunicado');
+          statusAlert.style.display = 'block';
+        }
+      } catch (err) {
+        statusAlert.className = 'alert alert-error';
+        statusAlert.innerText = 'Error de red o servidor al procesar el envío';
+        statusAlert.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Enviar comunicado';
+      }
+    }
+  </script>
+</body>
+</html>
