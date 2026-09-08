@@ -11,6 +11,7 @@ const { getSession, getAllSessions, resetSession } = require('./db/sessions');
 const { FILE_PATH: EXCEL_PATH } = require('./db/excel');
 const { getRegisteredEmails } = require('./db/mongo');
 const { sendNotificationEmail } = require('./senders/email');
+const { sendWhatsAppMessage } = require('./senders/whatsapp');
 
 const app = express();
 
@@ -237,6 +238,42 @@ function buildChannelLogs(channel, userId, userMsg, botMsg) {
     timestamp: ts,
   };
 }
+
+// ─── WEBHOOK DE WHATSAPP ────────────────────────────────
+
+app.get('/webhook', (req, res) => {
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+
+  if (mode === 'subscribe' && token === process.env.WHATSAPP_VERIFY_TOKEN) {
+    console.log('Webhook de WhatsApp verificado correctamente');
+    return res.status(200).send(challenge);
+  }
+
+  return res.sendStatus(403);
+});
+
+app.post('/webhook', async (req, res) => {
+  try {
+    const entry = req.body.entry?.[0];
+    const change = entry?.changes?.[0];
+    const message = change?.value?.messages?.[0];
+
+    if (message && message.type === 'text') {
+      const userId = message.from;
+      const texto = message.text.body;
+
+      const botResponse = await processMessage(userId, texto);
+      await sendWhatsAppMessage(userId, botResponse);
+    }
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('Error procesando webhook de WhatsApp:', err);
+    res.sendStatus(200);
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
