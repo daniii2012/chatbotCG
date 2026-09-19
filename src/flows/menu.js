@@ -1,15 +1,42 @@
 const { MESSAGES: M } = require('../config/messages');
-const {sendNotificationEmail} = require('../senders/email');
-const {getNewRegisterTemplate} = require('../utils/emailTemplates/newRegister');
+const { sendNotificationEmail } = require('../senders/email');
+const { getNewRegisterTemplate } = require('../utils/emailTemplates/newRegister');
 
 const { getSession, updateSession } = require('../db/sessions');
 
 const { appendRecord } = require('../db/excel');
-const {saveBotRecord} = require('../db/mongo');
+const { saveBotRecord } = require('../db/mongo');
 
 const { handlePsico } = require('./psicologica');
 const { handleLegal } = require('./legal');
 const { handleBio, handleStandup, handleEmpEco, handleServicios, handleEmpresarial, handleDonativos, handleRRHH } = require('./otrosFlujos');
+
+// -- Validar si es una situación de riesgo
+const { esRiesgoInmediato } = require('../utils/validators');
+const { llamarGPT } = require('../senders/gpt');
+
+// Mensaje predeterminado directo
+const RESPUESTA_CRISIS_PREDETERMINADA = 
+  "Si estás en peligro inmediato o necesitas auxilio urgente, por favor comunícate a la línea de emergencia 911 o a la Línea Mujeres. No estás sola.";
+
+/**
+ * Función auxiliar para manejar el protocolo de crisis local o por GPT
+ */
+
+async function activarProtocoloCrisis(session) {
+  updateSession(session.userId, {
+    flow: null,
+    step: 'menu',
+    data: session.data, // conserva lo que ya haya llenado, si aplica
+  });
+
+  // Log interno sin contenido sensible — solo para que el equipo dé seguimiento si es que se quiere si no lo quitamos
+  try {
+    await saveBotRecord('crisis_activada', { timestamp: new Date().toISOString() }, session.userId);
+  } catch (err) {
+    console.error('[ERROR] No se pudo registrar evento de crisis:', err.message);
+  }
+}
 
 // Primer step de cada flujo al seleccionar del menú
 const MENU_MAP = {
@@ -42,11 +69,6 @@ async function dispatchFlow(session, userMessage) {
     default: return M.bienvenida;
   }
 
-  // El flujo acaba de llegar por primera vez a su paso "_fin" (ej. psico_fin,
-  // legal_fin, donativos_fin...) → ahí ya tenemos todos los datos recopilados,
-  // así que guardamos el registro en Excel. Si el paso YA estaba en "_fin"
-  // antes de procesar este mensaje, significa que solo está regresando al
-  // menú y no se debe duplicar el registro.
   const stepAfter = session.step;
   const recienLlegoAFin = stepAfter && (stepAfter.endsWith('_fin') || stepAfter === 'fin') && stepBefore !== stepAfter;
 
@@ -92,19 +114,41 @@ async function dispatchFlow(session, userMessage) {
   return response;
 }
 
+const OPCIONES_MENU = Object.entries(MENU_MAP).map(
+  ([num, o]) => `${num}. ${o.servicio}`
+);
+
 async function processMessage(userId, userMessage) {
   const session = getSession(userId);
   const trimmed = userMessage.trim();
 
+  // 1. PRIMER PASO: Filtro local de crisis (Ahorro de tokens y respuesta inmediata)
+  if (esRiesgoInmediato(trimmed)) {
+    await activarProtocoloCrisis(session);
+    return `${RESPUESTA_CRISIS_PREDETERMINADA}\n\n${M.bienvenida}`;
+  }
+
+  // 2. Si la usuaria está en el menú raíz o no tiene flujo definido
   if (!session.flow || session.step === 'menu') {
     const option = MENU_MAP[trimmed];
     if (option) {
       updateSession(userId, { flow: option.flow, step: option.step, data: { servicioSolicita: option.servicio } });
       return option.msg;
     }
-    return M.bienvenida;
+
+    // Si la opción no fue un número del 1 al 9, usamos GPT para responder con tono amable
+    const respuestaGPT = await llamarGPT(trimmed, OPCIONES_MENU);
+
+    // Verificación de respaldo por si GPT detectó crisis
+    if (respuestaGPT.includes('ESCALAR_CRISIS')) {
+      await activarProtocoloCrisis(session);
+      return RESPUESTA_CRISIS_PREDETERMINADA;
+    }
+
+    return respuestaGPT;
   }
 
+  // 3. Si la usuaria ya está dentro de un flujo activo (ej. respondiendo preguntas del formulario)
   return dispatchFlow(session, trimmed);
 }
 
