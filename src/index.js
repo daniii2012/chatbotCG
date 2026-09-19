@@ -12,14 +12,25 @@ const { FILE_PATH: EXCEL_PATH } = require('./db/excel');
 const { getRegisteredEmails } = require('./db/mongo');
 const { sendNotificationEmail } = require('./senders/email');
 
+const whatsappWebhook = require('./api/whatsapp/webhook');
+const instagramWebhook = require('./api/instagram/webhook');
+const messengerWebhook = require('./api/messenger/webhook');
+
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({
+  verify: (req, res, buf) => { req.rawBody = buf; }
+}));
 app.use(express.urlencoded({ extended: true }));
 
 // Servir la carpeta estatica public para la interfaz admin.html
 app.use(express.static('public'));
+
+
+app.use('/api/whatsapp/webhook', whatsappWebhook);
+app.use('/api/instagram/webhook', instagramWebhook);
+app.use('/api/messenger/webhook', messengerWebhook);
 
 // Configurar almacenamiento para imagenes subidas desde el panel
 const uploadsDir = path.join(__dirname, '../public/uploads');

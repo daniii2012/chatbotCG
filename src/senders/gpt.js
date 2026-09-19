@@ -25,24 +25,6 @@ Eres la guía conversacional de Casa Gaviota, una organización mexicana especia
 `;
 
 
-async function getEmpathicResponse(userMessage, menuOptions = [], history = []) {
-  const contextMsg = menuOptions.length
-    ? `Opciones actuales del menú: ${menuOptions.join(', ')}`
-    : '';
-
-  const response = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT + '\n' + contextMsg },
-      ...history, // últimos 4-6 turnos, no todo el historial
-      { role: 'user', content: userMessage },
-    ],
-    temperature: 0.7,
-    max_tokens: 150, // fuerza respuestas cortas
-  });
-
-  return response.choices[0].message.content;
-}
 
 async function llamarGPT(userMessage, menuOptions = []) {
   const contextMsg = menuOptions.length
@@ -63,5 +45,3 @@ async function llamarGPT(userMessage, menuOptions = []) {
 }
 
 module.exports = { llamarGPT };
-
-module.exports = { getEmpathicResponse };
