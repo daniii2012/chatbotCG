@@ -3,23 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Casa Gaviota — Envíos Masivos</title>
+  <title>Casa Gaviota — Panel Interno</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #123249;
-      --primary-hover: #0C2434;
-      --teal: #2E8C82;
-      --teal-hover: #278077;
-      --teal-pale: #DCEEEA;
-      --bg: #F5F3EC;
+      --primary: #d63381;
+      --primary-dark: #a3225e;
+      --primary-hover: #b82a6c;
+      --teal: #16aab4;
+      --teal-hover: #12909a;
+      --teal-pale: #E1F5F4;
+      --bg: #FDF4F8;
       --card-bg: #ffffff;
-      --text: #16283A;
-      --text-muted: #6D8089;
-      --border: #DDE4E1;
-      --radius: 10px;
+      --text: #3A2430;
+      --text-muted: #8A7480;
+      --border: #F0DCE6;
+      --radius: 12px;
       --font-display: 'DM Serif Display', serif;
       --font-body: 'DM Sans', sans-serif;
     }
@@ -38,32 +39,38 @@
       min-height: 100vh;
     }
 
-    /* ---------- Panel izquierdo: bloque navy ---------- */
+    /* ---------- Panel izquierdo: degradado de marca ---------- */
     .side {
-      background: var(--primary);
-      color: #F5F3EC;
-      padding: 56px 44px;
+      background: linear-gradient(160deg, #16aab4 0%, #12909a 100%);
+      color: #FDF4F8;
+      padding: 48px 44px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       position: relative;
       overflow: hidden;
     }
-    .side-top .mark {
-      width: 46px; height: 46px;
-      border-radius: 12px;
-      background: rgba(245,243,236,0.1);
-      border: 1px solid rgba(245,243,236,0.25);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
-      margin-bottom: 28px;
+
+    .logo-badge {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 14px 18px;
+      display: inline-flex;
+      align-items: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+      margin-bottom: 30px;
+      position: relative;
+      z-index: 2;
     }
+    .logo-badge img { height: 34px; width: auto; display: block; }
+
     .side-top .eyebrow {
       font-size: 0.72rem;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: #8FCFC5;
+      color: #8FE3DE;
       margin-bottom: 14px;
+      position: relative; z-index: 2;
     }
     .side-top h1 {
       font-family: var(--font-display);
@@ -71,26 +78,36 @@
       font-size: 2.1rem;
       line-height: 1.2;
       margin-bottom: 18px;
+      position: relative; z-index: 2;
     }
     .side-top p {
       font-size: 0.92rem;
       line-height: 1.65;
-      color: rgba(245,243,236,0.72);
+      color: rgba(253,244,248,0.82);
       max-width: 34ch;
+      position: relative; z-index: 2;
     }
-    .side-flight {
+
+    /* diamante decorativo, como el detalle del isologo */
+    .deco-diamond {
       position: absolute;
-      right: -40px;
-      bottom: -30px;
-      opacity: 0.9;
+      width: 90px; height: 90px;
+      background: rgba(255,255,255,0.08);
+      transform: rotate(45deg);
+      border-radius: 18px;
     }
+    .deco-diamond.d1 { top: -30px; right: 40px; background: rgba(214,51,129,0.55); }
+    .deco-diamond.d2 { bottom: 120px; right: -20px; width: 50px; height: 50px; background: rgba(214,51,129,0.5); }
+
+    .side-flight { position: absolute; right: -30px; bottom: 90px; opacity: 0.8; z-index: 1; }
+
     .side-stats {
       display: flex;
       gap: 28px;
-      padding-top: 24px;
-      border-top: 1px solid rgba(245,243,236,0.18);
+      padding-top: 22px;
+      border-top: 1px solid rgba(253,244,248,0.25);
       position: relative;
-      z-index: 1;
+      z-index: 2;
     }
     .side-stats .stat .num {
       font-family: var(--font-display);
@@ -99,9 +116,47 @@
     }
     .side-stats .stat .lbl {
       font-size: 0.68rem;
-      color: rgba(245,243,236,0.6);
+      color: rgba(253,244,248,0.68);
       margin-top: 2px;
     }
+
+    /* ---------- Navegación del panel (aparece tras login) ---------- */
+    .side-nav {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 30px;
+      position: relative;
+      z-index: 2;
+    }
+    .side-nav.show { display: flex; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(253,244,248,0.75);
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      font-weight: 500;
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .nav-item:hover {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+    }
+    .nav-item.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(214,51,129,0.4);
+    }
+    .nav-item .ico { font-size: 1rem; }
 
     /* ---------- Panel derecho: formulario ---------- */
     .main {
@@ -111,21 +166,33 @@
       padding: 56px 48px;
       overflow-y: auto;
     }
-    .main-inner { width: 100%; max-width: 440px; }
+    .main-inner {
+      width: 100%;
+      max-width: 560px;
+      background: var(--card-bg);
+      border-radius: 18px;
+      padding: 40px;
+      box-shadow: 0 10px 34px rgba(166, 42, 108, 0.08);
+      border: 1px solid var(--border);
+    }
 
     .main-head { margin-bottom: 28px; }
     .main-head .kicker {
-      font-size: 0.72rem;
+      display: inline-block;
+      font-size: 0.68rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--teal-hover);
-      font-weight: 600;
-      margin-bottom: 6px;
+      background: var(--teal-pale);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 700;
+      margin-bottom: 10px;
     }
     .main-head h2 {
       font-family: var(--font-display);
       font-weight: 400;
-      font-size: 1.6rem;
+      font-size: 2rem;
       color: var(--primary);
     }
     .main-head p {
@@ -151,7 +218,7 @@
       border: 1.5px solid var(--border);
       border-radius: var(--radius);
       font-family: inherit;
-      font-size: 0.95rem;
+      font-size: 1.05rem;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
       color: var(--text);
@@ -159,7 +226,7 @@
     }
     input:focus, textarea:focus {
       border-color: var(--teal);
-      box-shadow: 0 0 0 3px rgba(46, 140, 130, 0.15);
+      box-shadow: 0 0 0 3px rgba(22, 170, 180, 0.15);
     }
 
     .file-dropzone {
@@ -168,7 +235,7 @@
       padding: 20px;
       text-align: center;
       cursor: pointer;
-      background: #FAFBF8;
+      background: #FFFBFD;
       transition: background 0.2s, border-color 0.2s;
       position: relative;
     }
@@ -186,17 +253,65 @@
     .dropzone-text { color: var(--text-muted); font-size: 0.86rem; }
     .dropzone-text strong { color: var(--teal-hover); }
 
-    .image-preview { margin-top: 12px; display: none; text-align: center; }
-    .image-preview img {
-      max-width: 100%; max-height: 200px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      object-fit: cover;
+    /* Lista de archivos seleccionados */
+    .file-list {
+      margin-top: 12px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
     }
+    .file-list.show { display: flex; }
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+    }
+    .file-thumb {
+      width: 44px; height: 44px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .file-icon {
+      width: 44px; height: 44px;
+      border-radius: 8px;
+      background: var(--teal-pale);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .file-info { flex: 1; min-width: 0; }
+    .file-info .name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .file-info .size { font-size: 0.74rem; color: var(--text-muted); margin-top: 2px; }
+    .file-remove {
+      border: none;
+      background: #FBEEEE;
+      color: #8C3A35;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      font-size: 0.85rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .file-remove:hover { background: #F3D5D3; }
+    .file-count { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
 
     .btn {
       width: 100%;
-      background-color: var(--teal);
+      background: linear-gradient(135deg, var(--teal) 0%, var(--teal-hover) 100%);
       color: white;
       border: none;
       padding: 14px;
@@ -204,10 +319,11 @@
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 6px 16px rgba(22,170,180,0.3);
     }
-    .btn:hover { background-color: var(--teal-hover); }
-    .btn:disabled { background-color: #cbd5e1; cursor: not-allowed; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(22,170,180,0.4); }
+    .btn:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; transform: none; }
 
     .hidden { display: none !important; }
     .alert {
@@ -218,14 +334,15 @@
       display: none;
     }
     .alert-error { background-color: #FBEEEE; color: #8C3A35; border: 1px solid #E3C6C4; }
-    .alert-success { background-color: var(--teal-pale); color: #1F6E65; border: 1px solid #B8DAD4; }
+    .alert-success { background-color: var(--teal-pale); color: #0E6E75; border: 1px solid #B8E0DE; }
 
     @media (max-width: 840px) {
       .shell { grid-template-columns: 1fr; }
-      .side { padding: 40px 32px; }
+      .side { padding: 36px 28px; }
       .side-flight { display: none; }
       .side-stats { display: none; }
-      .main { padding: 40px 24px; }
+      .main { padding: 32px 20px; }
+      .main-inner { padding: 28px; }
     }
   </style>
 </head>
@@ -233,17 +350,35 @@
 
 <div class="shell">
 
-  <!-- BLOQUE IZQUIERDO: identidad -->
+  <!-- BLOQUE IZQUIERDO: identidad + navegación -->
   <div class="side">
-    <div class="side-top">
-      <div class="mark">🕊</div>
-      <div class="eyebrow">Casa Gaviota A.C.</div>
-      <h1>Un vuelo sin<br/>violencia</h1>
-      <p>Panel interno para enviar comunicados por correo a la comunidad registrada de Casa Gaviota.</p>
+    <div class="deco-diamond d1"></div>
+    <div class="deco-diamond d2"></div>
+
+    <div>
+      <div class="side-top">
+        <div class="logo-badge">
+          <img src="https://chatbot.casagaviota.org.mx/logo-casagaviota.png" alt="Casa Gaviota" />
+        </div>
+        <div class="eyebrow">Panel interno</div>
+        <h1>Un vuelo sin<br/>violencia</h1>
+        <p>Envía comunicados por correo y mensajes de WhatsApp a la comunidad de Casa Gaviota.</p>
+      </div>
+
+      <!-- Menú de navegación, aparece tras iniciar sesión -->
+      <nav class="side-nav" id="sideNav">
+        <button class="nav-item active" id="navComunicados" onclick="switchSection('panelCard', this)">
+          <span class="ico">📧</span> Comunicados
+        </button>
+        <button class="nav-item" id="navWhatsapp" onclick="switchSection('whatsappCard', this)">
+          <span class="ico">💬</span> WhatsApp
+        </button>
+      </nav>
     </div>
-    <svg class="side-flight" width="220" height="180" viewBox="0 0 220 180" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M10 130 C 55 90, 85 150, 110 100 C 135 50, 165 110, 210 60" stroke="#2E8C82" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
-      <path d="M30 150 C 70 120, 95 165, 120 125 C 145 85, 175 130, 205 95" stroke="#F5F3EC" stroke-width="1.5" stroke-linecap="round" opacity="0.25"/>
+
+    <svg class="side-flight" width="200" height="160" viewBox="0 0 220 180" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M10 130 C 55 90, 85 150, 110 100 C 135 50, 165 110, 210 60" stroke="#8FE3DE" stroke-width="2" stroke-linecap="round" opacity="0.45"/>
+      <path d="M30 150 C 70 120, 95 165, 120 125 C 145 85, 175 130, 205 95" stroke="#FDF4F8" stroke-width="1.5" stroke-linecap="round" opacity="0.25"/>
     </svg>
     <div class="side-stats">
       <div class="stat">
@@ -280,7 +415,7 @@
         </form>
       </div>
 
-      <!-- CARD 2: FORMULARIO DE ENVÍO -->
+      <!-- CARD 2: FORMULARIO DE ENVÍO DE CORREO -->
       <div id="panelCard" class="hidden">
         <div class="main-head">
           <div class="kicker">Comunicados</div>
@@ -302,16 +437,14 @@
           </div>
 
           <div class="form-group">
-            <label>Imagen o flyer del comunicado</label>
+            <label>Imágenes, flyers o PDF del comunicado</label>
             <div class="file-dropzone">
-              <input type="file" id="imagenInput" name="imagen" accept="image/*" onchange="previewImage(event)">
+              <input type="file" id="imagenInput" name="imagen" accept="image/*,application/pdf" multiple onchange="emailFiles.handle(event)">
               <div class="dropzone-text">
-                <span>📷 <strong>Haz clic aquí</strong> o arrastra una imagen (.jpg, .png)</span>
+                <span>📎 <strong>Haz clic aquí</strong> o arrastra uno o varios archivos (.jpg, .png, .pdf)</span>
               </div>
             </div>
-            <div id="imagePreviewContainer" class="image-preview">
-              <img id="imagePreview" src="" alt="Previsualización">
-            </div>
+            <div id="fileList" class="file-list"></div>
           </div>
 
           <div class="form-group">
@@ -320,6 +453,42 @@
           </div>
 
           <button type="submit" id="submitBtn" class="btn">Enviar comunicado</button>
+        </form>
+      </div>
+
+      <!-- CARD 3: ENVÍO MANUAL DE WHATSAPP -->
+      <div id="whatsappCard" class="hidden">
+        <div class="main-head">
+          <div class="kicker">WhatsApp</div>
+          <h2>Enviar mensaje manual</h2>
+          <p>Manda un mensaje directo desde el número del bot.</p>
+        </div>
+
+        <div id="whatsappAlert" class="alert"></div>
+
+        <form id="whatsappForm" onsubmit="handleSendWhatsapp(event)">
+          <div class="form-group">
+            <label for="waNumero">Número de WhatsApp *</label>
+            <input type="text" id="waNumero" name="numero" required placeholder="Ej. 5215512345678 (con código de país)">
+          </div>
+
+          <div class="form-group">
+            <label for="waMensaje">Mensaje *</label>
+            <textarea id="waMensaje" name="mensaje" rows="4" required placeholder="Escribe el mensaje..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Imágenes o PDF (opcional)</label>
+            <div class="file-dropzone">
+              <input type="file" id="waArchivosInput" name="archivos" accept="image/*,application/pdf" multiple onchange="waFiles.handle(event)">
+              <div class="dropzone-text">
+                <span>📎 <strong>Haz clic aquí</strong> o arrastra uno o varios archivos (.jpg, .png, .pdf)</span>
+              </div>
+            </div>
+            <div id="waFileList" class="file-list"></div>
+          </div>
+
+          <button type="submit" id="waSubmitBtn" class="btn">Enviar mensaje</button>
         </form>
       </div>
 
@@ -349,6 +518,7 @@
         if (data.success) {
           document.getElementById('loginCard').classList.add('hidden');
           document.getElementById('panelCard').classList.remove('hidden');
+          document.getElementById('sideNav').classList.add('show');
         } else {
           alertBox.innerText = data.error || 'Contraseña incorrecta';
           alertBox.style.display = 'block';
@@ -359,25 +529,123 @@
       }
     }
 
-    // Previsualizar la imagen antes de subirla
-    function previewImage(event) {
-      const file = event.target.files[0];
-      const previewContainer = document.getElementById('imagePreviewContainer');
-      const previewImg = document.getElementById('imagePreview');
+    // Cambiar entre secciones usando el menú lateral
+    function switchSection(sectionId, btnEl) {
+      document.getElementById('panelCard').classList.add('hidden');
+      document.getElementById('whatsappCard').classList.add('hidden');
+      document.getElementById(sectionId).classList.remove('hidden');
 
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          previewImg.src = e.target.result;
-          previewContainer.style.display = 'block';
-        }
-        reader.readAsDataURL(file);
-      } else {
-        previewContainer.style.display = 'none';
-      }
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      btnEl.classList.add('active');
     }
 
-    // Envío del formulario
+    // ---------- Manejo de múltiples archivos (imágenes y PDF) ----------
+    // Se usa para el formulario de correo y para el de WhatsApp
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function createFileManager(inputId, listId) {
+      let files = [];
+      const input = document.getElementById(inputId);
+      const list = document.getElementById(listId);
+
+      // Mantiene el input sincronizado con la lista, para que FormData envíe todos los archivos
+      function sync() {
+        const dt = new DataTransfer();
+        files.forEach(f => dt.items.add(f));
+        input.files = dt.files;
+      }
+
+      function remove(index) {
+        files.splice(index, 1);
+        sync();
+        render();
+      }
+
+      function render() {
+        list.innerHTML = '';
+
+        if (files.length === 0) {
+          list.classList.remove('show');
+          return;
+        }
+
+        list.classList.add('show');
+
+        files.forEach((file, i) => {
+          const item = document.createElement('div');
+          item.className = 'file-item';
+
+          let visual;
+          if (file.type.startsWith('image/')) {
+            visual = document.createElement('img');
+            visual.className = 'file-thumb';
+            visual.alt = file.name;
+            const reader = new FileReader();
+            reader.onload = e => { visual.src = e.target.result; };
+            reader.readAsDataURL(file);
+          } else {
+            visual = document.createElement('div');
+            visual.className = 'file-icon';
+            visual.textContent = file.type === 'application/pdf' ? '📄' : '📎';
+          }
+
+          const info = document.createElement('div');
+          info.className = 'file-info';
+          const name = document.createElement('div');
+          name.className = 'name';
+          name.textContent = file.name;
+          const size = document.createElement('div');
+          size.className = 'size';
+          size.textContent = formatSize(file.size);
+          info.appendChild(name);
+          info.appendChild(size);
+
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'file-remove';
+          btn.title = 'Quitar archivo';
+          btn.textContent = '✕';
+          btn.onclick = () => remove(i);
+
+          item.appendChild(visual);
+          item.appendChild(info);
+          item.appendChild(btn);
+          list.appendChild(item);
+        });
+
+        const count = document.createElement('div');
+        count.className = 'file-count';
+        count.textContent = files.length + (files.length === 1 ? ' archivo seleccionado' : ' archivos seleccionados');
+        list.appendChild(count);
+      }
+
+      return {
+        handle(event) {
+          Array.from(event.target.files).forEach(f => {
+            const repetido = files.some(x =>
+              x.name === f.name && x.size === f.size && x.lastModified === f.lastModified
+            );
+            if (!repetido) files.push(f);
+          });
+          sync();
+          render();
+        },
+        clear() {
+          files = [];
+          sync();
+          render();
+        }
+      };
+    }
+
+    const emailFiles = createFileManager('imagenInput', 'fileList');
+    const waFiles = createFileManager('waArchivosInput', 'waFileList');
+
+    // Envío del formulario de campaña por correo
     async function handleSendCampaign(e) {
       e.preventDefault();
       
@@ -404,7 +672,7 @@
           statusAlert.innerText = `¡Campaña enviada con éxito a ${data.total} usuarias!`;
           statusAlert.style.display = 'block';
           form.reset();
-          document.getElementById('imagePreviewContainer').style.display = 'none';
+          emailFiles.clear();
         } else {
           statusAlert.className = 'alert alert-error';
           statusAlert.innerText = 'Error: ' + (data.error || 'No se pudo enviar el comunicado');
@@ -419,6 +687,50 @@
         submitBtn.innerText = 'Enviar comunicado';
       }
     }
+
+    // Envío manual de WhatsApp (ahora con archivos, por eso usa FormData)
+    async function handleSendWhatsapp(e) {
+      e.preventDefault();
+
+      const form = document.getElementById('whatsappForm');
+      const submitBtn = document.getElementById('waSubmitBtn');
+      const alertBox = document.getElementById('whatsappAlert');
+
+      const formData = new FormData(form);
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Enviando...';
+      alertBox.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/admin/send-whatsapp', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          alertBox.className = 'alert alert-success';
+          alertBox.innerText = 'Mensaje enviado correctamente.';
+          alertBox.style.display = 'block';
+          form.reset();
+          waFiles.clear();
+        } else {
+          alertBox.className = 'alert alert-error';
+          alertBox.innerText = 'Error: ' + (data.error || 'No se pudo enviar');
+          alertBox.style.display = 'block';
+        }
+      } catch (err) {
+        alertBox.className = 'alert alert-error';
+        alertBox.innerText = 'Error de red o servidor';
+        alertBox.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Enviar mensaje';
+      }
+    }
   </script>
+
 </body>
 </html>

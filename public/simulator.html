@@ -413,7 +413,8 @@
 </div>
 
 <script>
-const API = 'https://casa-gaviota-chatbot.onrender.com';
+// const API = 'https://casa-gaviota-chatbot.onrender.com';
+const API = '';
 let userId = null;
 let activeChannel = 'simulator';
 
@@ -454,7 +455,7 @@ async function sendMessage() {
  }, 600);
  } catch (err) {
  showTyping(false);
- appendBubble('bot', '⚠️ Error al conectar con el servidor. ¿Está corriendo Node en localhost:3000?');
+ appendBubble('bot', ' Error al conectar con el servidor. ¿Está corriendo Node en localhost:3000?');
  }
 }
 
