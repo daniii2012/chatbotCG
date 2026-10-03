@@ -6,6 +6,10 @@ const fs = require('fs');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 
+const { getCampaignTemplate } = require('./utils/emailTemplates/campaign');
+
+const { sendWhatsAppMessage } = require('./api/whatsapp/send');
+
 const { processMessage } = require('./flows/menu');
 const { getSession, getAllSessions, resetSession } = require('./db/sessions');
 const { FILE_PATH: EXCEL_PATH } = require('./db/excel');
@@ -33,7 +37,7 @@ app.use('/api/whatsapp/webhook', whatsappWebhook);
 app.use('/api/instagram/webhook', instagramWebhook);
 app.use('/api/messenger/webhook', messengerWebhook);
 
-// Configurar almacenamiento para imagenes subidas desde el panel
+// Configurar almacenamiento para archivos subidos desde el panel
 const uploadsDir = path.join(__dirname, '../public/uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -43,10 +47,24 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
-    cb(null, `flyer-${Date.now()}${ext}`);
+    // Nombre único para que varios archivos subidos a la vez no se pisen
+    cb(null, `archivo-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
   }
 });
-const upload = multer({ storage });
+
+// Solo se permiten imágenes y PDF
+const upload = multer({
+  storage,
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15 MB por archivo
+  fileFilter: (req, file, cb) => {
+    const permitido =
+      file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf';
+    if (!permitido) {
+      return cb(new Error('Solo se permiten imágenes y archivos PDF.'));
+    }
+    cb(null, true);
+  }
+});
 
 // Middleware de autenticacion para endpoints de API
 function requireApiKey(req, res, next) {
@@ -83,7 +101,7 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 // Envio de correos desde la interfaz admin
-app.post('/api/admin/send-campaign', upload.single('imagen'), async (req, res) => {
+app.post('/api/admin/send-campaign', upload.array('imagen', 10), async (req, res) => {
   try {
     const { asunto, mensaje, enlace } = req.body;
 
@@ -97,39 +115,39 @@ app.post('/api/admin/send-campaign', upload.single('imagen'), async (req, res) =
       return res.status(400).json({ success: false, error: 'No hay correos registrados en la base de datos.' });
     }
 
-    // Construccion del banner/imagen en el HTML si se subio un archivo
-    let imageHtml = '';
-    if (req.file) {
-      const host = req.get('host');
-      const protocol = req.protocol;
-      const imageUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
-      imageHtml = `<div style="text-align: center; margin: 20px 0;"><img src="${imageUrl}" alt="Flyer" style="max-width: 100%; height: auto; border-radius: 8px;"></div>`;
+    // Separar imágenes y PDF
+    const archivos = req.files || [];
+    const imagenes = archivos.filter(f => f.mimetype.startsWith('image/'));
+    const pdfs = archivos.filter(f => f.mimetype === 'application/pdf');
+
+    // Límite de peso total de los PDF adjuntos
+    const pesoPdfs = pdfs.reduce((total, f) => total + f.size, 0);
+    if (pesoPdfs > 20 * 1024 * 1024) {
+      pdfs.forEach(f => fs.unlink(f.path, () => {}));
+      return res.status(400).json({ success: false, error: 'Los PDF pesan más de 20 MB en total. Sube archivos más ligeros.' });
     }
 
-    // Construccion de boton si hay un enlace opcional
-    let buttonHtml = '';
-    if (enlace) {
-      buttonHtml = `
-        <div style="text-align: center; margin-top: 25px;">
-          <a href="${enlace}" target="_blank" style="background-color: #2b5b84; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Ver mas informacion</a>
-        </div>
-      `;
-    }
+    const baseUrl = `${req.protocol}://${req.get('host')}/uploads`;
 
-    const htmlBody = `
-      <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
-        <h2 style="color: #2b5b84; text-align: center;">Casa Gaviota A.C.</h2>
-        <hr style="border: none; border-top: 1px solid #eee; margin: 15px 0;">
-        <p style="font-size: 16px; line-height: 1.5; white-space: pre-wrap;">${mensaje}</p>
-        ${imageHtml}
-        ${buttonHtml}
-      </div>
-    `;
+    // Los PDF se mandan como adjuntos reales
+    const adjuntos = pdfs.map(f => ({
+      filename: Buffer.from(f.originalname, 'latin1').toString('utf8'),
+      content: fs.readFileSync(f.path),
+    }));
 
-    // Enviar correo a la lista recuperada de Mongo
+    // HTML del correo con el nuevo diseño
+    const htmlBody = getCampaignTemplate({
+      mensaje,
+      imageUrls: imagenes.map(f => `${baseUrl}/${f.filename}`),
+      enlace,
+    });
+
     for (const email of destinatarios) {
-      await sendNotificationEmail(email, asunto, htmlBody);
+      await sendNotificationEmail(email, asunto, htmlBody, adjuntos);
     }
+
+    // Los PDF ya se enviaron como adjuntos: se borran del servidor
+    pdfs.forEach(f => fs.unlink(f.path, () => {}));
 
     res.json({ success: true, total: destinatarios.length });
   } catch (error) {
@@ -249,6 +267,43 @@ function buildChannelLogs(channel, userId, userMsg, botMsg) {
     timestamp: ts,
   };
 }
+
+// Envío manual de WhatsApp desde el panel admin
+// Recibe multipart/form-data, por eso necesita multer
+app.post('/api/admin/send-whatsapp', upload.array('archivos', 10), async (req, res) => {
+  try {
+    const { numero, mensaje } = req.body;
+
+    if (!numero || !mensaje) {
+      return res.status(400).json({ success: false, error: 'El número y el mensaje son obligatorios.' });
+    }
+
+    // Por ahora solo se envía el texto. Los archivos ya llegan en req.files,
+    // falta que sendWhatsAppMessage sepa mandarlos (ver src/api/whatsapp/send.js).
+    if (req.files && req.files.length > 0) {
+      console.log(`WhatsApp manual: se recibieron ${req.files.length} archivo(s), aún no se envían.`);
+    }
+
+    const ok = await sendWhatsAppMessage(numero, mensaje);
+
+    if (!ok) {
+      return res.status(500).json({ success: false, error: 'No se pudo enviar el mensaje. Revisa las credenciales de WhatsApp.' });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error al enviar WhatsApp manual:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Manejo de errores de multer (archivo no permitido, muy pesado, etc.)
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError || err.message === 'Solo se permiten imágenes y archivos PDF.') {
+    return res.status(400).json({ success: false, error: err.message });
+  }
+  next(err);
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
