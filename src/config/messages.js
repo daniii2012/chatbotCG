@@ -1,7 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────
-// MENSAJES DEL CHATBOT — Casa Gaviota
-// ─────────────────────────────────────────────────────────────────────
-
 const MESSAGES = {
   bienvenida: `¡Hola! 👋 Te estamos comunicando al chat bot de *Casa Gaviota — Un vuelo sin violencia A.C.*
 
