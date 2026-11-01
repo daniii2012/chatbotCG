@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+const { enviarRegistroOnline } = require('./sheetsOnline');
+
 const mongoURI = process.env.MONGO_URI || process.env.mongoURI;
 
 if (mongoURI) {
@@ -22,6 +24,36 @@ const registroSchema = new mongoose.Schema({
 
 const Registro = mongoose.model('Registro', registroSchema);
 
+// ─── Configuración editable desde el panel admin (precios, números, convocatorias...) ───
+const configSchema = new mongoose.Schema({
+  clave: { type: String, required: true, unique: true },
+  valor: mongoose.Schema.Types.Mixed,
+}, { timestamps: true });
+const ConfigDoc = mongoose.model('Config', configSchema);
+
+const hayMongo = Boolean(mongoURI);
+
+async function leerConfigRemota() {
+  if (!hayMongo) return null;
+  try {
+    const docs = await ConfigDoc.find({});
+    return Object.fromEntries(docs.map((d) => [d.clave, d.valor]));
+  } catch (err) {
+    console.error('[CONFIG] No se pudo leer la configuración de Mongo:', err.message);
+    return null;
+  }
+}
+
+async function guardarConfigRemota(clave, valor) {
+  if (!hayMongo) throw new Error('Mongo no está configurado');
+  await ConfigDoc.findOneAndUpdate({ clave }, { valor }, { upsert: true });
+}
+
+async function borrarConfigRemota(clave) {
+  if (!hayMongo) return;
+  await ConfigDoc.deleteOne({ clave });
+}
+
 async function saveBotRecord(flow, sessionData, userId) {
   const { correo, telefono, nombre } = sessionData || {};
   
@@ -29,6 +61,9 @@ async function saveBotRecord(flow, sessionData, userId) {
     console.warn(`Registro omitido: usuario ${userId} en flujo '${flow}' no completo correo o telefono.`);
     return;
   }
+
+  // Copia exacta en el Excel en línea (no bloquea ni depende de que Mongo funcione)
+  enviarRegistroOnline(flow, sessionData, userId);
 
   try {
     const nuevoRegistro = new Registro({
@@ -59,4 +94,4 @@ async function getRegisteredEmails() {
   }  
 }
 
-module.exports = { saveBotRecord, getRegisteredEmails };
+module.exports = { saveBotRecord, getRegisteredEmails, leerConfigRemota, guardarConfigRemota, borrarConfigRemota };

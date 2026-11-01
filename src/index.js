@@ -15,6 +15,8 @@ const { getSession, getAllSessions, resetSession } = require('./db/sessions');
 const { FILE_PATH: EXCEL_PATH } = require('./db/excel');
 const { getRegisteredEmails } = require('./db/mongo');
 const { sendNotificationEmail } = require('./senders/email');
+const crypto = require('crypto');
+const { iniciarConfig, guardarSeccion, restaurarSeccion, describirConfig } = require('./config/configStore');
 
 const whatsappWebhook = require('./api/whatsapp/webhook');
 const instagramWebhook = require('./api/instagram/webhook');
@@ -100,6 +102,37 @@ app.post('/api/admin/login', (req, res) => {
   return res.status(401).json({ success: false, error: 'Contrasena incorrecta' });
 });
 
+// Protege las rutas de edición de datos: la contraseña viaja en el encabezado x-admin-password
+function requireAdmin(req, res, next) {
+  const pass = process.env.ADMIN_PASSWORD || process.env.ADMIN_API_KEY;
+  if (!pass) return res.status(500).json({ success: false, error: 'Contraseña de administrador no configurada' });
+  let enviada = '';
+  try { enviada = decodeURIComponent(req.get('x-admin-password') || ''); } catch { enviada = ''; }
+  const a = Buffer.from(enviada);
+  const b = Buffer.from(pass);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return res.status(401).json({ success: false, error: 'Sesión no válida. Vuelve a ingresar al panel.' });
+  }
+  next();
+}
+
+// Datos del chatbot editables desde el panel (precios, convocatorias, números de emergencia...)
+app.get('/api/admin/config', requireAdmin, (req, res) => {
+  res.json({ success: true, ...describirConfig() });
+});
+
+app.put('/api/admin/config/:key', requireAdmin, async (req, res) => {
+  const r = await guardarSeccion(req.params.key, req.body?.valor);
+  if (!r.ok) return res.status(400).json({ success: false, error: r.error });
+  res.json({ success: true, valor: r.valor, aviso: r.aviso });
+});
+
+app.post('/api/admin/config/:key/restaurar', requireAdmin, async (req, res) => {
+  const r = await restaurarSeccion(req.params.key);
+  if (!r.ok) return res.status(400).json({ success: false, error: r.error });
+  res.json({ success: true, valor: r.valor });
+});
+
 // Envio de correos desde la interfaz admin
 app.post('/api/admin/send-campaign', upload.array('imagen', 10), async (req, res) => {
   try {
@@ -158,14 +191,14 @@ app.post('/api/admin/send-campaign', upload.array('imagen', 10), async (req, res
 
 // ─── POST /api/message ────────────────────────────────────────────────────
 app.post('/api/message', async (req, res) => {
-  const { userId, message, channel = 'simulator' } = req.body;
+  const { userId, message, channel = 'simulator', media = null } = req.body;
 
   if (!userId || !message) {
     return res.status(400).json({ error: 'userId y message son requeridos' });
   }
 
   try {
-    const botResponse = await processMessage(userId, message);
+    const botResponse = await processMessage(userId, message, media);
     const session = getSession(userId);
 
     const channelLogs = buildChannelLogs(channel, userId, message, botResponse);
@@ -306,6 +339,9 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
+// Carga lo que el equipo editó desde el panel (copia local al instante, Mongo en cuanto conecta)
+iniciarConfig().catch((err) => console.error('[CONFIG] Error al cargar la configuración:', err.message));
+
 app.listen(PORT, () => {
   console.log(`Casa Gaviota Chatbot corriendo en http://localhost:${PORT}`);
 });

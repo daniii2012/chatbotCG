@@ -3,19 +3,33 @@ const { updateSession } = require('../db/sessions');
 const { runQuestionnaire } = require('./questionnaireEngine');
 const { SOCIOECONOMICO_PREGUNTAS, EMPODERAMIENTO_PREGUNTAS } = require('../config/questionnaires');
 const { appendEmpoderamientoRecord } = require('../db/excel');
-const { esCorreoValido, esTelefonoValido, esEdadValida } = require('../utils/validators');
+const { esCorreoValido, esTelefonoValido, validarNombreCompleto, validarFechaNacimiento } = require('../utils/validators');
+const { alertarComprobante } = require('../utils/alertaPago');
 
-async function handlePsico(session, userMessage) {
+async function handlePsico(session, userMessage, media) {
   const { step, data } = session;
   let response = '';
   let nextStep = step;
 
   switch (step) {
-    case 'psico_nombre':
-      data.nombre = userMessage;
+    case 'psico_motivo':
+      data.motivoConsulta = userMessage;
+      nextStep = 'psico_nombre';
+      response = M.psico.pedirNombre;
+      break;
+
+    case 'psico_nombre': {
+      const r = validarNombreCompleto(userMessage);
+      if (!r.ok) {
+        response = r.error + '\n\n' + M.psico.pedirNombre;
+        break;
+      }
+      data.nombre = r.valor;
+      data.modalidad = 'En línea'; // La atención psicológica es solo en línea
       nextStep = 'psico_telefono';
       response = M.psico.pedirTelefono;
       break;
+    }
 
     case 'psico_telefono':
       if (!esTelefonoValido(userMessage)) {
@@ -37,21 +51,24 @@ async function handlePsico(session, userMessage) {
       response = M.psico.pedirResidencia;
       break;
 
-    case 'psico_residencia':
+        case 'psico_residencia':
       data.residencia = userMessage;
-      nextStep = 'psico_edad';
-      response = M.psico.pedirEdad;
+      nextStep = 'psico_fechaNacimiento';
+      response = M.psico.pedirFechaNacimiento;
       break;
 
-    case 'psico_edad':
-      if (!esEdadValida(userMessage)) {
-        response = '⚠️ Escribe tu edad solo con números (entre 12 y 100).\n\n' + M.psico.pedirEdad;
+    case 'psico_fechaNacimiento': {
+      const r = validarFechaNacimiento(userMessage);
+      if (!r.ok) {
+        response = r.error + '\n\n' + M.psico.pedirFechaNacimiento;
         break;
       }
-      data.edad = userMessage;
+      data.fechaNacimiento = r.fecha;
+      data.edad = r.edad; // se calcula sola, para no perder la columna Edad del Excel
       nextStep = 'psico_cuota';
       response = M.psico.preguntarCuota(data.nombre);
       break;
+    }
 
     case 'psico_cuota':
       if (userMessage === '1') {
@@ -67,22 +84,13 @@ async function handlePsico(session, userMessage) {
       break;
 
     case 'psico_cuenta_enviada':
-      if (userMessage === '1') {
-        nextStep = 'psico_modalidad';
-        response = M.psico.pedirModalidad;
-      } else {
-        response = M.psico.enviarCuenta;
-      }
-      break;
-
-    case 'psico_modalidad':
-      if (userMessage === '1' || userMessage === '2') {
-        data.modalidad = userMessage === '1' ? 'Presencial' : 'En línea';
+      if (esComprobante(userMessage, media)) {
+        await alertarComprobante(session, 'psico', media); // avisa al equipo para revisión manual
         nextStep = 'psico_empoderamiento';
         const primera = runQuestionnaire(session, null, EMPODERAMIENTO_PREGUNTAS, 'empIndex');
-        response = M.empoderamientoIntro + '\n\n' + primera.response;
+        response = M.comprobanteRecibido + '\n\n' + M.empoderamientoIntro + '\n\n' + primera.response;
       } else {
-        response = M.noEntiendo + '\n\n' + M.psico.pedirModalidad;
+        response = M.recordarComprobante;
       }
       break;
 

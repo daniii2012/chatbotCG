@@ -2,19 +2,26 @@ const { MESSAGES: M } = require('../config/messages');
 const { updateSession } = require('../db/sessions');
 const { runQuestionnaire } = require('./questionnaireEngine');
 const { SOCIOECONOMICO_PREGUNTAS, LEGAL_FAMILIAR_PREGUNTAS } = require('../config/questionnaires');
-const { esCorreoValido, esTelefonoValido, esEdadValida } = require('../utils/validators');
+const { esCorreoValido, esTelefonoValido, validarNombreCompleto, validarFechaNacimiento } = require('../utils/validators');
+const { alertarComprobante } = require('../utils/alertaPago');
 
-async function handleLegal(session, userMessage) {
+async function handleLegal(session, userMessage, media) {
   const { step, data } = session;
   let response = '';
   let nextStep = step;
 
   switch (step) {
-    case 'legal_nombre':
-      data.nombre = userMessage;
+    case 'legal_nombre': {
+      const r = validarNombreCompleto(userMessage);
+      if (!r.ok) {
+        response = r.error + '\n\n' + M.legal.pedirNombre;
+        break;
+      }
+      data.nombre = r.valor;
       nextStep = 'legal_telefono';
       response = M.legal.pedirTelefono;
       break;
+    }
 
     case 'legal_telefono':
       if (!esTelefonoValido(userMessage)) {
@@ -36,24 +43,27 @@ async function handleLegal(session, userMessage) {
       response = M.legal.pedirResidencia;
       break;
 
-    case 'legal_residencia':
+        case 'legal_residencia':
       data.residencia = userMessage;
-      nextStep = 'legal_edad';
-      response = M.legal.pedirEdad;
+      nextStep = 'legal_fechaNacimiento';
+      response = M.legal.pedirFechaNacimiento;
       break;
 
-    case 'legal_edad':
-      if (!esEdadValida(userMessage)) {
-        response = '⚠️ Escribe tu edad solo con números (entre 12 y 100).\n\n' + M.legal.pedirEdad;
+    case 'legal_fechaNacimiento': {
+      const r = validarFechaNacimiento(userMessage);
+      if (!r.ok) {
+        response = r.error + '\n\n' + M.legal.pedirFechaNacimiento;
         break;
       }
-      data.edad = userMessage;
+      data.fechaNacimiento = r.fecha;
+      data.edad = r.edad; // se calcula sola, para no perder la columna Edad del Excel
       nextStep = 'legal_familiar';
       {
         const primera = runQuestionnaire(session, null, LEGAL_FAMILIAR_PREGUNTAS, 'legalIndex');
         response = M.legalFamiliarIntro + '\n\n' + primera.response;
       }
       break;
+    }
 
     case 'legal_familiar': {
       const resultado = runQuestionnaire(session, userMessage, LEGAL_FAMILIAR_PREGUNTAS, 'legalIndex');
@@ -80,21 +90,13 @@ async function handleLegal(session, userMessage) {
       break;
 
     case 'legal_cuenta_enviada':
-      if (userMessage === '1') {
-        nextStep = 'legal_modalidad';
-        response = M.legal.pedirModalidad;
-      } else {
-        response = M.legal.enviarCuenta;
-      }
-      break;
-
-    case 'legal_modalidad':
-      if (userMessage === '1' || userMessage === '2') {
-        data.modalidad = userMessage === '1' ? 'Presencial' : 'En línea';
+      if (esComprobante(userMessage, media)) {
+        await alertarComprobante(session, 'legal', media); // avisa al equipo para revisión manual
+        data.modalidad = 'En línea'; // la asesoría legal es solo en línea
         nextStep = 'legal_fin';
-        response = M.legal.asignacion;
+        response = M.comprobanteRecibido + '\n\n' + M.legal.asignacion;
       } else {
-        response = M.noEntiendo + '\n\n' + M.legal.pedirModalidad;
+        response = M.recordarComprobante;
       }
       break;
 

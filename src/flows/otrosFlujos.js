@@ -1,22 +1,32 @@
 const { MESSAGES: M } = require('../config/messages');
+const { DATOS, TEXTOS } = require('../config/datos');
 const { updateSession } = require('../db/sessions');
 const { runQuestionnaire } = require('./questionnaireEngine');
 const { EMPRESARIAL_PREGUNTAS } = require('../config/questionnaires');
-const { esCorreoValido, esTelefonoValido, esEdadValida } = require('../utils/validators');
+const { esCorreoValido, esTelefonoValido, validarNombreCompleto, validarFechaNacimiento } = require('../utils/validators');
+const { alertarComprobante, avisarDonativoEspecie } = require('../utils/alertaPago');
 
-const PROGRAMAS_EMPECO = { '1': 'Capacitación para el trabajo', '2': 'Belleza por un futuro', '3': 'Microemprendimiento', '4': 'Vinculación laboral' };
+const T = TEXTOS;
+
+// Los cursos salen de config/datos.js (cursosEmpoderamiento)
 
 // ─── BIODECODIFICACIÓN ────────────────────────────────────────────────────────
-async function handleBio(session, userMessage) {
+async function handleBio(session, userMessage, media) {
   const { step, data } = session;
   let response = '', nextStep = step;
 
   switch (step) {
-    case 'bio_nombre':
-      data.nombre = userMessage;
+    case 'bio_nombre': {
+      const r = validarNombreCompleto(userMessage);
+      if (!r.ok) {
+        response = r.error + '\n\n' + M.bio.pedirNombre;
+        break;
+      }
+      data.nombre = r.valor;
       nextStep = 'bio_telefono';
       response = M.bio.pedirTelefono;
       break;
+    }
 
     case 'bio_telefono':
       if (!esTelefonoValido(userMessage)) {
@@ -38,26 +48,39 @@ async function handleBio(session, userMessage) {
       response = M.bio.pedirResidencia;
       break;
 
-    case 'bio_residencia':
+        case 'bio_residencia':
       data.residencia = userMessage;
-      nextStep = 'bio_edad';
-      response = M.bio.pedirEdad;
+      nextStep = 'bio_fechaNacimiento';
+      response = M.bio.pedirFechaNacimiento;
       break;
 
-    case 'bio_edad':
-      if (!esEdadValida(userMessage)) {
-        response = '⚠️ Escribe tu edad solo con números (entre 12 y 100).\n\n' + M.bio.pedirEdad;
+    case 'bio_fechaNacimiento': {
+      const r = validarFechaNacimiento(userMessage);
+      if (!r.ok) {
+        response = r.error + '\n\n' + M.bio.pedirFechaNacimiento;
         break;
       }
-      data.edad = userMessage;
+      data.fechaNacimiento = r.fecha;
+      data.edad = r.edad; // se calcula sola, para no perder la columna Edad del Excel
       nextStep = 'bio_agendar';
       response = M.bio.preguntarAgendar(data.nombre);
       break;
+    }
 
     case 'bio_agendar':
-      if (userMessage === '1') { nextStep = 'bio_fin'; response = M.bio.agendarSi; }
+      if (userMessage === '1') { nextStep = 'bio_comprobante'; response = M.bio.agendarSi; }
       else if (userMessage === '2') { nextStep = 'bio_fin'; response = M.bio.agendarNo; }
       else { response = M.noEntiendo + '\n\n' + M.bio.preguntarAgendar(data.nombre); }
+      break;
+
+    case 'bio_comprobante':
+      if (esComprobante(userMessage, media)) {
+        await alertarComprobante(session, 'bio', media);
+        nextStep = 'bio_fin';
+        response = M.comprobanteRecibido + '\n\nEn breve te contactamos para asignarte horario con la terapeuta.\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú';
+      } else {
+        response = M.recordarComprobante;
+      }
       break;
 
     case 'bio_fin': nextStep = 'menu'; response = M.bienvenida; break;
@@ -68,22 +91,91 @@ async function handleBio(session, userMessage) {
   return response;
 }
 
-// ─── STANDUP ──────────────────────────────────────────────────────────────────
+// ─── TALLER DE STAND UP CONTRA EL ACOSO CALLEJERO ─────────────────────────────
+// Flujo: modalidad -> número de asistentes (se valida el mínimo) -> datos -> fin
+// Ya NO se ofrece la sesión individual de los jueves.
 async function handleStandup(session, userMessage) {
   const { step, data } = session;
   let response = '', nextStep = step;
 
   switch (step) {
-    case 'standup_grupo':
-      if (userMessage === '1') { nextStep = 'standup_fin'; response = M.standup.menosCincuenta; }
-      else if (userMessage === '2') { nextStep = 'standup_datos_grupo'; response = M.standup.masCincuenta; }
-      else { response = M.noEntiendo + '\n\n' + M.standup.intro; }
+    case 'standup_modalidad':
+      if (userMessage === '1' || userMessage === '2') {
+        data.modalidad = userMessage === '1' ? 'Presencial' : 'En línea';
+        nextStep = 'standup_asistentes';
+        response = T.standup.pedirAsistentes;
+      } else {
+        response = M.noEntiendo + '\n\n' + T.standup.intro;
+      }
       break;
-    case 'standup_datos_grupo':
-      data.datosGrupo = userMessage;
+
+    case 'standup_asistentes': {
+      const m = userMessage.match(/\d+/);
+      if (!m) {
+        response = T.standup.errorAsistentes + '\n\n' + T.standup.pedirAsistentes;
+        break;
+      }
+      const n = parseInt(m[0], 10);
+      const min = data.modalidad === 'Presencial' ? DATOS.standUp.minimoPresencial : DATOS.standUp.minimoEnLinea;
+      data.asistentes = n;
+
+      if (n < min) {
+        // No cumple el mínimo: no se agenda, se regresa al menú
+        nextStep = 'menu';
+        response = T.standup.noCumpleMinimo(data.modalidad, min, n) + '\n\n' + M.bienvenida;
+      } else {
+        nextStep = 'standup_nombre';
+        response = T.standup.pedirNombre;
+      }
+      break;
+    }
+
+    case 'standup_nombre': {
+      const r = validarNombreCompleto(userMessage);
+      if (!r.ok) {
+        response = r.error + '\n\n' + T.standup.pedirNombre;
+        break;
+      }
+      data.nombre = r.valor;
+      nextStep = 'standup_telefono';
+      response = T.standup.pedirTelefono;
+      break;
+    }
+
+    case 'standup_telefono':
+      if (!esTelefonoValido(userMessage)) {
+        response = '⚠️ Ese teléfono no parece válido, debe tener 10 dígitos.\n\n' + T.standup.pedirTelefono;
+        break;
+      }
+      data.telefono = userMessage;
+      nextStep = 'standup_correo';
+      response = T.standup.pedirCorreo;
+      break;
+
+    case 'standup_correo':
+      if (!esCorreoValido(userMessage)) {
+        response = '⚠️ Ese correo no parece válido, revisa el formato (ejemplo@dominio.com).\n\n' + T.standup.pedirCorreo;
+        break;
+      }
+      data.correo = userMessage;
+      nextStep = 'standup_institucion';
+      response = T.standup.pedirInstitucion;
+      break;
+
+    case 'standup_institucion':
+      data.institucion = userMessage;
+      nextStep = 'standup_cargo';
+      response = T.standup.pedirCargo;
+      break;
+
+    case 'standup_cargo':
+      data.cargo = userMessage;
+      // Resumen en `datosGrupo` por compatibilidad con la columna que ya existía
+      data.datosGrupo = `${data.institucion} | ${data.cargo} | ${data.modalidad} | ${data.asistentes} asistentes`;
       nextStep = 'standup_fin';
-      response = M.standup.masCincuentaConfirm;
+      response = T.standup.confirmacion(data.nombre);
       break;
+
     case 'standup_fin': nextStep = 'menu'; response = M.bienvenida; break;
     default: nextStep = 'menu'; response = M.bienvenida;
   }
@@ -99,20 +191,26 @@ async function handleEmpEco(session, userMessage) {
 
   switch (step) {
     case 'empeco_programa':
-      if (PROGRAMAS_EMPECO[userMessage]) {
-        data.programa = PROGRAMAS_EMPECO[userMessage];
+      if (T.empEco.programas[userMessage]) {
+        data.programa = T.empEco.programas[userMessage];
         nextStep = 'empeco_nombre';
         response = M.empEco.pedirNombre;
       } else {
-        response = M.noEntiendo + '\n\n' + M.empEco.inicio;
+        response = M.noEntiendo + '\n\n' + T.empEco.inicio;
       }
       break;
 
-    case 'empeco_nombre':
-      data.nombre = userMessage;
+    case 'empeco_nombre': {
+      const r = validarNombreCompleto(userMessage);
+      if (!r.ok) {
+        response = r.error + '\n\n' + M.empEco.pedirNombre;
+        break;
+      }
+      data.nombre = r.valor;
       nextStep = 'empeco_telefono';
       response = M.empEco.pedirTelefono;
       break;
+    }
 
     case 'empeco_telefono':
       if (!esTelefonoValido(userMessage)) {
@@ -138,11 +236,17 @@ async function handleServicios(session, userMessage) {
   let response = '', nextStep = step;
 
   switch (step) {
-    case 'servicios_nombre':
-      data.nombre = userMessage;
+    case 'servicios_nombre': {
+      const r = validarNombreCompleto(userMessage);
+      if (!r.ok) {
+        response = r.error + '\n\n' + M.servicios.inicio;
+        break;
+      }
+      data.nombre = r.valor;
       nextStep = 'servicios_telefono';
       response = M.servicios.pedirTelefono;
       break;
+    }
 
     case 'servicios_telefono':
       if (!esTelefonoValido(userMessage)) {
@@ -174,6 +278,29 @@ async function handleEmpresarial(session, userMessage) {
   let response = '', nextStep = step;
 
   switch (step) {
+    // Menú de Servicios empresariales: temas, modalidades o solicitar propuesta
+    case 'empresarial_menu':
+      if (userMessage === '1') { nextStep = 'empresarial_lineas'; response = M.empresarial.lineas(); }
+      else if (userMessage === '2') { response = M.empresarial.modalidades() + '\n\n' + M.empresarial.menu; }
+      else if (userMessage === '3') { nextStep = 'empresarial_empresa'; response = M.empresarial.pedirEmpresa; }
+      else { response = M.noEntiendo + '\n\n' + M.empresarial.menu; }
+      break;
+
+    // Catálogo: 1-8 ver talleres de una línea, 9 solicitar propuesta, 0 regresar
+    case 'empresarial_lineas': {
+      const totalLineas = DATOS.empresas.lineas.length;
+      const n = /^\d$/.test(userMessage) ? Number(userMessage) : NaN;
+      if (n === 9) { nextStep = 'empresarial_empresa'; response = M.empresarial.pedirEmpresa; }
+      else if (n === 0) { nextStep = 'empresarial_menu'; response = M.empresarial.menu; }
+      else if (n >= 1 && n <= totalLineas) {
+        const vistas = new Set(data.lineasConsultadas ? data.lineasConsultadas.split(', ') : []);
+        vistas.add(DATOS.empresas.lineas[n - 1].nombre);
+        data.lineasConsultadas = [...vistas].join(', ');
+        response = M.empresarial.detalleLinea(n);
+      } else { response = M.noEntiendo + '\n\n' + M.empresarial.lineas(); }
+      break;
+    }
+
     case 'empresarial_empresa':
       data.empresa = userMessage;
       nextStep = 'empresarial_cuestionario';
@@ -189,9 +316,12 @@ async function handleEmpresarial(session, userMessage) {
         // Mapea los campos del cuestionario a las columnas conocidas del Excel
         data.nombre = data.nombrePersona;
         data.telefono = data.celular;
+        // Si contestó solo la letra, guarda el nombre completo de la modalidad
+        const modal = DATOS.empresas.modalidades.find((x) => x.letra.toLowerCase() === String(data.modalidadFormacion || '').trim().toLowerCase().replace(/[).]/g, ''));
+        if (modal) data.modalidadFormacion = `${modal.letra}) ${modal.nombre}`;
 
         nextStep = 'empresarial_fin';
-        response = M.empresarial.confirmacion(data.empresa, data.nombrePersona);
+        response = M.empresarial.confirmacion(data.empresa, data.nombrePersona, data.horarioAtencion);
       } else {
         response = resultado.response;
       }
@@ -207,17 +337,99 @@ async function handleEmpresarial(session, userMessage) {
 }
 
 // ─── DONATIVOS ────────────────────────────────────────────────────────────────
-async function handleDonativos(session, userMessage) {
+async function handleDonativos(session, userMessage, media) {
   const { step, data } = session;
   let response = '', nextStep = step;
 
   switch (step) {
     case 'donativos_tipo':
-      if (userMessage === '1') { nextStep = 'donativos_fin'; response = M.donativos.economico; }
-      else if (userMessage === '2') { nextStep = 'donativos_fin'; response = M.donativos.especie; }
-      else if (userMessage === '3') { nextStep = 'donativos_voluntariado'; response = M.donativos.voluntariado; }
+      if (userMessage === '1') { data.tipoDonativo = 'Económico'; nextStep = 'donativos_recibo'; response = M.donativos.preguntarRecibo; }
+      else if (userMessage === '2') { data.tipoDonativo = 'En especie (ropa)'; nextStep = 'donativos_especie'; response = M.donativos.especie; }
+      else if (userMessage === '3') { data.tipoDonativo = 'Voluntariado'; nextStep = 'donativos_voluntariado'; response = M.donativos.voluntariado; }
       else { response = M.noEntiendo + '\n\n' + M.donativos.inicio; }
       break;
+
+    // Económico: ¿requiere recibo de donatario?
+    case 'donativos_recibo':
+      if (userMessage === '1') { data.requiereRecibo = 'Sí'; nextStep = 'donativos_recibo_datos'; response = M.donativos.reciboPedirDatos; }
+      else if (userMessage === '2') { data.requiereRecibo = 'No'; nextStep = 'donativos_nombre'; response = M.donativos.pedirNombre; }
+      else { response = M.noEntiendo + '\n\n' + M.donativos.preguntarRecibo; }
+      break;
+
+    case 'donativos_recibo_datos':
+      data.contacto = userMessage;
+      nextStep = 'donativos_fin';
+      response = M.donativos.reciboConfirmacion;
+      break;
+
+    case 'donativos_nombre': {
+      const r = validarNombreCompleto(userMessage);
+      if (!r.ok) {
+        response = r.error + '\n\n' + M.donativos.pedirNombre;
+        break;
+      }
+      data.nombre = r.valor;
+      nextStep = 'donativos_cantidad';
+      response = M.donativos.pedirCantidad;
+      break;
+    }
+
+    case 'donativos_cantidad':
+      data.cantidadEstimada = userMessage;
+      nextStep = 'donativos_comprobante';
+      response = M.donativos.economico;
+      break;
+
+    case 'donativos_comprobante':
+      if (esComprobante(userMessage, media)) {
+        await alertarComprobante(session, 'donativos', media);
+        nextStep = 'donativos_fin';
+        response = '✅ ¡Muchas gracias por tu donativo! Recibimos tu comprobante y el equipo lo revisará. 💛\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú';
+      } else {
+        response = M.recordarComprobante;
+      }
+      break;
+
+    // En especie (ropa): prendas + cantidad, luego datos de contacto. La foto la mandan por correo.
+    case 'donativos_especie':
+      data.detalleEspecie = userMessage;
+      nextStep = 'donativos_especie_nombre';
+      response = M.donativos.pedirNombre;
+      break;
+
+    case 'donativos_especie_nombre': {
+      const r = validarNombreCompleto(userMessage);
+      if (!r.ok) {
+        response = r.error + '\n\n' + M.donativos.pedirNombre;
+        break;
+      }
+      data.nombre = r.valor;
+      nextStep = 'donativos_especie_telefono';
+      response = M.donativos.especiePedirTelefono;
+      break;
+    }
+
+    case 'donativos_especie_telefono':
+      if (!esTelefonoValido(userMessage)) {
+        response = '⚠️ Ese teléfono no parece válido, debe tener 10 dígitos.\n\n' + M.donativos.especiePedirTelefono;
+        break;
+      }
+      data.telefono = userMessage;
+      nextStep = 'donativos_especie_correo';
+      response = M.donativos.especiePedirCorreo;
+      break;
+
+    case 'donativos_especie_correo':
+      if (!esCorreoValido(userMessage)) {
+        response = '⚠️ Ese correo no parece válido.\n\n' + M.donativos.especiePedirCorreo;
+        break;
+      }
+      data.correo = userMessage;
+      await avisarDonativoEspecie(session); // avisa a los correos de seguimiento de ropa
+      nextStep = 'donativos_fin';
+      response = M.donativos.especieConfirmacion;
+      break;
+
     case 'donativos_voluntariado':
       data.contacto = userMessage;
       nextStep = 'donativos_fin';
@@ -257,6 +469,22 @@ async function handleRRHH(session, userMessage) {
         break;
       }
       data.correo = userMessage;
+      if (data.tipo === 'voluntariado') {
+        // Ya dio su teléfono junto con su nombre
+        nextStep = 'rrhh_fin';
+        response = M.rrhh.confirmacion(data.info?.split(' ')[0] || 'candidata');
+      } else {
+        nextStep = 'rrhh_telefono';
+        response = M.rrhh.pedirTelefono;
+      }
+      break;
+
+    case 'rrhh_telefono':
+      if (!esTelefonoValido(userMessage)) {
+        response = '⚠️ Ese teléfono no parece válido, debe tener 10 dígitos.\n\n' + M.rrhh.pedirTelefono;
+        break;
+      }
+      data.telefono = userMessage;
       nextStep = 'rrhh_fin';
       response = M.rrhh.confirmacion(data.info?.split(' ')[0] || 'candidata');
       break;
