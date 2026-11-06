@@ -2,6 +2,7 @@ const ExcelJS = require('exceljs');
 const path = require('path');
 const fs = require('fs');
 const { EMPODERAMIENTO_PREGUNTAS } = require('../config/questionnaires');
+const { enviarAHoja, ahora, aTexto } = require('./sheetsOnline');
 
 // El archivo se guarda en la raíz del proyecto, junto a package.json
 // (o dentro de DATA_DIR si está definido, ej. en producción con disco persistente)
@@ -103,6 +104,10 @@ async function appendRecord(flow, data, userId) {
 
 async function appendEmpoderamientoRecord(session) {
   const { userId, data } = session;
+  // Copia en el Excel en línea
+  const regEmp = { 'Fecha': ahora(), 'UserId': userId || '', 'Nombre': data?.nombre || '' };
+  EMPODERAMIENTO_PREGUNTAS.forEach((p) => { regEmp[p.key] = aTexto(data?.[p.key]); });
+  enviarAHoja('Empoderamiento', regEmp, ['Fecha', 'UserId', 'Nombre']);
   writeQueue = writeQueue.then(async () => {
     try {
       const workbook = new ExcelJS.Workbook();

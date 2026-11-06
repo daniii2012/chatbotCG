@@ -4,3 +4,6 @@ registros.xlsx
 registros.xlsx.tmp
 sessions_data.json
 sessions_data.json.tmp
+
+# Comprobantes de pago (datos privados)
+public/uploads/comprobantes/

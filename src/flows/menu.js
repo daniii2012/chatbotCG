@@ -1,4 +1,6 @@
 const { MESSAGES: M } = require('../config/messages');
+const { hayMalestar, frasePrevia } = require('../utils/calidez');
+const { DATOS, TEXTOS, mensajeFormulario } = require('../config/datos');
 const { sendNotificationEmail } = require('../senders/email');
 const { getNewRegisterTemplate } = require('../utils/emailTemplates/newRegister');
 
@@ -15,14 +17,10 @@ const COMANDOS_CANCELAR = ['cancelar', 'salir', 'menu', 'menú', 'regresar', 'vo
 
 // -- Validar si es una situación de riesgo
 const { esRiesgoInmediato } = require('../utils/validators');
-const { llamarGroq } = require('../senders/groq');
-
-// Mensaje predeterminado directo
-const RESPUESTA_CRISIS_PREDETERMINADA = 
-  "Si estás en peligro inmediato o necesitas auxilio urgente, por favor comunícate a la línea de emergencia 911 o a la Línea Mujeres. No estás sola.";
+const { llamarGroq, detectarEmergencia, mensajeEmergencia } = require('../senders/groq');
 
 /**
- * Función auxiliar para manejar el protocolo de crisis local o por GPT
+ * Función auxiliar para manejar el protocolo de crisis local o por IA
  */
 async function activarProtocoloCrisis(session) {
   updateSession(session.userId, {
@@ -41,47 +39,51 @@ async function activarProtocoloCrisis(session) {
 
 // Primer step de cada flujo al seleccionar del menú
 const MENU_MAP = {
-  '1': { flow: 'psico', step: 'psico_nombre', msg: M.psico.pedirNombre, servicio: 'Atención psicológica', keywords: ['psicológ', 'psicologa', 'terapia'] },
-  '2': { flow: 'legal', step: 'legal_nombre', msg: M.legal.pedirNombre, servicio: 'Asesoría legal', keywords: ['legal', 'abogad', 'jurídic'] },
-  '3': { flow: 'bio', step: 'bio_nombre', msg: M.bio.pedirNombre, servicio: 'Biodescodificación biológica', keywords: ['biodescodificaci', 'biodecodificaci', 'biodesc'] },
-  '4': { flow: 'standup', step: 'standup_grupo', msg: M.standup.intro, servicio: 'Stand Up', keywords: ['stand up', 'standup'] },
-  '5': { flow: 'empeco', step: 'empeco_programa', msg: M.empEco.inicio, servicio: 'Empoderamiento económico', keywords: ['empoderamiento económico', 'empoderamiento economico'] },
-  '6': { flow: 'servicios', step: 'servicios_nombre', msg: M.servicios.inicio, servicio: 'Servicios del centro', keywords: ['servicios del centro'] },
-  '7': { flow: 'empresarial', step: 'empresarial_empresa', msg: M.empresarial.inicio, servicio: 'Servicios empresariales', keywords: ['servicios empresariales', 'empresa'] },
-  '8': { flow: 'donativos', step: 'donativos_tipo', msg: M.donativos.inicio, servicio: 'Donativos', keywords: ['donativ', 'donar'] },
-  '9': { flow: 'rrhh', step: 'rrhh_opcion', msg: M.rrhh.inicio, servicio: 'Recursos Humanos', keywords: ['recursos humanos', 'rrhh'] },
+  '1': { flow: 'psico', step: 'psico_motivo', get msg() { return M.psico.pedirMotivo; }, get servicio() { return 'Atención psicológica'; }, keywords: ['psicológ', 'psicologa', 'terapia'] },
+  '2': { flow: 'legal', step: 'legal_nombre', get msg() { return M.legal.inicio; }, get servicio() { return 'Asesoría legal'; }, keywords: ['legal', 'abogad', 'jurídic'] },
+  '3': { flow: 'bio', step: 'bio_nombre', get msg() { return M.bio.pedirNombre; }, get servicio() { return 'Biodescodificación biológica'; }, keywords: ['biodescodificaci', 'biodecodificaci', 'biodesc'] },
+  '4': { flow: 'standup', step: 'standup_modalidad', get msg() { return TEXTOS.standup.intro; }, get servicio() { return DATOS.standUp.nombreCompleto; }, keywords: ['stand up', 'standup', 'acoso callejero'] },
+  '5': { flow: 'empeco', step: 'empeco_programa', get msg() { return TEXTOS.empEco.inicio; }, get servicio() { return 'Empoderamiento económico'; }, keywords: ['empoderamiento económico', 'empoderamiento economico'] },
+  '6': { flow: 'servicios', step: 'servicios_nombre', get msg() { return M.servicios.inicio; }, get servicio() { return 'Servicios del centro'; }, keywords: ['servicios del centro'] },
+  '7': { flow: 'empresarial', step: 'empresarial_menu', get msg() { return M.empresarial.inicio; }, get servicio() { return 'Servicios empresariales'; }, keywords: ['servicios empresariales', 'empresa'] },
+  '8': { flow: 'donativos', step: 'donativos_tipo', get msg() { return M.donativos.inicio; }, get servicio() { return 'Donativos'; }, keywords: ['donativ', 'donar'] },
+  '9': { flow: 'rrhh', step: 'rrhh_opcion', get msg() { return M.rrhh.inicio; }, get servicio() { return 'Recursos Humanos'; }, keywords: ['recursos humanos', 'rrhh'] },
 };
 
 // Frases que indican que la usuaria quiere INICIAR el servicio, no solo preguntar sobre él
 const VERBOS_SELECCION = /^(quiero|dame|necesito|inscr[ií]beme|empezar con|iniciar)\b/i;
 const PALABRAS_PREGUNTA = /saber|informaci[oó]n|duda|c[oó]mo funciona|qu[eé] es|en qu[eé] consiste/i;
 
+// Quita acentos y pasa a minúsculas ("Psicológica" -> "psicologica"),
+// para que "atencion psicologica" y "atención psicológica" se reconozcan igual.
+const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
 function detectarSeleccionPorTexto(texto) {
-  const lower = texto.toLowerCase().trim();
+  const lower = norm(texto);
 
   if (!VERBOS_SELECCION.test(lower)) return null;
   if (PALABRAS_PREGUNTA.test(lower)) return null; // "quiero saber sobre X" no cuenta como selección
 
   for (const [num, o] of Object.entries(MENU_MAP)) {
-    if (o.keywords.some(k => lower.includes(k))) return num;
+    if (o.keywords.some(k => lower.includes(norm(k)))) return num;
   }
   return null;
 }
 
-async function dispatchFlow(session, userMessage) {
+async function dispatchFlow(session, userMessage, media) {
   const flow = session.flow;
   const stepBefore = session.step;
 
   let response;
   switch (flow) {
-    case 'psico': response = await handlePsico(session, userMessage); break;
-    case 'legal': response = await handleLegal(session, userMessage); break;
-    case 'bio': response = await handleBio(session, userMessage); break;
+    case 'psico': response = await handlePsico(session, userMessage, media); break;
+    case 'legal': response = await handleLegal(session, userMessage, media); break;
+    case 'bio': response = await handleBio(session, userMessage, media); break;
     case 'standup': response = await handleStandup(session, userMessage); break;
     case 'empeco': response = await handleEmpEco(session, userMessage); break;
     case 'servicios': response = await handleServicios(session, userMessage); break;
     case 'empresarial': response = await handleEmpresarial(session, userMessage); break;
-    case 'donativos': response = await handleDonativos(session, userMessage); break;
+    case 'donativos': response = await handleDonativos(session, userMessage, media); break;
     case 'rrhh': response = await handleRRHH(session, userMessage); break;
     default: return M.bienvenida;
   }
@@ -126,28 +128,38 @@ async function dispatchFlow(session, userMessage) {
     } else {
       console.log('[WARN] Correo vacio en session.data.correo');
     }
+
+    // Ya guardado todo: mandamos el link del formulario (Forms Assembly)
+    if (DATOS.formulario.flujos.includes(flow)) {
+      response = `${response}\n\n${mensajeFormulario()}`;
+    }
   }
 
   return response;
 }
 
-const OPCIONES_MENU = Object.entries(MENU_MAP).map(
+const opcionesMenu = () => Object.entries(MENU_MAP).map(
   ([num, o]) => `${num}. ${o.servicio}`
 );
 
-async function processMessage(userId, userMessage) {
+async function processMessage(userId, userMessage, media = null) {
   const session = getSession(userId);
   const trimmed = userMessage.trim();
+  const enFlujoActivo = Boolean(session.flow) && session.step !== 'menu';
 
   // 1. PRIMER PASO: Filtro local de crisis (Ahorro de tokens y respuesta inmediata)
-  if (esRiesgoInmediato(trimmed)) {
+  //    - esRiesgoInmediato: siempre (como estaba).
+  //    - detectarEmergencia (lista de palabras de config/datos.js): solo fuera de un flujo,
+  //      para no cortar el cuestionario cuando alguien describe su caso en legal/psico.
+  if (esRiesgoInmediato(trimmed) || (!enFlujoActivo && detectarEmergencia(trimmed))) {
     await activarProtocoloCrisis(session);
-    return `${RESPUESTA_CRISIS_PREDETERMINADA}\n\n${M.bienvenida}`;
+    return mensajeEmergencia();
   }
 
   // 2. Comando global de cancelar, disponible en cualquier punto del flujo
   if (session.flow && COMANDOS_CANCELAR.includes(trimmed.toLowerCase())) {
-    updateSession(userId, { flow: null, step: 'menu', data: {} });
+    // menuMostrado: true porque M.bienvenida ya trae el menú
+    updateSession(userId, { flow: null, step: 'menu', data: { menuMostrado: true } });
     return `Sin problema, volvamos al inicio.\n\n${M.bienvenida}`;
   }
 
@@ -156,12 +168,26 @@ async function processMessage(userId, userMessage) {
     const option = MENU_MAP[trimmed] || MENU_MAP[detectarSeleccionPorTexto(trimmed)];
 
     if (option) {
+      // Si la persona lo escribió con sus palabras y compartió algo difícil, primero se le acompaña
+      const porTexto = !MENU_MAP[trimmed];
+      const calido = porTexto && hayMalestar(trimmed);
+
+      // En psicología, si ya contó su motivo, no se le vuelve a preguntar: pasamos a sus datos
+      if (calido && option.flow === 'psico') {
+        updateSession(userId, {
+          flow: 'psico',
+          step: 'psico_nombre',
+          data: { servicioSolicita: option.servicio, motivoConsulta: trimmed },
+        });
+        return `${frasePrevia(trimmed)}\n\n${M.psico.pedirNombre}`;
+      }
+
       updateSession(userId, {
         flow: option.flow,
         step: option.step,
         data: { servicioSolicita: option.servicio },
       });
-      return option.msg;
+      return (calido ? `${frasePrevia(trimmed)}\n\n` : '') + option.msg;
     }
 
     // Si el mensaje menciona una opción (por número o por nombre), recuérdala para más adelante
@@ -173,8 +199,9 @@ async function processMessage(userId, userMessage) {
     }
 
     // Si pregunta "cómo iniciar" y ya sabemos de qué opción hablaba, entra directo al flujo
-    const FRASES_INICIO = /^(c[oó]mo (iniciar|empezar|inscribirme|registrarme|me registro)|quiero (iniciar|empezar|inscribirme|registrarme)|inscr[ií]beme|reg[ií]strame|registrarme)\b/i;
-    if (FRASES_INICIO.test(trimmed) && session.data?.ultimaOpcionMencionada) {
+    // (se prueba sobre el texto sin acentos)
+    const FRASES_INICIO = /^((si,?\s*)?(quiero\s+)?(iniciar|empezar|comenzar)|como (iniciar|empezar|comenzar|inscribirme|registrarme|me registro)|quiero (inscribirme|registrarme)|inscribeme|registrame|registrarme)\b/;
+    if (FRASES_INICIO.test(norm(trimmed)) && session.data?.ultimaOpcionMencionada) {
       const opcionGuardada = MENU_MAP[session.data.ultimaOpcionMencionada];
       updateSession(userId, {
         flow: opcionGuardada.flow,
@@ -184,38 +211,51 @@ async function processMessage(userId, userMessage) {
       return opcionGuardada.msg;
     }
 
+    // ── PRIMER MENSAJE: saludo cálido, sin menú ──────────────────────────
+    const esPrimerMensaje = !session.data?.saludoEnviado;
+    const pideMenu = /\b(menu|opciones|servicios|que ofrecen|que hacen)\b/.test(norm(trimmed));
+    if (esPrimerMensaje && !pideMenu) {
+      const esSaludoOCorto = trimmed.split(/\s+/).length <= 4; // "hola", "buenas tardes", "f", "info"...
+      updateSession(userId, { data: { ...session.data, saludoEnviado: true } });
+      if (esSaludoOCorto) return M.saludoInicial;
+      // Si ya cuenta algo concreto, Gavi responde a eso (con su presentación) y NO suelta el menú todavía
+      return llamarGroq(trimmed, opcionesMenu(), true);
+    }
+
     // Si la opción no fue un número del 1 al 9 ni una selección clara, usamos Groq para responder
     const yaMostroMenu = session.data?.menuMostrado || false;
-    const respuestaGPT = await llamarGroq(trimmed, OPCIONES_MENU, yaMostroMenu);
+    const respuestaGPT = await llamarGroq(trimmed, opcionesMenu(), yaMostroMenu);
 
     if (!yaMostroMenu) {
       updateSession(userId, { data: { ...session.data, menuMostrado: true } });
     }
 
+    // La IA detectó riesgo: respondemos con el mensaje fijo (líneas editables en config/datos.js)
     if (respuestaGPT.includes('ESCALAR_CRISIS')) {
       await activarProtocoloCrisis(session);
-      return `${RESPUESTA_CRISIS_PREDETERMINADA}\n\n${M.bienvenida}`;
+      return mensajeEmergencia();
     }
 
     return respuestaGPT;
   }
 
   // 4. Si la usuaria ya está dentro de un flujo activo (ej. respondiendo preguntas del formulario)
-  return dispatchFlow(session, trimmed);
+  return dispatchFlow(session, trimmed, media);
 }
 
 function detectarOpcionMencionada(texto) {
-  const lower = texto.toLowerCase();
+  const lower = norm(texto);
 
-  // 1. Intenta por número suelto (ej. "es la 3", "opción 3")
-  const matchNumero = lower.match(/\b([1-9])\b/);
+  // 1. Número solo si viene como opción (ej. "es la 3", "opcion 3", "numero 3"),
+  //    para no confundir "me pegó 3 veces" con la opción 3 del menú
+  const matchNumero = lower.match(/\b(?:opcion|numero|num|la|el)\s+([1-9])\b/);
   if (matchNumero && MENU_MAP[matchNumero[1]]) {
     return matchNumero[1];
   }
 
   // 2. Intenta por nombre del servicio, usando las mismas keywords de MENU_MAP
   for (const [num, o] of Object.entries(MENU_MAP)) {
-    if (o.keywords.some(k => lower.includes(k))) {
+    if (o.keywords.some(k => lower.includes(norm(k)))) {
       return num;
     }
   }

@@ -163,6 +163,14 @@
  align-self: flex-end;
  color: var(--accent);
  }
+ .bubble img.chat-img {
+ max-width: 100%;
+ max-height: 200px;
+ border-radius: 8px;
+ margin-bottom: 6px;
+ display: block;
+ border: 1px solid var(--border);
+ }
  .bubble .ts {
  font-size: 0.62rem;
  color: var(--text2);
@@ -188,11 +196,47 @@
  40% { transform: translateY(-6px); }
  }
  .chat-input-area {
- padding: 16px 20px;
+ padding: 12px 20px;
  border-top: 1px solid var(--border);
  display: flex;
- gap: 10px;
+ flex-direction: column;
+ gap: 8px;
  flex-shrink: 0;
+ }
+ .image-preview-bar {
+ display: none;
+ align-items: center;
+ gap: 10px;
+ background: var(--surface2);
+ border: 1px solid var(--border);
+ border-radius: 8px;
+ padding: 6px 10px;
+ }
+ .image-preview-bar.show { display: flex; }
+ .image-preview-bar img {
+ width: 40px;
+ height: 40px;
+ object-fit: cover;
+ border-radius: 4px;
+ }
+ .image-preview-bar span {
+ font-size: 0.72rem;
+ color: var(--text2);
+ flex: 1;
+ overflow: hidden;
+ text-overflow: ellipsis;
+ white-space: nowrap;
+ }
+ .image-preview-bar .remove-btn {
+ cursor: pointer;
+ color: var(--danger);
+ font-size: 0.9rem;
+ font-weight: bold;
+ }
+ .input-row {
+ display: flex;
+ gap: 8px;
+ width: 100%;
  }
  #messageInput {
  flex: 1;
@@ -378,10 +422,19 @@
  <div class="typing-indicator" id="typingIndicator">
  <div class="dot"></div><div class="dot"></div><div class="dot"></div>
  </div>
+
  <div class="chat-input-area">
- <input id="messageInput" type="text" placeholder="Escribe un mensaje..." autocomplete="off"
- onkeydown="if(event.key==='Enter') sendMessage()"/>
+ <div class="image-preview-bar" id="previewBar">
+ <img id="previewThumb" src="" alt="Vista previa"/>
+ <span id="previewName">comprobante.png</span>
+ <span class="remove-btn" onclick="clearSelectedImage()">✕</span>
+ </div>
+ <div class="input-row">
+ <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="handleImageSelected(event)"/>
+ <button class="btn" type="button" onclick="document.getElementById('imageInput').click()" title="Adjuntar imagen">📎</button>
+ <input id="messageInput" type="text" placeholder="Escribe un mensaje..." autocomplete="off" onkeydown="if(event.key==='Enter') sendMessage()"/>
  <button class="btn btn-primary" onclick="sendMessage()">Enviar</button>
+ </div>
  </div>
  </div>
 
@@ -417,12 +470,17 @@
 const API = '';
 let userId = null;
 let activeChannel = 'simulator';
+let currentImageData = null;
 
 async function init() {
+ try {
  const res = await fetch(`${API}/api/new-user`);
  const { userId: id } = await res.json();
  userId = id;
  document.getElementById('userIdDisplay').textContent = id.substring(0, 16) + '...';
+ } catch(e) {
+ console.error("Error al obtener userId:", e);
+ }
 }
 
 function setChannel(ch, el) {
@@ -432,19 +490,56 @@ function setChannel(ch, el) {
  document.getElementById('currentChannel').textContent = el.textContent.replace(/^./, '').trim();
 }
 
+function handleImageSelected(event) {
+ const file = event.target.files[0];
+ if (!file) return;
+ const reader = new FileReader();
+ reader.onload = function(e) {
+ currentImageData = {
+ url: e.target.result,
+ type: 'image'
+ };
+ document.getElementById('previewThumb').src = e.target.result;
+ document.getElementById('previewName').textContent = file.name;
+ document.getElementById('previewBar').classList.add('show');
+ };
+ reader.readAsDataURL(file);
+}
+
+function clearSelectedImage() {
+ currentImageData = null;
+ document.getElementById('imageInput').value = '';
+ document.getElementById('previewBar').classList.remove('show');
+}
+
 async function sendMessage() {
  const input = document.getElementById('messageInput');
  const msg = input.value.trim();
- if (!msg || !userId) return;
+ const mediaToSend = currentImageData;
+
+ if (!msg && !mediaToSend) return;
+ if (!userId) return;
+
  input.value = '';
- appendBubble('user', msg);
+ clearSelectedImage();
+
+ appendBubble('user', msg, mediaToSend ? mediaToSend.url : null);
  showTyping(true);
 
  try {
+ const payload = {
+ userId,
+ message: msg || '[Imagen enviada]',
+ channel: activeChannel
+ };
+ if (mediaToSend) {
+ payload.media = mediaToSend;
+ }
+
  const res = await fetch(`${API}/api/message`, {
  method: 'POST',
  headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ userId, message: msg, channel: activeChannel }),
+ body: JSON.stringify(payload),
  });
  const data = await res.json();
  setTimeout(() => {
@@ -459,13 +554,25 @@ async function sendMessage() {
  }
 }
 
-function appendBubble(type, text) {
+function appendBubble(type, text, imageUrl = null) {
  const msgs = document.getElementById('messages');
  const empty = msgs.querySelector('.empty-state');
  if (empty) empty.remove();
  const div = document.createElement('div');
  div.className = `bubble ${type}`;
- div.textContent = text;
+ 
+ if (imageUrl) {
+ const img = document.createElement('img');
+ img.src = imageUrl;
+ img.className = 'chat-img';
+ div.appendChild(img);
+ }
+
+ if (text) {
+ const textNode = document.createTextNode(text);
+ div.appendChild(textNode);
+ }
+
  const ts = document.createElement('span');
  ts.className = 'ts';
  ts.textContent = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });

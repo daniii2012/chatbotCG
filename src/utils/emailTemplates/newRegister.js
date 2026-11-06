@@ -43,7 +43,6 @@ function getNewRegisterTemplate(flow, session) {
 
             <div class="header">
               <img src="https://chatbot.casagaviota.org.mx/logo-casagaviota.png" alt="Casa Gaviota" />
-              <div class="tagline">un vuelo sin violencia a.c.</div>
             </div>
 
             <img class="wave" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MDAgNTAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiPgo8cGF0aCBkPSJNMCw1MCBMMCwxNSBDMTUwLDQ1IDMwMCwwIDQ1MCwyMCBDNTIwLDMwIDU3MCwxMCA2MDAsMCBMNjAwLDUwIFoiIGZpbGw9IiMxNmFhYjQiLz4KPC9zdmc+Cg==" alt="" />
@@ -62,7 +61,7 @@ function getNewRegisterTemplate(flow, session) {
               </div>
 
               <div class="emergency">
-                🚨 Si estás en una situación de emergencia o tu vida está en riesgo, llama al 911
+                🚨 Si estás ante una situación de emergencia o riesgo inmediato, puedes comunicarte al 911 para solicitar apoyo
               </div>
 
               <div class="divider">
@@ -81,7 +80,7 @@ function getNewRegisterTemplate(flow, session) {
             </div>
 
             <div class="footer">
-              Casa Gaviota un vuelo sin violencia A.C. · Galicia no. 192 int. 3, Col. Álamos, CDMX · RFC: CGU120224488<br/>
+              Casa Gaviota un vuelo sin violencia A.C. · CDMX ·<br/>
               T. (55) 3096 5189 · <a href="https://www.casagaviota.org">www.casagaviota.org</a>
             </div>
 

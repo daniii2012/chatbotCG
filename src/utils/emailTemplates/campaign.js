@@ -41,7 +41,6 @@ function getCampaignTemplate({ mensaje, imageUrls = [], enlace, logoUrl }) {
           <!-- Encabezado -->
           <div style="padding: 32px 30px 8px 30px; text-align: center;">
             <img src="${logo}" alt="Casa Gaviota" style="max-width: 200px; height: auto;" />
-            <div style="font-family: 'Brush Script MT', cursive; color: #d63381; font-size: 15px; margin-top: 6px;">un vuelo sin violencia a.c.</div>
           </div>
 
           <!-- Contenido -->
@@ -57,7 +56,7 @@ function getCampaignTemplate({ mensaje, imageUrls = [], enlace, logoUrl }) {
 
             <!-- Aviso de emergencia -->
             <div style="background-color: #fdeef4; border: 1.5px solid #d63381; border-radius: 12px; padding: 14px 18px; font-size: 13px; color: #a3225e; font-weight: 700; text-align: center; margin-top: 30px;">
-              Si estás en una situación de emergencia o tu vida está en riesgo, llama al 911
+              Si estás ante una situación de emergencia o riesgo inmediato, puedes comunicarte al 911 para solicitar apoyo
             </div>
 
             <!-- Tarjeta de contacto -->
@@ -69,7 +68,7 @@ function getCampaignTemplate({ mensaje, imageUrls = [], enlace, logoUrl }) {
 
           <!-- Pie -->
           <div style="background-color: #16aab4; color: #ffffff; padding: 20px 30px; font-size: 11.5px; text-align: center;">
-            Casa Gaviota un vuelo sin violencia A.C. · Galicia no. 192 int. 3, Col. Álamos, CDMX · RFC: CGU120224488<br/>
+            Casa Gaviota un vuelo sin violencia A.C. · CDMX · <br/>
             T. (55) 3096 5189 · <a href="https://www.casagaviota.org" style="color: #ffffff; text-decoration: underline;">www.casagaviota.org</a>
           </div>
 
