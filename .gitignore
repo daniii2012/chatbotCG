@@ -7,3 +7,5 @@ sessions_data.json.tmp
 
 # Comprobantes de pago (datos privados)
 public/uploads/comprobantes/
+equipo_admin.json
+config_editable.json

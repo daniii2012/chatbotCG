@@ -290,6 +290,7 @@ async function guardarSeccion(key, valorNuevo) {
   const r = validar(key, valorNuevo);
   if (!r.ok) return r;
 
+  const antes = clonar(DATOS[key]);
   DATOS[key] = r.valor;
   reconstruir();
 
@@ -305,11 +306,12 @@ async function guardarSeccion(key, valorNuevo) {
     console.error('[CONFIG]', aviso);
   }
   console.log(`⚙️ [CONFIG] Sección "${key}" actualizada desde el panel admin.`);
-  return { ok: true, valor: r.valor, aviso };
+  return { ok: true, valor: r.valor, antes, aviso };
 }
 
 async function restaurarSeccion(key) {
   if (!Object.prototype.hasOwnProperty.call(POR_DEFECTO, key)) return { ok: false, error: 'Esa sección no se puede restaurar.' };
+  const antes = clonar(DATOS[key]);
   DATOS[key] = clonar(POR_DEFECTO[key]);
   reconstruir();
   const local = leerArchivo();
@@ -317,8 +319,53 @@ async function restaurarSeccion(key) {
   escribirArchivo(local);
   try { await mongo.borrarConfigRemota(key); } catch (err) { console.error('[CONFIG]', err.message); }
   console.log(`⚙️ [CONFIG] Sección "${key}" restaurada a los valores originales.`);
-  return { ok: true, valor: DATOS[key] };
+  return { ok: true, valor: DATOS[key], antes };
 }
+
+// ─── Para el historial: qué cambió exactamente ───────────────────────────
+function aplanar(v, ruta, out) {
+  if (Array.isArray(v)) {
+    if (v.length === 0) out.set(JSON.stringify(ruta), '(lista vacía)');
+    v.forEach((x, i) => aplanar(x, ruta.concat(i), out));
+  } else if (v && typeof v === 'object') {
+    Object.keys(v).forEach((k) => aplanar(v[k], ruta.concat(k), out));
+  } else {
+    out.set(JSON.stringify(ruta), v);
+  }
+}
+
+function etiquetaDeRuta(key, ruta) {
+  const sinNumeros = ruta.filter((r) => typeof r !== 'number');
+  const completa = [key, ...sinNumeros].join('.');
+  const nombre = ETIQUETAS[completa] || ETIQUETAS[key] || String(sinNumeros[sinNumeros.length - 1] || key);
+  const posiciones = ruta.filter((r) => typeof r === 'number').map((n) => n + 1);
+  return posiciones.length ? `${nombre} (#${posiciones.join('.')})` : nombre;
+}
+
+function describirCambios(key, antes, despues) {
+  const a = new Map(); const d = new Map();
+  aplanar(antes, [], a); aplanar(despues, [], d);
+  const corto = (v) => {
+    const t = String(v === undefined ? '' : v);
+    return t.length > 80 ? t.slice(0, 77) + '…' : t;
+  };
+  const lineas = [];
+  for (const [k, nuevo] of d) {
+    const viejo = a.get(k);
+    if (viejo === nuevo) continue;
+    const ruta = JSON.parse(k);
+    lineas.push(`${etiquetaDeRuta(key, ruta)}: ${a.has(k) ? '“' + corto(viejo) + '”' : '(nuevo)'} → “${corto(nuevo)}”`);
+  }
+  for (const [k, viejo] of a) {
+    if (d.has(k)) continue;
+    lineas.push(`${etiquetaDeRuta(key, JSON.parse(k))}: “${corto(viejo)}” → (eliminado)`);
+  }
+  if (lineas.length > 25) { const extra = lineas.length - 25; lineas.length = 25; lineas.push(`… y ${extra} cambio(s) más`); }
+  return lineas;
+}
+
+const tituloSeccion = (key) => (SECCIONES.find((s) => s.key === key) || {}).titulo || key;
+const valorActual = (key) => clonar(DATOS[key]);
 
 function describirConfig() {
   return {
@@ -332,4 +379,4 @@ function describirConfig() {
   };
 }
 
-module.exports = { iniciarConfig, guardarSeccion, restaurarSeccion, describirConfig, validar };
+module.exports = { iniciarConfig, guardarSeccion, restaurarSeccion, describirConfig, validar, describirCambios, tituloSeccion, valorActual };

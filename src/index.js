@@ -16,7 +16,8 @@ const { FILE_PATH: EXCEL_PATH } = require('./db/excel');
 const { getRegisteredEmails } = require('./db/mongo');
 const { sendNotificationEmail } = require('./senders/email');
 const crypto = require('crypto');
-const { iniciarConfig, guardarSeccion, restaurarSeccion, describirConfig } = require('./config/configStore');
+const { iniciarConfig, guardarSeccion, restaurarSeccion, describirConfig, describirCambios, tituloSeccion } = require('./config/configStore');
+const { router: adminAuthRouter, auth, registrarCambio } = require('./api/admin/auth');
 
 const whatsappWebhook = require('./api/whatsapp/webhook');
 const instagramWebhook = require('./api/instagram/webhook');
@@ -87,55 +88,42 @@ function requireApiKey(req, res, next) {
 
 // ─── RUTAS DEL PANEL DE ADMINISTRACION ───────────────────────────────────
 
-// Login del panel web (admin.html)
-app.post('/api/admin/login', (req, res) => {
-  const { password } = req.body;
-  const adminPass = process.env.ADMIN_PASSWORD || process.env.ADMIN_API_KEY;
-
-  if (!adminPass) {
-    return res.status(500).json({ success: false, error: 'Contrasena de administrador no configurada' });
-  }
-
-  if (password === adminPass) {
-    return res.json({ success: true });
-  }
-
-  return res.status(401).json({ success: false, error: 'Contrasena incorrecta' });
-});
-
-// Protege las rutas de edición de datos: la contraseña viaja en el encabezado x-admin-password
-function requireAdmin(req, res, next) {
-  const pass = process.env.ADMIN_PASSWORD || process.env.ADMIN_API_KEY;
-  if (!pass) return res.status(500).json({ success: false, error: 'Contraseña de administrador no configurada' });
-  let enviada = '';
-  try { enviada = decodeURIComponent(req.get('x-admin-password') || ''); } catch { enviada = ''; }
-  const a = Buffer.from(enviada);
-  const b = Buffer.from(pass);
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
-    return res.status(401).json({ success: false, error: 'Sesión no válida. Vuelve a ingresar al panel.' });
-  }
-  next();
-}
+// Acceso por persona, equipo e historial de cambios (login, /equipo, /historial)
+app.use('/api/admin', adminAuthRouter);
 
 // Datos del chatbot editables desde el panel (precios, convocatorias, números de emergencia...)
-app.get('/api/admin/config', requireAdmin, (req, res) => {
+app.get('/api/admin/config', auth(), (req, res) => {
   res.json({ success: true, ...describirConfig() });
 });
 
-app.put('/api/admin/config/:key', requireAdmin, async (req, res) => {
-  const r = await guardarSeccion(req.params.key, req.body?.valor);
+app.put('/api/admin/config/:key', auth(), async (req, res) => {
+  const key = req.params.key;
+  const r = await guardarSeccion(key, req.body?.valor);
   if (!r.ok) return res.status(400).json({ success: false, error: r.error });
+  const detalles = describirCambios(key, r.antes, r.valor);
+  if (detalles.length) {
+    await registrarCambio(req.usuario, {
+      tipo: 'config', seccion: tituloSeccion(key), clave: key,
+      resumen: `Editó «${tituloSeccion(key)}»`, detalles, antes: r.antes, despues: r.valor,
+    });
+  }
   res.json({ success: true, valor: r.valor, aviso: r.aviso });
 });
 
-app.post('/api/admin/config/:key/restaurar', requireAdmin, async (req, res) => {
-  const r = await restaurarSeccion(req.params.key);
+app.post('/api/admin/config/:key/restaurar', auth(), async (req, res) => {
+  const key = req.params.key;
+  const r = await restaurarSeccion(key);
   if (!r.ok) return res.status(400).json({ success: false, error: r.error });
+  await registrarCambio(req.usuario, {
+    tipo: 'config', seccion: tituloSeccion(key), clave: key,
+    resumen: `Restauró los valores originales de «${tituloSeccion(key)}»`,
+    detalles: describirCambios(key, r.antes, r.valor), antes: r.antes, despues: r.valor,
+  });
   res.json({ success: true, valor: r.valor });
 });
 
 // Envio de correos desde la interfaz admin
-app.post('/api/admin/send-campaign', upload.array('imagen', 10), async (req, res) => {
+app.post('/api/admin/send-campaign', auth(), upload.array('imagen', 10), async (req, res) => {
   try {
     const { asunto, mensaje, enlace } = req.body;
 
@@ -183,6 +171,10 @@ app.post('/api/admin/send-campaign', upload.array('imagen', 10), async (req, res
     // Los PDF ya se enviaron como adjuntos: se borran del servidor
     pdfs.forEach(f => fs.unlink(f.path, () => {}));
 
+    await registrarCambio(req.usuario, {
+      tipo: 'comunicado', seccion: 'Comunicados',
+      resumen: `Envió el comunicado «${String(asunto).slice(0, 80)}» a ${destinatarios.length} correo(s)`,
+    });
     res.json({ success: true, total: destinatarios.length });
   } catch (error) {
     console.error('Error al enviar campana masiva:', error);
@@ -310,7 +302,7 @@ function buildChannelLogs(channel, userId, userMsg, botMsg) {
 
 // Envío manual de WhatsApp desde el panel admin
 // Recibe multipart/form-data, por eso necesita multer
-app.post('/api/admin/send-whatsapp', upload.array('archivos', 10), async (req, res) => {
+app.post('/api/admin/send-whatsapp', auth(), upload.array('archivos', 10), async (req, res) => {
   try {
     const { numero, mensaje } = req.body;
 
@@ -330,6 +322,10 @@ app.post('/api/admin/send-whatsapp', upload.array('archivos', 10), async (req, r
       return res.status(500).json({ success: false, error: 'No se pudo enviar el mensaje. Revisa las credenciales de WhatsApp.' });
     }
 
+    await registrarCambio(req.usuario, {
+      tipo: 'whatsapp', seccion: 'WhatsApp',
+      resumen: `Envió un WhatsApp manual al número ${String(numero).replace(/\d(?=\d{4})/g, '•')}`,
+    });
     res.json({ success: true });
   } catch (error) {
     console.error('Error al enviar WhatsApp manual:', error);

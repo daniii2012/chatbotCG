@@ -376,6 +376,41 @@
     .cfg-actions .btn { width: auto; padding-left: 26px; padding-right: 26px; }
     .cfg-secondary { background: #fff; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 18px; cursor: pointer; font-family: var(--font-body); font-size: 14px; color: var(--text-muted); }
     .cfg-secondary:hover { border-color: var(--primary); color: var(--primary-dark); }
+
+    /* ─── Sesión, historial y equipo ─── */
+    .user-chip { font-size: 0.82rem; line-height: 1.45; background: rgba(255,255,255,0.14); border-radius: 10px; padding: 10px 12px; color: #fff; margin-bottom: 4px; }
+    .user-chip b { display: block; font-size: 0.92rem; }
+    .side-nav.bloqueado .nav-item:not(.siempre) { display: none; }
+    .login-alt { margin-top: 16px; text-align: center; font-size: 0.85rem; }
+    .login-alt a { color: var(--text-muted); }
+    .pwd-hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; }
+    .hist-filtros { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .hist-filtros select, .eq-nuevo select { flex: 1; min-width: 150px; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 0.9rem; background: #fff; color: var(--text); }
+    .hist-item { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; background: #fffafd; }
+    .hist-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .hist-quien { font-weight: 700; color: var(--primary-dark); }
+    .hist-sec { font-size: 0.72rem; background: var(--teal-pale); color: #0E6E75; border-radius: 20px; padding: 2px 10px; font-weight: 600; }
+    .hist-cuando { font-size: 0.78rem; color: var(--text-muted); margin-left: auto; }
+    .hist-resumen { margin: 6px 0 0; font-size: 0.92rem; }
+    .hist-det { margin: 8px 0 0 18px; font-size: 0.82rem; color: var(--text-muted); }
+    .hist-det li { margin-bottom: 3px; }
+    .hist-acc { margin-top: 10px; }
+    .hist-deshecho { font-size: 0.78rem; color: var(--text-muted); font-style: italic; margin-top: 8px; }
+    .eq-item { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; background: #fffafd; }
+    .eq-info { flex: 1; min-width: 200px; }
+    .eq-nom { font-weight: 700; }
+    .eq-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+    .eq-badge { font-size: 0.7rem; border-radius: 20px; padding: 2px 9px; font-weight: 700; margin-left: 6px; }
+    .eq-badge.admin { background: #fde7f1; color: var(--primary-dark); }
+    .eq-badge.off { background: #eee; color: #777; }
+    .eq-badge.pend { background: #fff3cd; color: #8a6d00; }
+    .eq-acciones { display: flex; gap: 6px; flex-wrap: wrap; }
+    .eq-nuevo { border: 1px dashed var(--teal); background: var(--teal-pale); border-radius: 12px; padding: 16px; margin-bottom: 22px; }
+    .eq-nuevo .fila { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .eq-nuevo .fila > div { flex: 1; min-width: 170px; }
+    .eq-nuevo label { margin-bottom: 5px; }
+    .pwd-box { background: #fff8e1; border: 1px solid #ffe08a; border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; font-size: 0.9rem; line-height: 1.6; }
+    .pwd-box code { font-size: 1.1rem; letter-spacing: 1px; background: #fff; padding: 3px 10px; border-radius: 6px; border: 1px solid #eee; user-select: all; }
   </style>
 </head>
 <body>
@@ -399,6 +434,7 @@
 
       <!-- Menú de navegación, aparece tras iniciar sesión -->
       <nav class="side-nav" id="sideNav">
+        <div class="user-chip" id="userChip"></div>
         <button class="nav-item active" id="navComunicados" onclick="switchSection('panelCard', this)">
           <span class="ico">📧</span> Comunicados
         </button>
@@ -407,6 +443,18 @@
         </button>
         <button class="nav-item" id="navConfig" onclick="switchSection('configCard', this)">
           <span class="ico">⚙️</span> Datos del chatbot
+        </button>
+        <button class="nav-item" id="navHistorial" onclick="switchSection('historialCard', this)">
+          <span class="ico">📜</span> Historial
+        </button>
+        <button class="nav-item" id="navEquipo" onclick="switchSection('equipoCard', this)" style="display:none">
+          <span class="ico">👥</span> Equipo
+        </button>
+        <button class="nav-item" id="navPassword" onclick="switchSection('passwordCard', this)">
+          <span class="ico">🔑</span> Mi contraseña
+        </button>
+        <button class="nav-item siempre" id="navLogout" onclick="cerrarSesion()">
+          <span class="ico">🚪</span> Cerrar sesión
         </button>
       </nav>
     </div>
@@ -436,17 +484,22 @@
         <div class="main-head">
           <div class="kicker">Acceso</div>
           <h2>Entra al panel</h2>
-          <p>Introduce la contraseña de administración para continuar.</p>
+          <p id="loginAyuda">Usa tu correo y tu contraseña personal.</p>
         </div>
 
         <div id="loginAlert" class="alert alert-error"></div>
 
         <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="form-group" id="loginCorreoGrupo">
+            <label for="loginCorreo">Correo</label>
+            <input type="text" inputmode="email" id="loginCorreo" autocomplete="username" placeholder="tucorreo@casagaviota.org.mx">
+          </div>
           <div class="form-group">
-            <label for="adminPass">Contraseña de acceso</label>
-            <input type="password" id="adminPass" required placeholder="Ingresa la contraseña">
+            <label for="adminPass" id="loginPassLabel">Contraseña</label>
+            <input type="password" id="adminPass" required autocomplete="current-password" placeholder="Tu contraseña">
           </div>
           <button type="submit" class="btn">Ingresar al panel</button>
+          <p class="login-alt"><a href="#" id="emergenciaLink" onclick="toggleEmergencia(event)">Acceso de emergencia</a></p>
         </form>
       </div>
 
@@ -540,39 +593,146 @@
         <div id="configEditor"></div>
       </div>
 
+      <!-- CARD 5: HISTORIAL DE CAMBIOS -->
+      <div id="historialCard" class="hidden">
+        <div class="main-head">
+          <div class="kicker">Historial</div>
+          <h2>Historial de cambios</h2>
+          <p>Quién hizo qué en el panel. Los cambios de los datos del chatbot se pueden deshacer.</p>
+        </div>
+        <div id="histAlert" class="alert"></div>
+        <div class="hist-filtros">
+          <select id="histPersona" onchange="cargarHistorial(true)"><option value="">Todas las personas</option></select>
+          <select id="histSeccion" onchange="cargarHistorial(true)"><option value="">Todas las secciones</option></select>
+        </div>
+        <div id="histLista"></div>
+        <button type="button" class="cfg-secondary" id="histMas" style="display:none" onclick="cargarHistorial(false)">Ver más</button>
+      </div>
+
+      <!-- CARD 6: EQUIPO (solo administradoras) -->
+      <div id="equipoCard" class="hidden">
+        <div class="main-head">
+          <div class="kicker">Equipo</div>
+          <h2>Personas con acceso</h2>
+          <p>Cada persona entra con su correo y su propia contraseña. Quien deje el equipo se desactiva sin afectar a las demás.</p>
+        </div>
+        <div id="equipoAlert" class="alert"></div>
+        <div id="equipoClave"></div>
+        <div class="eq-nuevo">
+          <div class="cfg-title">Agregar persona</div>
+          <div class="fila">
+            <div><label for="eqNombre">Nombre</label><input type="text" id="eqNombre" placeholder="Ej. Sofía Báez"></div>
+            <div><label for="eqCorreo">Correo</label><input type="text" inputmode="email" id="eqCorreo" placeholder="persona@casagaviota.org.mx"></div>
+            <div><label for="eqRol">Rol</label><select id="eqRol"><option value="equipo">Equipo</option><option value="admin">Administradora</option></select></div>
+          </div>
+          <button type="button" class="btn" id="eqAgregarBtn" style="width:auto; padding-left:26px; padding-right:26px" onclick="agregarPersona()">Agregar y enviar acceso</button>
+          <p class="pwd-hint">Se le envía por correo una contraseña temporal; al entrar, la cambia por una propia. Equipo y administradoras pueden hacer lo mismo; solo las administradoras gestionan personas.</p>
+        </div>
+        <div id="equipoLista"></div>
+      </div>
+
+      <!-- CARD 7: MI CONTRASEÑA -->
+      <div id="passwordCard" class="hidden">
+        <div class="main-head">
+          <div class="kicker">Mi cuenta</div>
+          <h2 id="pwdTitulo">Cambiar mi contraseña</h2>
+          <p id="pwdAyuda">Elige una contraseña que solo tú conozcas.</p>
+        </div>
+        <div id="pwdAlert" class="alert"></div>
+        <form id="pwdForm" onsubmit="handleCambiarPassword(event)">
+          <div class="form-group">
+            <label for="pwdActual">Contraseña actual</label>
+            <input type="password" id="pwdActual" required autocomplete="current-password">
+          </div>
+          <div class="form-group">
+            <label for="pwdNueva">Contraseña nueva</label>
+            <input type="password" id="pwdNueva" required autocomplete="new-password">
+            <div class="pwd-hint">Mínimo 10 caracteres, con letras y números.</div>
+          </div>
+          <div class="form-group">
+            <label for="pwdNueva2">Repite la contraseña nueva</label>
+            <input type="password" id="pwdNueva2" required autocomplete="new-password">
+          </div>
+          <button type="submit" class="btn" id="pwdBtn">Guardar contraseña nueva</button>
+        </form>
+      </div>
+
     </div>
   </div>
 
 </div>
 
   <script>
-    // Contraseña del panel (solo en memoria): se manda al editar los datos del chatbot
-    let adminPassword = '';
+    // ═════════ Sesión personal ═════════
+    // { token, usuario: { nombre, correo, rol, emergencia }, debeCambiarPassword }
+    let sesion = null;
+    const SS_KEY = 'gaviota_panel_sesion';
+    let modoEmergencia = false;
 
-    // Manejo de inicio de sesión
+    const guardarSesion = () => sessionStorage.setItem(SS_KEY, JSON.stringify(sesion));
+    const authHeader = () => (sesion ? { Authorization: 'Bearer ' + sesion.token } : {});
+
+    // Llamada al servidor con la sesión; si la sesión terminó, regresa al inicio
+    async function api(ruta, { method = 'GET', body, form } = {}) {
+      const headers = { ...authHeader() };
+      let payload;
+      if (form) payload = form;
+      else if (body !== undefined) { headers['Content-Type'] = 'application/json'; payload = JSON.stringify(body); }
+      const res = await fetch(ruta, { method, headers, body: payload });
+      let data = {};
+      try { data = await res.json(); } catch (e) { /* sin cuerpo */ }
+      if (res.status === 401 && data.codigo === 'SESION') { cerrarSesion('Tu sesión terminó. Vuelve a entrar.'); throw new Error(data.error); }
+      if (res.status === 403 && data.codigo === 'CAMBIAR_PASSWORD') { if (sesion) sesion.debeCambiarPassword = true; mostrarCambioObligatorio(); throw new Error(data.error); }
+      return { status: res.status, data };
+    }
+
+    function avisoEn(id, msg, ok) {
+      const box = document.getElementById(id);
+      box.className = 'alert ' + (ok ? 'alert-success' : 'alert-error');
+      box.textContent = msg;
+      box.style.display = 'block';
+    }
+
+    function toggleEmergencia(e) {
+      e.preventDefault();
+      modoEmergencia = !modoEmergencia;
+      document.getElementById('loginCorreoGrupo').style.display = modoEmergencia ? 'none' : 'block';
+      document.getElementById('loginPassLabel').textContent = modoEmergencia ? 'Contraseña de emergencia' : 'Contraseña';
+      document.getElementById('emergenciaLink').textContent = modoEmergencia ? 'Volver al acceso normal' : 'Acceso de emergencia';
+      document.getElementById('loginAyuda').textContent = modoEmergencia
+        ? 'Úsalo solo si no puedes entrar con tu cuenta. Queda registrado en el historial.'
+        : 'Usa tu correo y tu contraseña personal.';
+      document.getElementById('loginAlert').style.display = 'none';
+    }
+
     async function handleLogin(e) {
       e.preventDefault();
       const password = document.getElementById('adminPass').value;
+      const correo = document.getElementById('loginCorreo').value.trim();
       const alertBox = document.getElementById('loginAlert');
-      
       alertBox.style.display = 'none';
 
+      if (!modoEmergencia && !correo) {
+        alertBox.innerText = 'Escribe tu correo.';
+        alertBox.style.display = 'block';
+        return;
+      }
+
       try {
-        const res = await fetch('/api/admin/login', {
+        const res = await fetch('/api/admin/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password })
+          body: JSON.stringify(modoEmergencia ? { emergencia: true, password } : { correo, password })
         });
-        
         const data = await res.json();
 
         if (data.success) {
-          adminPassword = password;
-          document.getElementById('loginCard').classList.add('hidden');
-          document.getElementById('panelCard').classList.remove('hidden');
-          document.getElementById('sideNav').classList.add('show');
+          sesion = { token: data.token, usuario: data.usuario, debeCambiarPassword: data.debeCambiarPassword };
+          guardarSesion();
+          document.getElementById('adminPass').value = '';
+          mostrarPanelTrasLogin();
         } else {
-          alertBox.innerText = data.error || 'Contraseña incorrecta';
+          alertBox.innerText = data.error || 'No se pudo iniciar sesión';
           alertBox.style.display = 'block';
         }
       } catch (err) {
@@ -581,17 +741,60 @@
       }
     }
 
+    function etiquetaRol(u) {
+      if (u.emergencia) return 'Acceso de emergencia';
+      return u.rol === 'admin' ? 'Administradora' : 'Equipo';
+    }
+
+    function mostrarPanelTrasLogin() {
+      document.getElementById('loginCard').classList.add('hidden');
+      const nav = document.getElementById('sideNav');
+      nav.classList.add('show');
+
+      const chip = document.getElementById('userChip');
+      chip.innerHTML = '';
+      chip.appendChild(el('b', null, sesion.usuario.nombre));
+      chip.appendChild(el('span', null, etiquetaRol(sesion.usuario)));
+      document.getElementById('navEquipo').style.display = sesion.usuario.rol === 'admin' ? 'flex' : 'none';
+
+      if (sesion.debeCambiarPassword) { mostrarCambioObligatorio(); return; }
+      nav.classList.remove('bloqueado');
+      switchSection('panelCard', document.getElementById('navComunicados'));
+    }
+
+    // Primer ingreso con contraseña temporal: solo puede cambiarla
+    function mostrarCambioObligatorio() {
+      document.getElementById('sideNav').classList.add('show', 'bloqueado');
+      switchSection('passwordCard', null);
+    }
+
+    function cerrarSesion(mensaje) {
+      sessionStorage.removeItem(SS_KEY);
+      sesion = null;
+      CFG = null; seccionActual = null;
+      TARJETAS.forEach((id) => document.getElementById(id).classList.add('hidden'));
+      document.getElementById('sideNav').classList.remove('show', 'bloqueado');
+      document.getElementById('loginCard').classList.remove('hidden');
+      document.querySelector('.main-inner').classList.remove('wide');
+      const box = document.getElementById('loginAlert');
+      if (typeof mensaje === 'string' && mensaje) { box.innerText = mensaje; box.style.display = 'block'; }
+      else box.style.display = 'none';
+    }
+
     // Cambiar entre secciones usando el menú lateral
+    const TARJETAS = ['panelCard', 'whatsappCard', 'configCard', 'historialCard', 'equipoCard', 'passwordCard'];
     function switchSection(sectionId, btnEl) {
-      document.getElementById('panelCard').classList.add('hidden');
-      document.getElementById('whatsappCard').classList.add('hidden');
-      document.getElementById('configCard').classList.add('hidden');
+      TARJETAS.forEach((id) => document.getElementById(id).classList.add('hidden'));
       document.getElementById(sectionId).classList.remove('hidden');
-      document.querySelector('.main-inner').classList.toggle('wide', sectionId === 'configCard');
+      document.querySelector('.main-inner').classList.toggle('wide', ['configCard', 'historialCard', 'equipoCard'].includes(sectionId));
+
       if (sectionId === 'configCard') cargarConfig();
+      if (sectionId === 'historialCard') cargarHistorial(true);
+      if (sectionId === 'equipoCard') cargarEquipo();
+      if (sectionId === 'passwordCard') prepararPassword();
 
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-      btnEl.classList.add('active');
+      if (btnEl) btnEl.classList.add('active');
     }
 
     // ---------- Manejo de múltiples archivos (imágenes y PDF) ----------
@@ -715,12 +918,7 @@
       statusAlert.style.display = 'none';
 
       try {
-        const res = await fetch('/api/admin/send-campaign', {
-          method: 'POST',
-          body: formData
-        });
-
-        const data = await res.json();
+        const { data } = await api('/api/admin/send-campaign', { method: 'POST', form: formData });
 
         if (data.success) {
           statusAlert.className = 'alert alert-success';
@@ -758,12 +956,7 @@
       alertBox.style.display = 'none';
 
       try {
-        const res = await fetch('/api/admin/send-whatsapp', {
-          method: 'POST',
-          body: formData
-        });
-
-        const data = await res.json();
+        const { data } = await api('/api/admin/send-whatsapp', { method: 'POST', form: formData });
 
         if (data.success) {
           alertBox.className = 'alert alert-success';
@@ -792,7 +985,6 @@
     let estado = null;         // copia editable del valor de la sección
 
     const clonar = (x) => JSON.parse(JSON.stringify(x));
-    const cfgHeaders = () => ({ 'Content-Type': 'application/json', 'x-admin-password': encodeURIComponent(adminPassword) });
 
     function el(tag, cls, texto) {
       const e = document.createElement(tag);
@@ -818,8 +1010,7 @@
     async function cargarConfig(abrir) {
       if (CFG && !abrir) return;
       try {
-        const res = await fetch('/api/admin/config', { headers: cfgHeaders() });
-        const d = await res.json();
+        const { data: d } = await api('/api/admin/config');
         if (!d.success) throw new Error(d.error || 'No se pudo cargar');
         CFG = d;
         abrirSeccion(abrir || seccionActual || CFG.secciones[0].key);
@@ -1011,10 +1202,7 @@
       const textoOriginal = btn.textContent;
       btn.textContent = 'Guardando...';
       try {
-        const res = await fetch('/api/admin/config/' + seccionActual, {
-          method: 'PUT', headers: cfgHeaders(), body: JSON.stringify({ valor: estado.valor }),
-        });
-        const d = await res.json();
+        const { data: d } = await api('/api/admin/config/' + seccionActual, { method: 'PUT', body: { valor: estado.valor } });
         if (!d.success) { cfgAviso('⚠️ ' + (d.error || 'No se pudo guardar'), false); return; }
         const key = seccionActual;
         await cargarConfig(key);
@@ -1030,8 +1218,7 @@
     async function restaurarSeccion() {
       if (!confirm('Esto devuelve toda esta sección a los valores originales del chatbot. ¿Continuar?')) return;
       try {
-        const res = await fetch('/api/admin/config/' + seccionActual + '/restaurar', { method: 'POST', headers: cfgHeaders() });
-        const d = await res.json();
+        const { data: d } = await api('/api/admin/config/' + seccionActual + '/restaurar', { method: 'POST' });
         if (!d.success) { cfgAviso('⚠️ ' + (d.error || 'No se pudo restaurar'), false); return; }
         const key = seccionActual;
         await cargarConfig(key);
@@ -1040,6 +1227,242 @@
         cfgAviso('Error de conexión con el servidor', false);
       }
     }
+
+    // ═════════ Historial de cambios ═════════
+    let histUltimaFecha = null;
+
+    function fechaCorta(f) {
+      return new Date(f).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' });
+    }
+
+    async function cargarHistorial(reiniciar) {
+      const persona = document.getElementById('histPersona').value;
+      const seccion = document.getElementById('histSeccion').value;
+      const params = new URLSearchParams({ limite: '30' });
+      if (persona) params.set('persona', persona);
+      if (seccion) params.set('seccion', seccion);
+      if (!reiniciar && histUltimaFecha) params.set('antes', histUltimaFecha);
+
+      try {
+        const { data } = await api('/api/admin/historial?' + params.toString());
+        if (!data.success) { avisoEn('histAlert', data.error || 'No se pudo cargar el historial', false); return; }
+        document.getElementById('histAlert').style.display = 'none';
+
+        const lista = document.getElementById('histLista');
+        if (reiniciar) {
+          lista.innerHTML = '';
+          if (data.filtros) {
+            const selP = document.getElementById('histPersona');
+            const selS = document.getElementById('histSeccion');
+            const vp = selP.value, vs = selS.value;
+            selP.innerHTML = ''; selS.innerHTML = '';
+            const op = (sel, v, t) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); };
+            op(selP, '', 'Todas las personas');
+            data.filtros.personas.forEach((p) => op(selP, p.correo, p.nombre || p.correo));
+            op(selS, '', 'Todas las secciones');
+            data.filtros.secciones.forEach((x) => op(selS, x, x));
+            selP.value = vp; selS.value = vs;
+          }
+          if (!data.items.length) lista.appendChild(el('p', 'cfg-help', 'Todavía no hay movimientos con esos filtros.'));
+        }
+        data.items.forEach((h) => lista.appendChild(renderMovimiento(h)));
+        histUltimaFecha = data.items.length ? data.items[data.items.length - 1].fecha : histUltimaFecha;
+        document.getElementById('histMas').style.display = data.hayMas ? 'inline-block' : 'none';
+      } catch (err) { /* la sesión ya se manejó en api() */ }
+    }
+
+    function renderMovimiento(h) {
+      const card = el('div', 'hist-item');
+      const head = el('div', 'hist-head');
+      head.appendChild(el('span', 'hist-quien', h.usuarioNombre || '(desconocida)'));
+      if (h.seccion) head.appendChild(el('span', 'hist-sec', h.seccion));
+      head.appendChild(el('span', 'hist-cuando', fechaCorta(h.fecha)));
+      card.appendChild(head);
+      card.appendChild(el('p', 'hist-resumen', h.resumen));
+      if (h.detalles && h.detalles.length) {
+        const ul = el('ul', 'hist-det');
+        h.detalles.forEach((d) => ul.appendChild(el('li', null, d)));
+        card.appendChild(ul);
+      }
+      if (h.deshecho) {
+        card.appendChild(el('div', 'hist-deshecho', 'Este cambio ya fue deshecho' + (h.deshechoPor ? ' por ' + h.deshechoPor : '') + '.'));
+      } else if (h.puedeDeshacer) {
+        const acc = el('div', 'hist-acc');
+        const b = el('button', 'cfg-secondary', '↩ Deshacer este cambio');
+        b.type = 'button';
+        b.onclick = () => deshacerMovimiento(h.id);
+        acc.appendChild(b);
+        card.appendChild(acc);
+      }
+      return card;
+    }
+
+    async function deshacerMovimiento(id, forzar) {
+      if (!forzar && !confirm('Se volverá a poner el valor que había antes de este cambio. ¿Continuar?')) return;
+      try {
+        const { status, data } = await api('/api/admin/historial/' + id + '/deshacer', { method: 'POST', body: { forzar: Boolean(forzar) } });
+        if (status === 409 && data.conflicto) {
+          if (confirm(data.error + '\n\n¿Quieres continuar de todos modos?')) return deshacerMovimiento(id, true);
+          return;
+        }
+        if (!data.success) { avisoEn('histAlert', data.error || 'No se pudo deshacer', false); return; }
+        CFG = null; // los datos del chatbot cambiaron: se vuelven a cargar al abrir esa sección
+        await cargarHistorial(true);
+        avisoEn('histAlert', '✅ Listo: se volvió a poner el valor anterior en el chatbot.', true);
+      } catch (err) { /* sesión */ }
+    }
+
+    // ═════════ Equipo (administradoras) ═════════
+    async function cargarEquipo() {
+      try {
+        const { data } = await api('/api/admin/equipo');
+        if (!data.success) { avisoEn('equipoAlert', data.error || 'No se pudo cargar el equipo', false); return; }
+        document.getElementById('equipoAlert').style.display = 'none';
+        renderEquipo(data.personas);
+      } catch (err) { /* sesión */ }
+    }
+
+    function renderEquipo(personas) {
+      const lista = document.getElementById('equipoLista');
+      lista.innerHTML = '';
+      if (!personas.length) lista.appendChild(el('p', 'cfg-help', 'Todavía no hay personas registradas.'));
+      personas.forEach((p) => {
+        const yo = sesion && p.correo === sesion.usuario.correo;
+        const fila = el('div', 'eq-item');
+        const info = el('div', 'eq-info');
+        const nom = el('div', 'eq-nom', p.nombre + (yo ? ' (tú)' : ''));
+        if (p.rol === 'admin') nom.appendChild(el('span', 'eq-badge admin', 'Administradora'));
+        if (!p.activo) nom.appendChild(el('span', 'eq-badge off', 'Desactivada'));
+        else if (p.debeCambiarPassword) nom.appendChild(el('span', 'eq-badge pend', 'Aún no entra'));
+        if (p.bloqueado) nom.appendChild(el('span', 'eq-badge off', 'Bloqueada'));
+        info.appendChild(nom);
+        info.appendChild(el('div', 'eq-meta', p.correo + ' · ' + (p.ultimoAcceso ? 'Último acceso: ' + fechaCorta(p.ultimoAcceso) : 'Sin accesos todavía')));
+        fila.appendChild(info);
+
+        if (!yo) {
+          const acc = el('div', 'eq-acciones');
+          acc.appendChild(botonMini('🔑 Restablecer contraseña', 'Genera una contraseña temporal nueva', () => restablecerPersona(p)));
+          acc.appendChild(botonMini(p.rol === 'admin' ? 'Quitar administradora' : 'Hacer administradora', 'Cambiar rol', () => cambiarPersona(p, { rol: p.rol === 'admin' ? 'equipo' : 'admin' })));
+          acc.appendChild(botonMini(p.activo ? 'Desactivar' : 'Reactivar', p.activo ? 'Quita su acceso' : 'Le devuelve el acceso', () => cambiarPersona(p, { activo: !p.activo }), p.activo ? 'danger' : ''));
+          fila.appendChild(acc);
+        }
+        lista.appendChild(fila);
+      });
+    }
+
+    function mostrarClave(nombre, password, correoEnviado, esReinicio) {
+      const box = document.getElementById('equipoClave');
+      box.innerHTML = '';
+      const d = el('div', 'pwd-box');
+      d.appendChild(el('div', null, (esReinicio ? 'Contraseña restablecida para ' : 'Acceso creado para ') + nombre + '.'));
+      const linea = el('div', null, 'Contraseña temporal: ');
+      linea.appendChild(el('code', null, password));
+      d.appendChild(linea);
+      d.appendChild(el('div', null, correoEnviado
+        ? '📧 También se la enviamos por correo. Al entrar, tendrá que cambiarla.'
+        : '⚠️ No se pudo enviar el correo: pásale esta contraseña por un medio seguro. Al entrar, tendrá que cambiarla.'));
+      d.appendChild(el('div', 'eq-meta', 'Solo se muestra ahora; por seguridad no se puede volver a ver.'));
+      box.appendChild(d);
+    }
+
+    async function agregarPersona() {
+      const nombre = document.getElementById('eqNombre').value.trim();
+      const correo = document.getElementById('eqCorreo').value.trim();
+      const rol = document.getElementById('eqRol').value;
+      const btn = document.getElementById('eqAgregarBtn');
+      btn.disabled = true;
+      try {
+        const { data } = await api('/api/admin/equipo', { method: 'POST', body: { nombre, correo, rol } });
+        if (!data.success) { avisoEn('equipoAlert', data.error || 'No se pudo agregar', false); return; }
+        document.getElementById('equipoAlert').style.display = 'none';
+        mostrarClave(data.persona.nombre, data.passwordTemporal, data.correoEnviado, false);
+        document.getElementById('eqNombre').value = '';
+        document.getElementById('eqCorreo').value = '';
+        document.getElementById('eqRol').value = 'equipo';
+        cargarEquipo();
+      } catch (err) { /* sesión */ }
+      finally { btn.disabled = false; }
+    }
+
+    async function restablecerPersona(p) {
+      if (!confirm('Se generará una contraseña temporal nueva para ' + p.nombre + ' y se cerrará su sesión actual. ¿Continuar?')) return;
+      try {
+        const { data } = await api('/api/admin/equipo/' + p.id + '/restablecer', { method: 'POST' });
+        if (!data.success) { avisoEn('equipoAlert', data.error || 'No se pudo restablecer', false); return; }
+        document.getElementById('equipoAlert').style.display = 'none';
+        mostrarClave(p.nombre, data.passwordTemporal, data.correoEnviado, true);
+        cargarEquipo();
+      } catch (err) { /* sesión */ }
+    }
+
+    async function cambiarPersona(p, cambios) {
+      const msg = 'activo' in cambios
+        ? (cambios.activo ? '¿Reactivar el acceso de ' + p.nombre + '?' : '¿Desactivar el acceso de ' + p.nombre + '? Se cerrará su sesión.')
+        : '¿Cambiar el rol de ' + p.nombre + ' a ' + (cambios.rol === 'admin' ? 'administradora' : 'equipo') + '?';
+      if (!confirm(msg)) return;
+      try {
+        const { data } = await api('/api/admin/equipo/' + p.id, { method: 'PATCH', body: cambios });
+        if (!data.success) { avisoEn('equipoAlert', data.error || 'No se pudo actualizar', false); return; }
+        document.getElementById('equipoAlert').style.display = 'none';
+        cargarEquipo();
+      } catch (err) { /* sesión */ }
+    }
+
+    // ═════════ Mi contraseña ═════════
+    function prepararPassword() {
+      const form = document.getElementById('pwdForm');
+      const obligatorio = Boolean(sesion && sesion.debeCambiarPassword);
+      document.getElementById('pwdAlert').style.display = 'none';
+      document.getElementById('pwdTitulo').textContent = obligatorio ? 'Elige tu contraseña nueva' : 'Cambiar mi contraseña';
+      document.getElementById('pwdAyuda').textContent = obligatorio
+        ? 'Entraste con una contraseña temporal. Elige una propia para continuar.'
+        : 'Elige una contraseña que solo tú conozcas.';
+      if (sesion && sesion.usuario.emergencia) {
+        form.style.display = 'none';
+        avisoEn('pwdAlert', 'El acceso de emergencia usa la contraseña del archivo .env del servidor; no se cambia desde aquí.', false);
+      } else {
+        form.style.display = 'block';
+      }
+    }
+
+    async function handleCambiarPassword(e) {
+      e.preventDefault();
+      const actual = document.getElementById('pwdActual').value;
+      const nueva = document.getElementById('pwdNueva').value;
+      const nueva2 = document.getElementById('pwdNueva2').value;
+      if (nueva !== nueva2) { avisoEn('pwdAlert', 'Las contraseñas nuevas no coinciden.', false); return; }
+      const btn = document.getElementById('pwdBtn');
+      btn.disabled = true;
+      try {
+        const { data } = await api('/api/admin/auth/cambiar-password', { method: 'POST', body: { actual, nueva } });
+        if (!data.success) { avisoEn('pwdAlert', data.error || 'No se pudo cambiar la contraseña', false); return; }
+        const eraObligatorio = sesion.debeCambiarPassword;
+        sesion.token = data.token;
+        sesion.debeCambiarPassword = false;
+        guardarSesion();
+        document.getElementById('pwdForm').reset();
+        document.getElementById('sideNav').classList.remove('bloqueado');
+        if (eraObligatorio) { switchSection('panelCard', document.getElementById('navComunicados')); }
+        else avisoEn('pwdAlert', '✅ Tu contraseña se cambió correctamente.', true);
+      } catch (err) { /* sesión */ }
+      finally { btn.disabled = false; }
+    }
+
+    // ═════════ Al abrir la página: recuperar la sesión si sigue vigente ═════════
+    (async function restaurarSesion() {
+      const guardada = sessionStorage.getItem(SS_KEY);
+      if (!guardada) return;
+      try {
+        sesion = JSON.parse(guardada);
+        const { data } = await api('/api/admin/auth/yo');
+        if (data.success) {
+          sesion.usuario = data.usuario;
+          sesion.debeCambiarPassword = data.debeCambiarPassword;
+          guardarSesion();
+          mostrarPanelTrasLogin();
+        } else cerrarSesion();
+      } catch (err) { cerrarSesion(); }
+    })();
   </script>
 
 </body>
