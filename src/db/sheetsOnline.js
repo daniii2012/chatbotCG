@@ -9,7 +9,7 @@ const ETIQUETAS = {
   fechaNacimiento: 'Fecha de nacimiento', edad: 'Edad', modalidad: 'Modalidad',
   servicioSolicita: 'Servicio', userId: 'UserId', flow: 'Flujo',
   empresa: 'Empresa / organización', cargo: 'Cargo', ubicacion: 'Ubicación',
-  horarioAtencion: 'Horario de atención', datosGrupo: 'Resumen del grupo',
+  horarioAtencion: 'Horario de atención', extension: 'Extensión', datosGrupo: 'Resumen del grupo',
   interes: 'Servicio que le interesa', programa: 'Programa de interés', contacto: 'Contacto proporcionado',
   info: 'Datos proporcionados', tipo: 'Tipo de solicitud', cantidadEstimada: 'Cantidad estimada del donativo',
   requiereRecibo: '¿Requiere recibo?', asistentes: 'Asistentes aproximados', institucion: 'Institución', motivoConsulta: 'Motivo de consulta',

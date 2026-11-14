@@ -1,4 +1,4 @@
-const { DATOS } = require('./datos');
+const { DATOS, mensajeEstudio } = require('./datos');
 
 // Las tarifas, horarios y el nombre del taller salen de config/datos.js.
 // Si algo cambia, se edita allá y aquí se actualiza solo.
@@ -53,7 +53,7 @@ Escribe el número de tu opción.`,
     enviarCuenta: `✅ Perfecto. Te enviamos los datos para el pago:\n\n🏦 *Datos bancarios:*\nBanco: ${cb.banco}\nTitular: ${cb.titular}\nCLABE: ${cb.clabe}\n\nUna vez realizado el pago, envíanos tu *comprobante* por este medio.`,
     confirmarPago: `¿Ya realizaste el pago?\n\n1️⃣ Sí, ya pagué\n2️⃣ Aún no he pagado`,
     asignacion: `Perfecto. En breve una terapeuta con horario disponible se pondrá en contacto contigo para confirmar tu cita en línea. 💙\n\nTambién recibirás:\n📄 Reglamento\n📄 Carta compromiso\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
-    valoracionCuota: `¡Gracias! Hemos recibido tu información.\n\nNuestro equipo la revisará para asignarte una cuota personalizada. Si resultara menor a ${cr.cuotaMinima}, te ofrecemos los *Círculos de Reflexión*:\n\n🌸 Espacios seguros donde podrás expresarte y descubrir que más mujeres están pasando por lo mismo.\n• Costo: ${cr.costo} · ${cr.frecuencia} · ${cr.duracion}\n\n¿Te interesa?\n1️⃣ Sí, quiero inscribirme\n2️⃣ Solo espero la valoración`,
+    valoracionCuota: `¡Gracias! Hemos recibido tu información.\n\n${mensajeEstudio()}\n\nNuestro equipo la revisará para asignarte una cuota personalizada. Si resultara menor a ${cr.cuotaMinima}, te ofrecemos los *Círculos de Reflexión*:\n\n🌸 Espacios seguros donde podrás expresarte y descubrir que más mujeres están pasando por lo mismo.\n• Costo: ${cr.costo} · ${cr.frecuencia} · ${cr.duracion}\n\n¿Te interesa?\n1️⃣ Sí, quiero inscribirme\n2️⃣ Solo espero la valoración`,
     circulosInfo: (nombre) => `🌸 *Círculos de Reflexión*\n\n¡Listo, ${nombre}! Registramos tu inscripción con los datos que ya nos diste. En breve te contactamos con horarios disponibles. 💙\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
     soloValoracion: `Entendido. En cuanto tengamos tu valoración nos ponemos en contacto. 💙\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
   },
@@ -70,7 +70,7 @@ Escribe el número de tu opción.`,
     enviarCuenta: `✅ Perfecto. Te enviamos los datos para el pago:\n\n🏦 *Datos bancarios:*\nBanco: ${cb.banco}\nTitular: ${cb.titular}\nCLABE: ${cb.clabe}\n\nUna vez realizado el pago, envíanos tu *comprobante* por este medio.`,
     confirmarPago: `¿Ya realizaste el pago?\n\n1️⃣ Sí, ya pagué\n2️⃣ Aún no he pagado`,
     asignacion: `Perfecto. En breve una abogada se pondrá en contacto contigo para acordar el horario de tu asesoría en línea, según tu disponibilidad y la suya. 💙\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
-    valoracionCuota: `¡Gracias! Nuestro equipo revisará tu información. Si la cuota resultara muy baja, emitiremos una *carta de canalización* con opciones de apoyo gratuito.\n\nNos pondremos en contacto pronto.\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
+    valoracionCuota: `¡Gracias! Hemos recibido tu información.\n\n${mensajeEstudio()}\n\nNuestro equipo revisará tu información. Si la cuota resultara muy baja, emitiremos una *carta de canalización* con opciones de apoyo gratuito.\n\nNos pondremos en contacto pronto.\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
   },
 
   bio: {
@@ -94,27 +94,25 @@ Escribe el número de tu opción.`,
   },
 
   servicios: {
-    inicio: `🏛️ *Servicios del Centro*\n\n${DATOS.serviciosCentro.map((x) => '• ' + x).join('\n')}\n\nEscribe tu *nombre completo* para recibir información:`,
-    pedirTelefono: `Gracias. 😊 Ahora escribe tu *número de teléfono* para que podamos contactarte:`,
-    pedirInteres: `¿Qué servicio te interesa?`,
-    confirmacion: (nombre) => `✅ ¡Gracias, ${nombre}!\n\nEn breve te contactaremos con fechas y costos.\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
+    // Opción 6: estos servicios ya no pertenecen a Casa Gaviota → se comparte el número de contacto
+    derivar: `🏛️ *Servicios del Centro*\n\n${DATOS.centroContacto.mensaje}\n\n📲 ${DATOS.centroContacto.telefono}💜\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
   },
 
   empresarial: {
-    inicio: `🏢 *Servicios Empresariales*\n\nAcompañamos a empresas e instituciones con talleres y procesos de formación para construir *culturas de trabajo más humanas, seguras e inclusivas*. Trabajamos desde la Educación para la Paz, la noviolencia, los derechos humanos y el aprendizaje de personas adultas.\n\nTenemos *${DATOS.empresas.lineas.length} líneas temáticas* con más de 20 talleres. Y si buscas sensibilizar sobre el acoso callejero, también está el *${DATOS.standUp.nombreCompleto}* (sin costo), en la opción 4 del menú principal.\n\n¿Qué te gustaría hacer?\n\n1️⃣ Ver los temas de talleres\n2️⃣ Conocer las modalidades\n3️⃣ Solicitar una propuesta personalizada`,
+    inicio: `🏢 *Servicios Empresariales*\n\nAcompañamos a empresas e instituciones con talleres y procesos de formación para construir *culturas de trabajo más humanas, seguras e inclusivas*. Trabajamos desde la Educación para la Paz, la noviolencia, los derechos humanos y el aprendizaje de personas adultas.\n\nTenemos *${DATOS.empresas.lineas.length} líneas temáticas* con más de 20 talleres. Y si buscas sensibilizar sobre el acoso callejero, también está el *${DATOS.standUp.nombreCompleto}* (sin costo), en la opción 4 del menú principal.\n\n¿Qué te gustaría hacer?\n\n1️⃣ Ver los temas de talleres\n2️⃣ Conocer las modalidades\n3️⃣ Solicitar una cotización o propuesta personalizada`,
 
-    menu: `¿Qué te gustaría hacer?\n\n1️⃣ Ver los temas de talleres\n2️⃣ Conocer las modalidades\n3️⃣ Solicitar una propuesta personalizada`,
+    menu: `¿Qué te gustaría hacer?\n\n1️⃣ Ver los temas de talleres\n2️⃣ Conocer las modalidades\n3️⃣ Solicitar una cotización o propuesta personalizada`,
 
     lineas: () => {
       const num = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'];
       const lista = DATOS.empresas.lineas.map((l, i) => `${num[i + 1]} ${l.nombre}`).join('\n');
-      return `📚 *Líneas temáticas*\n\n${lista}\n\nEscribe el *número* de una línea para ver sus talleres.\n9️⃣ Solicitar una propuesta personalizada\n0️⃣ Regresar`;
+      return `📚 *Líneas temáticas*\n\n${lista}\n\nEscribe el *número* de una línea para ver sus talleres.\n9️⃣ Solicitar una cotización\n0️⃣ Regresar`;
     },
 
     detalleLinea: (n) => {
       const l = DATOS.empresas.lineas[n - 1];
       const talleres = l.talleres.map((t) => `• *${t.nombre}*\n${t.objetivo}`).join('\n\n');
-      return `📌 *${l.nombre}*\n\n${talleres}\n\nEscribe otro *número del 1 al ${DATOS.empresas.lineas.length}* para ver otra línea, *9* para solicitar una propuesta o *0* para regresar.`;
+      return `📌 *${l.nombre}*\n\n${talleres}\n\nEscribe otro *número del 1 al ${DATOS.empresas.lineas.length}* para ver otra línea, *9* para solicitar una cotización o *0* para regresar.`;
     },
 
     modalidades: () => {
@@ -122,9 +120,15 @@ Escribe el número de tu opción.`,
       return `🧩 *Modalidades*\n\n${m}\n\nSe pueden configurar junto con el equipo de Recursos Humanos o Responsabilidad Social de tu empresa.`;
     },
 
-    pedirEmpresa: `Con gusto armamos una propuesta para tu empresa 💙\n\nEscribe el *nombre de tu empresa u organización*:`,
+    // Al pedir cotización: se explica que se canaliza al departamento especializado y se piden los datos
+    canalizar: `Con gusto 💙 Para canalizar tu solicitud con el *departamento especializado* de Servicios Empresariales y que te hagan llegar tu cotización, necesito algunos datos. Vamos paso a paso.`,
 
-    confirmacion: (empresa, nombrePersona, horario) => `✅ ¡Gracias, ${nombrePersona}!\n\nHemos registrado el interés de *${empresa}*. Una representante se pondrá en contacto contigo${horario ? ' en el horario que nos indicaste (' + horario + ')' : ' pronto'} para diseñar una propuesta personalizada.\n\nTambién puedes escribirnos a ${DATOS.empresas.contacto.correo} o llamar al ${DATOS.empresas.contacto.telefonos}.\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
+    confirmacion: (d) => {
+      const ext = d.extension && d.extension !== 'No tiene' ? ` (ext. ${d.extension})` : '';
+      const tel = d.celular ? ` al ${d.celular}${ext}` : '';
+      const horario = d.horarioAtencion ? ` en el horario que nos indicaste (${d.horarioAtencion})` : '';
+      return `✅ ¡Gracias, ${d.nombrePersona}!\n\nRegistramos la solicitud de *${d.empresa}* y la canalizamos al *departamento especializado* de Servicios Empresariales. Una persona del equipo se pondrá en contacto contigo${tel}${horario} para darte seguimiento y enviarte tu cotización.\n\nTambién puedes escribirnos a ${DATOS.empresas.contacto.correo} o llamar al ${DATOS.empresas.contacto.telefonos}.\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`;
+    },
   },
 
   donativos: {
@@ -162,7 +166,7 @@ Escribe el número de tu opción.`,
     confirmacion: (nombre) => `✅ ¡Gracias, ${nombre}!\n\nEl equipo correspondiente dará seguimiento a tu solicitud. Esto no garantiza una vacante ni su aceptación.\n\n${DATOS.rrhh.formularioMensaje}\n${DATOS.rrhh.formularioUrl}\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
   },
 
-  noEntiendo: `Disculpa, no logré entender tu respuesta. 💙 ¿Me ayudas escribiendo el *número* de la opción que prefieres?`,
+  noEntiendo: `Disculpa, no logré entender tu respuesta. 💙 Puedes escribir el *número* de la opción, o decirme con tus palabras cuál prefieres.`,
 };
 }
 

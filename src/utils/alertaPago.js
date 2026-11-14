@@ -6,6 +6,8 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
 const HOJA = 'Pagos por revisar';
 const HEADERS = [
   'Fecha', 'Servicio', 'Monto de referencia', 'Nombre', 'Teléfono', 'Correo',
@@ -103,11 +105,11 @@ async function alertarComprobante(session, flow, media) {
     <h2>💳 Nuevo comprobante de pago por revisar</h2>
     <p>Una usuaria envió un comprobante. <b>Por favor verifica manualmente que sea real</b> antes de confirmar su cita.</p>
     <ul>
-      <li><b>Servicio:</b> ${fila[1]}</li>
-      <li><b>Monto de referencia:</b> ${fila[2]}</li>
-      <li><b>Nombre:</b> ${fila[3] || '—'}</li>
-      <li><b>Teléfono:</b> ${fila[4] || '—'}</li>
-      <li><b>Correo:</b> ${fila[5] || '—'}</li>
+      <li><b>Servicio:</b> ${esc(fila[1])}</li>
+      <li><b>Monto de referencia:</b> ${esc(fila[2])}</li>
+      <li><b>Nombre:</b> ${esc(fila[3]) || '—'}</li>
+      <li><b>Teléfono:</b> ${esc(fila[4]) || '—'}</li>
+      <li><b>Correo:</b> ${esc(fila[5]) || '—'}</li>
       <li><b>Comprobante:</b> ${comprobanteEmailHtml}</li>
       <li><b>Fecha:</b> ${fila[0]}</li>
     </ul>
@@ -125,10 +127,10 @@ async function avisarDonativoEspecie(session) {
     <h2>👕 Nuevo donativo en especie (ropa)</h2>
     <p>Una persona quiere donar ropa y <b>enviará fotografías a este correo</b>. Por favor dale seguimiento.</p>
     <ul>
-      <li><b>Nombre:</b> ${d.nombre || '—'}</li>
-      <li><b>Teléfono:</b> ${d.telefono || '—'}</li>
-      <li><b>Correo:</b> ${d.correo || '—'}</li>
-      <li><b>Prendas y cantidad aproximada:</b> ${d.detalleEspecie || '—'}</li>
+      <li><b>Nombre:</b> ${esc(d.nombre) || '—'}</li>
+      <li><b>Teléfono:</b> ${esc(d.telefono) || '—'}</li>
+      <li><b>Correo:</b> ${esc(d.correo) || '—'}</li>
+      <li><b>Prendas y cantidad aproximada:</b> ${esc(d.detalleEspecie) || '—'}</li>
     </ul>
     <p>Recordatorio: buenas condiciones, lavada, sin ropa interior, trajes de baño ni calcetines.</p>`;
   for (const to of DATOS.donativosEspecie.correos) {
@@ -136,4 +138,35 @@ async function avisarDonativoEspecie(session) {
   }
 }
 
-module.exports = { alertarComprobante, avisarDonativoEspecie };
+// Avisa al departamento especializado que una empresa pidió cotización (Servicios empresariales)
+async function avisarSolicitudEmpresarial(session) {
+  const d = session.data || {};
+  const destinos = (DATOS.empresas && DATOS.empresas.avisoCorreos) || [];
+  if (!destinos.length) return;
+
+  const ext = d.extension && d.extension !== 'No tiene' ? ` (ext. ${d.extension})` : '';
+  const fila = (titulo, valor) => `<li><b>${titulo}:</b> ${esc(valor) || '—'}</li>`;
+  const html = `
+    <h2>🏢 Nueva solicitud de cotización · Servicios empresariales</h2>
+    <p>Una persona pidió una cotización de talleres. <b>Por favor contáctala</b> en el horario que indicó.</p>
+    <ul>
+      ${fila('Persona que nos busca', d.nombrePersona)}
+      ${fila('Empresa u organización', d.empresa)}
+      ${fila('Puesto', d.cargo)}
+      ${fila('Teléfono', (d.celular || '') + ext)}
+      ${fila('Correo', d.correo)}
+      ${fila('Horario para contactarla', d.horarioAtencion)}
+      ${fila('Temas de interés', d.temasInteres)}
+      ${fila('Modalidad', d.modalidadFormacion)}
+      ${fila('Ubicación', d.ubicacion)}
+      ${fila('Líneas que consultó', d.lineasConsultadas)}
+    </ul>
+    <p>La solicitud también quedó registrada en el Excel en línea (pestaña "Servicios empresariales").</p>`;
+
+  const asunto = String(d.empresa || 'nueva solicitud').replace(/[\r\n]+/g, ' ').slice(0, 80);
+  for (const to of destinos) {
+    await sendNotificationEmail(to, `[Casa Gaviota] 🏢 Solicitud de cotización: ${asunto}`, html);
+  }
+}
+
+module.exports = { alertarComprobante, avisarDonativoEspecie, avisarSolicitudEmpresarial };

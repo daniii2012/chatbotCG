@@ -32,9 +32,10 @@ const SECCIONES = [
   { key: 'empresas', icono: '🏢', titulo: 'Servicios empresariales', ayuda: 'Contacto, modalidades y catálogo de talleres (máximo 8 líneas).' },
   { key: 'rrhh', icono: '📝', titulo: 'Recursos Humanos: formulario', ayuda: 'Enlace del formulario que se muestra en Recursos Humanos para vacantes, servicio social y voluntariado.' },
   { key: 'vacantes', icono: '👩‍💼', titulo: 'Vacantes (Recursos Humanos)', ayuda: 'Si la dejas vacía, el bot avisa que no hay vacantes abiertas.' },
-  { key: 'serviciosCentro', icono: '🏛️', titulo: 'Servicios del centro', ayuda: 'Lista que ve la usuaria en "Servicios del centro".' },
+  { key: 'centroContacto', icono: '🏛️', titulo: 'Servicios del centro (opción 6)', ayuda: 'Estos servicios ya no pertenecen a Casa Gaviota. Esto es lo que se le muestra a quien elige la opción 6: el mensaje y el número de contacto.' },
   { key: 'donativosEspecie', icono: '👕', titulo: 'Donativos en especie (ropa)', ayuda: 'Correos a los que se envían las fotos y que reciben el aviso.' },
-  { key: 'formulario', icono: '📝', titulo: 'Formulario final', ayuda: 'Enlace que se manda al terminar psicología y asesoría legal.' },
+  { key: 'estudioSocioeconomico', icono: '📋', titulo: 'Formulario del estudio socioeconómico', ayuda: 'Enlace que se manda cuando la persona dice que no puede pagar, justo después de las preguntas del estudio (psicología y asesoría legal).' },
+  { key: 'formulario', icono: '📝', titulo: 'Formulario final', ayuda: 'Enlace que se manda AL TERMINAR cualquier servicio (psicología, asesoría legal, biodescodificación, Stand Up, empoderamiento, empresas, donativos y Recursos Humanos). En "Servicios donde se envía" puedes quitar los que no lo necesiten.' },
   { key: 'palabrasEmergencia', icono: '⚠️', titulo: 'Frases que activan la alerta de emergencia', ayuda: 'Si la usuaria escribe una de estas frases fuera de un flujo, el bot manda los números de emergencia. Se guardan en minúsculas y sin acentos.' },
 ];
 
@@ -71,6 +72,7 @@ const ETIQUETAS = {
   'empresas.contacto.correo': 'Correo',
   'empresas.contacto.telefonos': 'Teléfonos',
   'empresas.contacto.web': 'Sitio web',
+  'empresas.avisoCorreos': 'Correos que reciben las solicitudes de cotización',
   'empresas.modalidades': 'Modalidades',
   'empresas.modalidades.letra': 'Letra',
   'empresas.modalidades.nombre': 'Nombre',
@@ -83,7 +85,10 @@ const ETIQUETAS = {
   'rrhh.formularioUrl': 'Enlace del formulario',
   'rrhh.formularioMensaje': 'Mensaje que acompaña al enlace',
   'vacantes': 'Vacantes',
-  'serviciosCentro': 'Servicios',
+  'centroContacto.telefono': 'Número de contacto',
+  'centroContacto.mensaje': 'Mensaje que se muestra antes del número',
+  'estudioSocioeconomico.url': 'Enlace del formulario del estudio',
+  'estudioSocioeconomico.mensaje': 'Mensaje que acompaña al enlace',
   'donativosEspecie.correos': 'Correos de seguimiento',
   'formulario.url': 'Enlace del formulario',
   'formulario.mensaje': 'Mensaje que acompaña al enlace',
@@ -96,10 +101,10 @@ const PLANTILLAS = {
   cursosEmpoderamiento: { nombre: '', detalle: '', fechas: '', cuota: '', requisitos: '', activo: true },
   lineasEmergencia: { nombre: '', numero: '' },
   'empresas.modalidades': { letra: '', nombre: '', detalle: '' },
+  'empresas.avisoCorreos': '',
   'empresas.lineas': { nombre: '', talleres: [] },
   'empresas.lineas.talleres': { nombre: '', objetivo: '' },
   vacantes: '',
-  serviciosCentro: '',
   'donativosEspecie.correos': '',
   'formulario.flujos': '',
   palabrasEmergencia: '',
@@ -193,12 +198,21 @@ const VALIDADORES = {
         objetivo: texto(t?.objetivo, E('empresas.lineas.talleres.objetivo'), { max: 600 }),
       })),
     }));
+    // Si una configuración guardada antes no trae este dato, se usa el original
+    const avisoCorreos = v?.avisoCorreos === undefined
+      ? clonar(POR_DEFECTO.empresas.avisoCorreos)
+      : [...new Set(lista(v.avisoCorreos, 'Correos que reciben las solicitudes de cotización', { min: 1, max: 10 }).map((c) => {
+        const t = limpiar(c).toLowerCase();
+        if (!esEmail(t)) throw new Error(`"${t || '(vacío)'}" no es un correo válido.`);
+        return t;
+      }))];
     return {
       contacto: {
         correo,
         telefonos: texto(v?.contacto?.telefonos, E('empresas.contacto.telefonos'), { max: 120 }),
         web: texto(v?.contacto?.web, E('empresas.contacto.web'), { vacio: true, max: 120 }),
       },
+      avisoCorreos,
       modalidades,
       lineas,
     };
@@ -211,7 +225,16 @@ const VALIDADORES = {
   },
 
   vacantes: (v) => lista(v, 'Vacantes', { max: 30 }).map((x) => texto(x, 'Vacante', { max: 120 })),
-  serviciosCentro: (v) => lista(v, 'Servicios del centro', { min: 1, max: 20 }).map((x) => texto(x, 'Servicio', { max: 120 })),
+  centroContacto: (v) => ({
+    telefono: texto(v?.telefono, E('centroContacto.telefono'), { max: 40 }),
+    mensaje: texto(v?.mensaje, E('centroContacto.mensaje'), { max: 400 }),
+  }),
+
+  estudioSocioeconomico: (v) => {
+    const url = texto(v?.url, E('estudioSocioeconomico.url'), { max: 300 });
+    if (!/^https?:\/\//i.test(url)) throw new Error('El enlace del estudio socioeconómico debe empezar con http:// o https://');
+    return { url, mensaje: texto(v?.mensaje, E('estudioSocioeconomico.mensaje'), { max: 300 }) };
+  },
 
   donativosEspecie: (v) => ({
     correos: [...new Set(lista(v?.correos, 'Correos de seguimiento', { min: 1, max: 10 }).map((c) => {

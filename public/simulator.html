@@ -163,7 +163,9 @@
  align-self: flex-end;
  color: var(--accent);
  }
- .bubble img.chat-img {
+ .bubble .chat-link { color: #8ec5ff; text-decoration: underline; word-break: break-all; }
+    .bubble.user .chat-link { color: #ffd98a; }
+    .bubble img.chat-img {
  max-width: 100%;
  max-height: 200px;
  border-radius: 8px;
@@ -554,6 +556,30 @@ async function sendMessage() {
  }
 }
 
+// Convierte las direcciones (https://...) en enlaces en los que se puede dar clic.
+// Se arma con nodos (no con innerHTML), así lo que escriba una persona nunca se interpreta como código.
+function appendTextWithLinks(parent, text) {
+  const re = /(https?:\/\/[^\s<>"']+)/g;
+  let last = 0, m;
+  while ((m = re.exec(text)) !== null) {
+    let url = m[1];
+    // los signos al final de la frase no forman parte del enlace
+    const cola = (url.match(/[.,;:!?)\]]+$/) || [''])[0];
+    if (cola) url = url.slice(0, url.length - cola.length);
+    if (m.index > last) parent.appendChild(document.createTextNode(text.slice(last, m.index)));
+    const a = document.createElement('a');
+    a.href = url;
+    a.textContent = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.className = 'chat-link';
+    parent.appendChild(a);
+    last = m.index + url.length;
+    re.lastIndex = last;
+  }
+  if (last < text.length) parent.appendChild(document.createTextNode(text.slice(last)));
+}
+
 function appendBubble(type, text, imageUrl = null) {
  const msgs = document.getElementById('messages');
  const empty = msgs.querySelector('.empty-state');
@@ -569,9 +595,8 @@ function appendBubble(type, text, imageUrl = null) {
  }
 
  if (text) {
- const textNode = document.createTextNode(text);
- div.appendChild(textNode);
- }
+    appendTextWithLinks(div, text);
+  }
 
  const ts = document.createElement('span');
  ts.className = 'ts';

@@ -9,9 +9,17 @@ const DATOS = {
   // Formulario de Forms Assembly que se envía al terminar el flujo.
   // `flujos` = en qué flujos se manda (nombres internos de session.flow).
   formulario: {
+    url: 'https://casagaviota.tfaforms.net/33',
+    mensaje: '📝 Para terminar, por favor llena este formulario de atención individual personalizada:',
+    // Se envía al terminar CUALQUIER servicio que cierra una solicitud (la opción 6 solo da un número, no cierra solicitud)
+    flujos: ['psico', 'legal', 'bio', 'standup', 'empeco', 'empresarial', 'donativos', 'rrhh'],
+  },
+
+  // Formulario del estudio socioeconómico: se envía cuando la persona dice que no puede pagar,
+  // justo después de las preguntas del estudio (psicología y asesoría legal).
+  estudioSocioeconomico: {
     url: 'https://casagaviota.tfaforms.net/32',
-    mensaje: '📝 Para terminar, por favor llena este formulario:',
-    flujos: ['psico', 'legal'],
+    mensaje: '📝 Para completar tu estudio socioeconómico, por favor llena este formulario:',
   },
 
   // Donativos en especie (ropa): a estos correos se manda la foto para dar seguimiento
@@ -27,6 +35,8 @@ const DATOS = {
       telefonos: '55 3096 5189 y 55 7430 3412',
       web: 'www.casagaviota.org',
     },
+    // Correos que reciben el aviso cuando una empresa pide cotización (departamento especializado)
+    avisoCorreos: ['contacto@casagaviota.org.mx'],
     modalidades: [
       { letra: 'A', nombre: 'Sesión focalizada', detalle: 'Una temática concreta para sensibilizar, abrir diálogo y compartir herramientas prácticas.' },
       { letra: 'B', nombre: 'Ruta temática', detalle: 'Un conjunto de talleres relacionados para profundizar en una prioridad organizacional.' },
@@ -129,8 +139,12 @@ const DATOS = {
   // Vacantes que ve la persona en Recursos Humanos (vacía = "no hay vacantes")
   vacantes: ['Psicóloga clínica', 'Abogada', 'Coordinadora de comunicación'],
 
-  // Lista que ve la usuaria en "Servicios del centro"
-  serviciosCentro: ['Talleres de bienestar', 'Masajes terapéuticos'],
+  // Opción 6 "Servicios del centro": estos servicios ya no pertenecen a Casa Gaviota.
+  // Se comparte este número para recibir información o agendar una cita.
+  centroContacto: {
+    telefono: '+52 1 55 1151 0783',
+    mensaje: 'Estos servicios ya no pertenecen a Casa Gaviota. Para recibir más información o agendar una cita, puedes comunicarte al siguiente número:',
+  },
 
   horarios: {
     psicologia: 'en línea, de lunes a viernes de 8:00 a. m. a 10:00 p. m.',
@@ -178,6 +192,10 @@ const DATOS = {
 
 function mensajeFormulario() {
   return `${DATOS.formulario.mensaje}\n${DATOS.formulario.url}`;
+}
+
+function mensajeEstudio() {
+  return `${DATOS.estudioSocioeconomico.mensaje}\n${DATOS.estudioSocioeconomico.url}`;
 }
 
 // ─── Textos nuevos (los que antes estaban en config/messages.js y
@@ -234,4 +252,4 @@ function reconstruirTextos() {
   Object.assign(TEXTOS, construirTextos());
 }
 
-module.exports = { DATOS, TEXTOS, mensajeFormulario, reconstruirTextos };
+module.exports = { DATOS, TEXTOS, mensajeFormulario, mensajeEstudio, reconstruirTextos };

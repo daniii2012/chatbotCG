@@ -4,7 +4,8 @@ const { updateSession } = require('../db/sessions');
 const { runQuestionnaire } = require('./questionnaireEngine');
 const { EMPRESARIAL_PREGUNTAS } = require('../config/questionnaires');
 const { esCorreoValido, esTelefonoValido, validarNombreCompleto, validarFechaNacimiento, esComprobante } = require('../utils/validators');
-const { alertarComprobante, avisarDonativoEspecie } = require('../utils/alertaPago');
+const { alertarComprobante, avisarDonativoEspecie, avisarSolicitudEmpresarial } = require('../utils/alertaPago');
+const { pideCotizacion, normalizarExtension } = require('../utils/intencionEmpresarial');
 const { appendRecord } = require('../db/excel');
 
 
@@ -227,41 +228,18 @@ async function handleEmpEco(session, userMessage) {
 }
 
 // ─── SERVICIOS DEL CENTRO ─────────────────────────────────────────────────────
-async function handleServicios(session, userMessage) {
+// Estos servicios ya no pertenecen a Casa Gaviota: no se piden datos, solo se comparte el número de contacto.
+async function handleServicios(session) {
   const { step, data } = session;
-  let response = '', nextStep = step;
+  let response, nextStep;
 
-  switch (step) {
-    case 'servicios_nombre': {
-      const r = validarNombreCompleto(userMessage);
-      if (!r.ok) {
-        response = r.error + '\n\n' + M.servicios.inicio;
-        break;
-      }
-      data.nombre = r.valor;
-      nextStep = 'servicios_telefono';
-      response = M.servicios.pedirTelefono;
-      break;
-    }
-
-    case 'servicios_telefono':
-      if (!esTelefonoValido(userMessage)) {
-        response = 'Creo que a ese número le falta algo 😊 Escríbelo con *10 dígitos*, por favor.\n\n' + M.servicios.pedirTelefono;
-        break;
-      }
-      data.telefono = userMessage;
-      nextStep = 'servicios_interes';
-      response = M.servicios.pedirInteres;
-      break;
-
-    case 'servicios_interes':
-      data.interes = userMessage;
-      nextStep = 'servicios_fin';
-      response = M.servicios.confirmacion(data.nombre);
-      break;
-
-    case 'servicios_fin': nextStep = 'menu'; response = M.bienvenida; break;
-    default: nextStep = 'menu'; response = M.bienvenida;
+  if (step === 'servicios_fin') {
+    nextStep = 'menu';
+    response = M.bienvenida;
+  } else {
+    // Conversación abierta con la versión anterior (pedía nombre y teléfono): se le comparte el número
+    nextStep = 'servicios_fin';
+    response = M.servicios.derivar;
   }
 
   updateSession(session.userId, { step: nextStep, data });
@@ -273,18 +251,26 @@ async function handleEmpresarial(session, userMessage) {
   const { step, data } = session;
   let response = '', nextStep = step;
 
+  // Arranca la toma de datos: explica que se canaliza al departamento especializado y pide el primero
+  const iniciarSolicitud = () => {
+    delete data.empresarialIndex;
+    nextStep = 'empresarial_cuestionario';
+    const primera = runQuestionnaire(session, null, EMPRESARIAL_PREGUNTAS, 'empresarialIndex');
+    return M.empresarial.canalizar + '\n\n' + primera.response;
+  };
+
   switch (step) {
     case 'empresarial_menu':
       if (userMessage === '1') { nextStep = 'empresarial_lineas'; response = M.empresarial.lineas(); }
       else if (userMessage === '2') { response = M.empresarial.modalidades() + '\n\n' + M.empresarial.menu; }
-      else if (userMessage === '3') { nextStep = 'empresarial_empresa'; response = M.empresarial.pedirEmpresa; }
+      else if (userMessage === '3' || pideCotizacion(userMessage)) { response = iniciarSolicitud(); }
       else { response = M.noEntiendo + '\n\n' + M.empresarial.menu; }
       break;
 
     case 'empresarial_lineas': {
       const totalLineas = DATOS.empresas.lineas.length;
       const n = /^\d$/.test(userMessage) ? Number(userMessage) : NaN;
-      if (n === 9) { nextStep = 'empresarial_empresa'; response = M.empresarial.pedirEmpresa; }
+      if (n === 9 || pideCotizacion(userMessage)) { response = iniciarSolicitud(); }
       else if (n === 0) { nextStep = 'empresarial_menu'; response = M.empresarial.menu; }
       else if (n >= 1 && n <= totalLineas) {
         const vistas = new Set(data.lineasConsultadas ? data.lineasConsultadas.split(', ') : []);
@@ -295,13 +281,9 @@ async function handleEmpresarial(session, userMessage) {
       break;
     }
 
+    // Sesiones abiertas con la versión anterior: se reinicia la toma de datos
     case 'empresarial_empresa':
-      data.empresa = userMessage;
-      nextStep = 'empresarial_cuestionario';
-      {
-        const primera = runQuestionnaire(session, null, EMPRESARIAL_PREGUNTAS, 'empresarialIndex');
-        response = primera.response;
-      }
+      response = iniciarSolicitud();
       break;
 
     case 'empresarial_cuestionario': {
@@ -309,11 +291,15 @@ async function handleEmpresarial(session, userMessage) {
       if (resultado.finished) {
         data.nombre = data.nombrePersona;
         data.telefono = data.celular;
+        data.extension = normalizarExtension(data.extension);
         const modal = DATOS.empresas.modalidades.find((x) => x.letra.toLowerCase() === String(data.modalidadFormacion || '').trim().toLowerCase().replace(/[).]/g, ''));
         if (modal) data.modalidadFormacion = `${modal.letra}) ${modal.nombre}`;
 
+        // Avisa al departamento especializado (nunca debe romper la conversación)
+        try { await avisarSolicitudEmpresarial(session); } catch (err) { console.error('[WARN] Aviso de solicitud empresarial:', err.message); }
+
         nextStep = 'empresarial_fin';
-        response = M.empresarial.confirmacion(data.empresa, data.nombrePersona, data.horarioAtencion);
+        response = M.empresarial.confirmacion(data);
       } else {
         response = resultado.response;
       }

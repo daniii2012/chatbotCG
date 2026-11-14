@@ -1,4 +1,5 @@
 const { DATOS } = require('./datos');
+const { esExtensionValida } = require('../utils/intencionEmpresarial');
 const { esCorreoValido, esTelefonoValido, esOpcionLikertValida, esNombreCompleto } = require('../utils/validators');
 
 // ─── ESTUDIO SOCIOECONÓMICO (solo cuando no puede pagar la cuota) ──────────
@@ -24,36 +25,53 @@ const EMPODERAMIENTO_PREGUNTAS = [
 // Datos que piden los lineamientos: nombre completo, teléfono, cargo, correo,
 // nombre de la empresa (se pide antes), horario de atención y ubicación si es una actividad presencial.
 const EMPRESARIAL_PREGUNTAS = [
-    {
+  {
     key: 'nombrePersona',
-    texto: '¿Cuál es tu *nombre completo*?',
+    texto: 'Para empezar, ¿cuál es tu *nombre completo*?',
     validate: esNombreCompleto,
-    errorMsg: '⚠️ Falta tu apellido o hay caracteres no válidos. Escribe tu nombre completo (nombre y apellidos), solo con letras.',
+    errorMsg: 'Necesito tu nombre y apellido 😊 Escríbelos completos y solo con letras, por favor.',
   },
-  { key: 'cargo', texto: '¿Cuál es tu *cargo*?' },
+  {
+    key: 'empresa',
+    texto: 'Gracias. ¿Cómo se llama tu *empresa u organización*?',
+    validate: (t) => String(t || '').trim().length >= 2,
+    errorMsg: 'Escribe el nombre de tu empresa u organización, por favor.',
+  },
+  {
+    key: 'cargo',
+    texto: '¿Cuál es tu *puesto o cargo*?',
+    validate: (t) => String(t || '').trim().length >= 2,
+    errorMsg: 'Cuéntanos cuál es tu puesto o cargo, por favor.',
+  },
   {
     key: 'celular',
-    texto: '¿Cuál es tu número de teléfono? (10 dígitos)',
+    texto: '¿Cuál es tu *número de teléfono*? (10 dígitos)',
     validate: esTelefonoValido,
-    errorMsg: '⚠️ Ese teléfono no parece válido, debe tener 10 dígitos.',
+    errorMsg: 'Creo que a ese número le falta algo 😊 Escríbelo con *10 dígitos*, por favor.',
+  },
+  {
+    key: 'extension',
+    texto: '¿Tu teléfono tiene *extensión*? Escríbela (solo los números) o responde *no tengo*.',
+    validate: esExtensionValida,
+    errorMsg: 'Escribe solo los números de tu extensión (por ejemplo 245), o *no tengo* si no aplica.',
   },
   {
     key: 'correo',
     texto: '¿Cuál es tu *correo electrónico*?',
     validate: esCorreoValido,
-    errorMsg: '⚠️ Ese correo no parece válido, revisa el formato (ejemplo@dominio.com).',
+    errorMsg: 'Parece que ese correo no está completo 😊 Revisa que tenga el formato ejemplo@dominio.com, por favor.',
   },
   {
     key: 'horarioAtencion',
-    texto: '¿En qué *horario de atención* podemos comunicarnos contigo? (ejemplo: lunes a viernes de 9:00 a 14:00)',
+    texto: '¿En qué *horario* podemos comunicarnos contigo? (ejemplo: lunes a viernes de 9:00 a 14:00)',
     validate: (t) => String(t || '').trim().length >= 4,
-    errorMsg: '⚠️ Cuéntanos en qué días y horarios podemos contactarte (ejemplo: lunes a viernes de 9:00 a 14:00).',
+    errorMsg: 'Cuéntanos en qué días y horarios podemos contactarte (ejemplo: lunes a viernes de 9:00 a 14:00).',
   },
   {
     key: 'temasInteres',
     texto: '¿Qué *temas o líneas* de talleres te interesan? Puedes escribir varios (o "aún no lo sé").',
     validate: (t) => String(t || '').trim().length >= 2,
-    errorMsg: '⚠️ Cuéntanos qué temas te interesan, o escribe "aún no lo sé".',
+    errorMsg: 'Cuéntanos qué temas te interesan, o escribe "aún no lo sé".',
   },
   {
     key: 'modalidadFormacion',
@@ -62,7 +80,7 @@ const EMPRESARIAL_PREGUNTAS = [
       return `¿Qué *modalidad* te interesa?\n\n${lista}\n\nSi aún no lo sabes, escribe "No lo sé" y lo definimos juntas.`;
     },
     validate: (t) => String(t || '').trim().length >= 1,
-    get errorMsg() { return `⚠️ Escribe ${DATOS.empresas.modalidades.map((m) => m.letra).join(', ')} o "No lo sé".`; },
+    get errorMsg() { return `Escribe ${DATOS.empresas.modalidades.map((m) => m.letra).join(', ')} o "No lo sé".`; },
   },
   { key: 'ubicacion', texto: 'Si necesitas una actividad presencial, ¿en qué *ubicación* sería? (si no aplica, escribe "No aplica")' },
 ];
