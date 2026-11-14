@@ -36,6 +36,7 @@ const SECCIONES = [
   { key: 'donativosEspecie', icono: '👕', titulo: 'Donativos en especie (ropa)', ayuda: 'Correos a los que se envían las fotos y que reciben el aviso.' },
   { key: 'estudioSocioeconomico', icono: '📋', titulo: 'Formulario del estudio socioeconómico', ayuda: 'Enlace que se manda cuando la persona dice que no puede pagar, justo después de las preguntas del estudio (psicología y asesoría legal).' },
   { key: 'formulario', icono: '📝', titulo: 'Formulario final', ayuda: 'Enlace que se manda AL TERMINAR cualquier servicio (psicología, asesoría legal, biodescodificación, Stand Up, empoderamiento, empresas, donativos y Recursos Humanos). En "Servicios donde se envía" puedes quitar los que no lo necesiten.' },
+  { key: 'redesSociales', icono: '📱', titulo: 'Redes sociales', ayuda: 'Se agregan al final de cada servicio con el mensaje "No olvides seguirnos...". Puedes agregar, quitar, reordenar o cambiar redes. Si dejas la lista vacía, no se muestra nada.' },
   { key: 'palabrasEmergencia', icono: '⚠️', titulo: 'Frases que activan la alerta de emergencia', ayuda: 'Si la usuaria escribe una de estas frases fuera de un flujo, el bot manda los números de emergencia. Se guardan en minúsculas y sin acentos.' },
 ];
 
@@ -93,6 +94,10 @@ const ETIQUETAS = {
   'formulario.url': 'Enlace del formulario',
   'formulario.mensaje': 'Mensaje que acompaña al enlace',
   'formulario.flujos': 'Servicios donde se envía (psico, legal, bio, standup, empeco, servicios, empresarial, donativos, rrhh)',
+  'redesSociales.mensaje': 'Mensaje antes de las redes',
+  'redesSociales.redes': 'Redes',
+  'redesSociales.redes.nombre': 'Red social (Facebook, Instagram, TikTok...)',
+  'redesSociales.redes.cuenta': 'Nombre de la cuenta (como se verá)',
   'palabrasEmergencia': 'Frases',
 };
 
@@ -107,6 +112,7 @@ const PLANTILLAS = {
   vacantes: '',
   'donativosEspecie.correos': '',
   'formulario.flujos': '',
+  'redesSociales.redes': { nombre: '', cuenta: '' },
   palabrasEmergencia: '',
 };
 
@@ -254,6 +260,14 @@ const VALIDADORES = {
     });
     return { url, mensaje: texto(v?.mensaje, E('formulario.mensaje'), { max: 300 }), flujos: [...new Set(flujos)] };
   },
+
+  redesSociales: (v) => ({
+    mensaje: texto(v?.mensaje, E('redesSociales.mensaje'), { max: 200 }),
+    redes: lista(v?.redes, 'Redes', { max: 10 }).map((r) => ({
+      nombre: texto(r?.nombre, E('redesSociales.redes.nombre'), { max: 40 }),
+      cuenta: texto(r?.cuenta, E('redesSociales.redes.cuenta'), { max: 100 }),
+    })),
+  }),
 
   palabrasEmergencia: (v) => [...new Set(lista(v, 'Frases de emergencia', { min: 1, max: 300 })
     .map((f) => quitaAcentos(limpiar(f))).filter(Boolean))],

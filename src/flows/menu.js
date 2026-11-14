@@ -3,7 +3,7 @@ const { hayMalestar, frasePrevia } = require('../utils/calidez');
 const { esCotizacionEmpresarial } = require('../utils/intencionEmpresarial');
 const { resolverRespuesta, numeroDicho } = require('../utils/respuestaNatural');
 const { EMPRESARIAL_PREGUNTAS } = require('../config/questionnaires');
-const { DATOS, TEXTOS, mensajeFormulario } = require('../config/datos');
+const { DATOS, TEXTOS, mensajeFormulario, mensajeRedes } = require('../config/datos');
 const { sendNotificationEmail } = require('../senders/email');
 const { getNewRegisterTemplate } = require('../utils/emailTemplates/newRegister');
 
@@ -140,6 +140,10 @@ async function dispatchFlow(session, userMessage, media) {
     if (DATOS.formulario.flujos.includes(flow)) {
       response = `${response}\n\n${mensajeFormulario()}`;
     }
+
+    // Al final de todo: invitación a seguir las redes sociales (editable desde el panel admin)
+    const redes = mensajeRedes();
+    if (redes) response = `${response}\n\n${redes}`;
   }
 
   return response;

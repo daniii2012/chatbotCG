@@ -15,6 +15,17 @@ const DATOS = {
     flujos: ['psico', 'legal', 'bio', 'standup', 'empeco', 'empresarial', 'donativos', 'rrhh'],
   },
 
+  // Redes sociales: se agregan al final de cada servicio ("No olvides seguirnos...").
+  // Editable desde el panel admin: agregar, quitar o cambiar redes. Lista vacía = no se muestra nada.
+  redesSociales: {
+    mensaje: '💙 No olvides seguirnos en nuestras redes sociales:',
+    redes: [
+      { nombre: 'Facebook', cuenta: 'Casa Gaviota AC' },
+      { nombre: 'Instagram', cuenta: 'Casa Gaviota AC' },
+      { nombre: 'TikTok', cuenta: 'Casa Gaviota' },
+    ],
+  },
+
   // Formulario del estudio socioeconómico: se envía cuando la persona dice que no puede pagar,
   // justo después de las preguntas del estudio (psicología y asesoría legal).
   estudioSocioeconomico: {
@@ -194,6 +205,12 @@ function mensajeFormulario() {
   return `${DATOS.formulario.mensaje}\n${DATOS.formulario.url}`;
 }
 
+function mensajeRedes() {
+  const redes = (DATOS.redesSociales?.redes || []).filter((r) => r.nombre && r.cuenta);
+  if (!redes.length) return '';
+  return `${DATOS.redesSociales.mensaje}\n${redes.map((r) => `• ${r.nombre}: ${r.cuenta}`).join('\n')}`;
+}
+
 function mensajeEstudio() {
   return `${DATOS.estudioSocioeconomico.mensaje}\n${DATOS.estudioSocioeconomico.url}`;
 }
@@ -252,4 +269,4 @@ function reconstruirTextos() {
   Object.assign(TEXTOS, construirTextos());
 }
 
-module.exports = { DATOS, TEXTOS, mensajeFormulario, mensajeEstudio, reconstruirTextos };
+module.exports = { DATOS, TEXTOS, mensajeFormulario, mensajeEstudio, mensajeRedes, reconstruirTextos };
