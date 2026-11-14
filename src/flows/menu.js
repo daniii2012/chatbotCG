@@ -1,5 +1,8 @@
 const { MESSAGES: M } = require('../config/messages');
 const { hayMalestar, frasePrevia } = require('../utils/calidez');
+const { esCotizacionEmpresarial } = require('../utils/intencionEmpresarial');
+const { resolverRespuesta, numeroDicho } = require('../utils/respuestaNatural');
+const { EMPRESARIAL_PREGUNTAS } = require('../config/questionnaires');
 const { DATOS, TEXTOS, mensajeFormulario } = require('../config/datos');
 const { sendNotificationEmail } = require('../senders/email');
 const { getNewRegisterTemplate } = require('../utils/emailTemplates/newRegister');
@@ -39,15 +42,15 @@ async function activarProtocoloCrisis(session) {
 
 // Primer step de cada flujo al seleccionar del menú
 const MENU_MAP = {
-  '1': { flow: 'psico', step: 'psico_motivo', get msg() { return M.psico.pedirMotivo; }, get servicio() { return 'Atención psicológica'; }, keywords: ['psicológ', 'psicologa', 'terapia'] },
-  '2': { flow: 'legal', step: 'legal_nombre', get msg() { return M.legal.inicio; }, get servicio() { return 'Asesoría legal'; }, keywords: ['legal', 'abogad', 'jurídic'] },
-  '3': { flow: 'bio', step: 'bio_nombre', get msg() { return M.bio.pedirNombre; }, get servicio() { return 'Biodescodificación biológica'; }, keywords: ['biodescodificaci', 'biodecodificaci', 'biodesc'] },
-  '4': { flow: 'standup', step: 'standup_modalidad', get msg() { return TEXTOS.standup.intro; }, get servicio() { return DATOS.standUp.nombreCompleto; }, keywords: ['stand up', 'standup', 'acoso callejero'] },
-  '5': { flow: 'empeco', step: 'empeco_programa', get msg() { return TEXTOS.empEco.inicio; }, get servicio() { return 'Empoderamiento económico'; }, keywords: ['empoderamiento económico', 'empoderamiento economico'] },
-  '6': { flow: 'servicios', step: 'servicios_nombre', get msg() { return M.servicios.inicio; }, get servicio() { return 'Servicios del centro'; }, keywords: ['servicios del centro'] },
-  '7': { flow: 'empresarial', step: 'empresarial_menu', get msg() { return M.empresarial.inicio; }, get servicio() { return 'Servicios empresariales'; }, keywords: ['servicios empresariales', 'empresa'] },
-  '8': { flow: 'donativos', step: 'donativos_tipo', get msg() { return M.donativos.inicio; }, get servicio() { return 'Donativos'; }, keywords: ['donativ', 'donar'] },
-  '9': { flow: 'rrhh', step: 'rrhh_opcion', get msg() { return M.rrhh.inicio; }, get servicio() { return 'Recursos Humanos'; }, keywords: ['recursos humanos', 'rrhh'] },
+  '1': { flow: 'psico', step: 'psico_motivo', get msg() { return M.psico.pedirMotivo; }, get servicio() { return 'Atención psicológica'; }, keywords: ['psicolog', 'psico', 'terapia', 'terapeuta', 'salud mental', 'emocional'] },
+  '2': { flow: 'legal', step: 'legal_nombre', get msg() { return M.legal.inicio; }, get servicio() { return 'Asesoría legal'; }, keywords: ['legal', 'abogad', 'juridic', 'asesoria legal'] },
+  '3': { flow: 'bio', step: 'bio_nombre', get msg() { return M.bio.pedirNombre; }, get servicio() { return 'Biodescodificación biológica'; }, keywords: ['biodescodificaci', 'biodecodificaci', 'biodesc', 'biologica'] },
+  '4': { flow: 'standup', step: 'standup_modalidad', get msg() { return TEXTOS.standup.intro; }, get servicio() { return DATOS.standUp.nombreCompleto; }, keywords: ['stand up', 'standup', 'stand-up', 'acoso callejero', 'taller de stand'] },
+  '5': { flow: 'empeco', step: 'empeco_programa', get msg() { return TEXTOS.empEco.inicio; }, get servicio() { return 'Empoderamiento económico'; }, keywords: ['empoderamiento económico', 'empoderamiento economico', 'empoderamiento financiero'] },
+  '6': { flow: 'servicios', step: 'servicios_fin', get msg() { return M.servicios.derivar; }, get servicio() { return 'Servicios del centro'; }, keywords: ['servicios del centro', 'centro de empoderamiento'] },
+  '7': { flow: 'empresarial', step: 'empresarial_menu', get msg() { return M.empresarial.inicio; }, get servicio() { return 'Servicios empresariales'; }, keywords: ['servicios empresariales', 'empresarial', 'empresa'] },
+  '8': { flow: 'donativos', step: 'donativos_tipo', get msg() { return M.donativos.inicio; }, get servicio() { return 'Donativos'; }, keywords: ['donativ', 'donar', 'donacion', 'apoyar con'] },
+  '9': { flow: 'rrhh', step: 'rrhh_opcion', get msg() { return M.rrhh.inicio; }, get servicio() { return 'Recursos Humanos'; }, keywords: ['recursos humanos', 'rrhh', 'vacante', 'bolsa de trabajo'] },
 };
 
 // Frases que indican que la usuaria quiere INICIAR el servicio, no solo preguntar sobre él
@@ -61,8 +64,12 @@ const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,
 function detectarSeleccionPorTexto(texto) {
   const lower = norm(texto);
 
-  if (!VERBOS_SELECCION.test(lower)) return null;
   if (PALABRAS_PREGUNTA.test(lower)) return null; // "quiero saber sobre X" no cuenta como selección
+
+  // Cuenta como selección si empieza con un verbo ("quiero psicológica") o si es un mensaje
+  // corto que solo nombra el servicio ("psicologica", "atencion psicologica", "asesoria legal").
+  const esCorto = lower.split(/\s+/).length <= 5 && !lower.includes('?');
+  if (!VERBOS_SELECCION.test(lower) && !esCorto) return null;
 
   for (const [num, o] of Object.entries(MENU_MAP)) {
     if (o.keywords.some(k => lower.includes(norm(k)))) return num;
@@ -165,11 +172,24 @@ async function processMessage(userId, userMessage, media = null) {
 
   // 3. Si la usuaria está en el menú raíz o no tiene flujo definido
   if (!session.flow || session.step === 'menu') {
-    const option = MENU_MAP[trimmed] || MENU_MAP[detectarSeleccionPorTexto(trimmed)];
+    // Pide cotización/propuesta de talleres para empresas: no se repite el catálogo,
+    // se pasa directo a tomar sus datos para canalizarla con el departamento especializado
+    if (esCotizacionEmpresarial(trimmed, session.data?.ultimaOpcionMencionada)) {
+      updateSession(userId, {
+        flow: 'empresarial',
+        step: 'empresarial_cuestionario',
+        data: { servicioSolicita: 'Servicios empresariales', empresarialIndex: 1 }, // ya se le hace la 1ª pregunta
+      });
+      return `${M.empresarial.canalizar}\n\n${EMPRESARIAL_PREGUNTAS[0].texto}`;
+    }
+
+    // También entiende "opción dos", "la primera", "2."...
+    const numeroMenu = numeroDicho(trimmed);
+    const option = MENU_MAP[trimmed] || (numeroMenu && MENU_MAP[numeroMenu]) || MENU_MAP[detectarSeleccionPorTexto(trimmed)];
 
     if (option) {
       // Si la persona lo escribió con sus palabras y compartió algo difícil, primero se le acompaña
-      const porTexto = !MENU_MAP[trimmed];
+      const porTexto = !MENU_MAP[trimmed] && !(numeroMenu && MENU_MAP[numeroMenu]);
       const calido = porTexto && hayMalestar(trimmed);
 
       // En psicología, si ya contó su motivo, no se le vuelve a preguntar: pasamos a sus datos
@@ -240,7 +260,9 @@ async function processMessage(userId, userMessage, media = null) {
   }
 
   // 4. Si la usuaria ya está dentro de un flujo activo (ej. respondiendo preguntas del formulario)
-  return dispatchFlow(session, trimmed, media);
+  // En los pasos con opciones, entiende palabras ("sí", "presencial", "ropa"...) además de números
+  const opcion = resolverRespuesta(session.step, trimmed);
+  return dispatchFlow(session, opcion ?? trimmed, media);
 }
 
 function detectarOpcionMencionada(texto) {
