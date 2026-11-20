@@ -43,7 +43,7 @@ Escribe el número de tu opción.`,
   empoderamientoIntro: `Para conocerte mejor y darte un mejor acompañamiento, te compartimos un breve cuestionario. No hay respuestas correctas o incorrectas, solo responde con lo que más se acerque a cómo te sientes. 💪`,
 
   psico: {
-    pedirMotivo: `💙 Antes de empezar, cuéntame brevemente cuál es el *motivo de tu consulta* (solo lo que quieras compartir). Así identifico si nuestro servicio puede acompañarte.\n\nTe aclaro que la atención psicológica de Casa Gaviota es para mujeres, con perspectiva de género, y no brindamos atención a personas generadoras de violencia.`,
+    pedirMotivo: `💙 Antes de empezar, cuéntame brevemente cuál es el *motivo de tu consulta* (solo lo que quieras compartir). Así identifico si nuestro servicio puede acompañarte.\n\nTe aclaro que la atención psicológica de Casa Gaviota es para mujeres, con perspectiva de género.`,
     pedirNombre: `Vamos paso a paso, sin prisa. 💙\n\nPara poder canalizarte con el equipo, escribe tu *nombre completo*:`,
     pedirTelefono: `Gracias. 😊 Ahora escribe tu *número de teléfono* para que podamos contactarte:`,
     pedirCorreo: `Perfecto. Escribe también tu *correo electrónico*, ahí te llegará la confirmación de tu registro:`,
