@@ -3,7 +3,7 @@ const { hayMalestar, frasePrevia } = require('../utils/calidez');
 const { esCotizacionEmpresarial } = require('../utils/intencionEmpresarial');
 const { resolverRespuesta, numeroDicho } = require('../utils/respuestaNatural');
 const { EMPRESARIAL_PREGUNTAS } = require('../config/questionnaires');
-const { DATOS, TEXTOS, mensajeFormulario, mensajeRedes } = require('../config/datos');
+const { DATOS, TEXTOS, mensajeFormulario } = require('../config/datos');
 const { sendNotificationEmail } = require('../senders/email');
 const { getNewRegisterTemplate } = require('../utils/emailTemplates/newRegister');
 
@@ -49,7 +49,7 @@ const MENU_MAP = {
   '5': { flow: 'empeco', step: 'empeco_programa', get msg() { return TEXTOS.empEco.inicio; }, get servicio() { return 'Empoderamiento económico'; }, keywords: ['empoderamiento económico', 'empoderamiento economico', 'empoderamiento financiero'] },
   '6': { flow: 'servicios', step: 'servicios_fin', get msg() { return M.servicios.derivar; }, get servicio() { return 'Servicios del centro'; }, keywords: ['servicios del centro', 'centro de empoderamiento'] },
   '7': { flow: 'empresarial', step: 'empresarial_menu', get msg() { return M.empresarial.inicio; }, get servicio() { return 'Servicios empresariales'; }, keywords: ['servicios empresariales', 'empresarial', 'empresa'] },
-  '8': { flow: 'donativos', step: 'donativos_tipo', get msg() { return M.donativos.inicio; }, get servicio() { return 'Donativos'; }, keywords: ['donativ', 'donar', 'donacion', 'apoyar con'] },
+  '8': { flow: 'donativos', step: 'donativos_tipo', get msg() { return M.donativos.inicio; }, get servicio() { return 'Donativos'; }, keywords: ['donativ', 'donar', 'donacion'] },
   '9': { flow: 'rrhh', step: 'rrhh_opcion', get msg() { return M.rrhh.inicio; }, get servicio() { return 'Recursos Humanos'; }, keywords: ['recursos humanos', 'rrhh', 'vacante', 'bolsa de trabajo'] },
 };
 
@@ -141,9 +141,8 @@ async function dispatchFlow(session, userMessage, media) {
       response = `${response}\n\n${mensajeFormulario()}`;
     }
 
-    // Al final de todo: invitación a seguir las redes sociales (editable desde el panel admin)
-    const redes = mensajeRedes();
-    if (redes) response = `${response}\n\n${redes}`;
+    // Al final de todo: invitación a seguir las redes y el podcast (editable desde el panel admin)
+    if (M.redesFinal) response = `${response}\n\n${M.redesFinal}`;
   }
 
   return response;
@@ -233,6 +232,12 @@ async function processMessage(userId, userMessage, media = null) {
         data: { servicioSolicita: opcionGuardada.servicio },
       });
       return opcionGuardada.msg;
+    }
+
+    // Pide el podcast o las redes sociales: se envían los enlaces
+    if (/\b(redes|redes sociales|instagram|facebook|tiktok|tik tok|podcast|youtube|spotify|desobedientes)\b/.test(norm(trimmed))) {
+      updateSession(userId, { data: { ...session.data, saludoEnviado: true } });
+      return M.redes;
     }
 
     // ── PRIMER MENSAJE: saludo cálido, sin menú ──────────────────────────

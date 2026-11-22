@@ -15,17 +15,6 @@ const DATOS = {
     flujos: ['psico', 'legal', 'bio', 'standup', 'empeco', 'empresarial', 'donativos', 'rrhh'],
   },
 
-  // Redes sociales: se agregan al final de cada servicio ("No olvides seguirnos...").
-  // Editable desde el panel admin: agregar, quitar o cambiar redes. Lista vacía = no se muestra nada.
-  redesSociales: {
-    mensaje: '💙 No olvides seguirnos en nuestras redes sociales:',
-    redes: [
-      { nombre: 'Facebook', cuenta: 'Casa Gaviota AC' },
-      { nombre: 'Instagram', cuenta: 'Casa Gaviota AC' },
-      { nombre: 'TikTok', cuenta: 'Casa Gaviota' },
-    ],
-  },
-
   // Formulario del estudio socioeconómico: se envía cuando la persona dice que no puede pagar,
   // justo después de las preguntas del estudio (psicología y asesoría legal).
   estudioSocioeconomico: {
@@ -126,11 +115,41 @@ const DATOS = {
     biodescodificacion: '$1,250 MXN',
   },
 
-  // Datos bancarios que se envían para pagos y donativos
+  // Cuenta para pagos de Atención psicológica y Círculos de Reflexión.
+  // También es la que se envía en Biodescodificación y Donativos.
+  // Campos vacíos (ej. tarjeta) no se muestran.
   cuentaBancaria: {
-    banco: 'BBVA',
-    titular: 'Fundación Casa Gaviota A.C.',
-    clabe: '012 180 00123456789 0',
+    banco: 'Banamex',
+    clabe: '002180700431023955',
+    cuenta: '3102395',
+    tarjeta: '',
+    beneficiario: 'Casa Gaviota un vuelo sin violencia A.C.',
+  },
+
+  // Cuenta EXCLUSIVA para pagos de Asesoría legal (es distinta a la anterior)
+  cuentaBancariaLegal: {
+    banco: 'Scotiabank',
+    clabe: '044180256000411219',
+    cuenta: '25600041121',
+    tarjeta: '5579209114531731',
+    beneficiario: 'Casa Gaviota',
+  },
+
+  // Podcast y redes sociales de Casa Gaviota. Se envían como enlaces con texto
+  // ([texto](url)): lo que se ve y se toca es el texto, no la URL larga.
+  // Se pueden agregar, quitar o cambiar desde el panel admin.
+  redes: {
+    mensajePodcast: 'Te invitamos a escuchar *Desobedientes Inc.*, el podcast de Casa Gaviota.',
+    podcast: [
+      { nombre: 'Velo en YouTube', url: 'https://youtube.com/playlist?list=PLPZyuze6psTuqMaDnYxC8wy9lgK2Vv1-M&si=IlPjBRXvBtDH0Z9J' },
+      { nombre: 'Escúchalo en Spotify', url: 'https://open.spotify.com/show/4B290kg22YjcDQIy6J6qPe?si=03b0931dbbdf428c' },
+    ],
+    mensajeRedes: 'No olvides seguirnos en nuestras redes sociales:',
+    sociales: [
+      { nombre: 'Instagram: Casa Gaviota AC', url: 'https://www.instagram.com/casagaviota/' },
+      { nombre: 'Facebook: Casa Gaviota AC', url: 'https://www.facebook.com/CasaGaviotaAC' },
+      { nombre: 'TikTok: Casa Gaviota', url: 'https://www.tiktok.com/@casagaviota?_r=1&_t=ZS-9BZEdelQLvI' },
+    ],
   },
 
   // Círculos de Reflexión (se ofrecen cuando la cuota valorada es muy baja)
@@ -154,11 +173,13 @@ const DATOS = {
   // Se comparte este número para recibir información o agendar una cita.
   centroContacto: {
     telefono: '+52 1 55 1151 0783',
-    mensaje: 'Estos servicios ya no pertenecen a Casa Gaviota. Para recibir más información o agendar una cita, puedes comunicarte al siguiente número:',
+    mensaje: 'Te agradecemos por tu interés en los servicios del centro, para recibir una atención personalizada puedes comunicarte al siguiente número:',
   },
 
   horarios: {
     psicologia: 'en línea, de lunes a viernes de 8:00 a. m. a 10:00 p. m.',
+    // Atención presencial (psicología y asesoría legal): hay pocos espacios
+    presencial: 'lunes, jueves o viernes de 9:00 a. m. a 5:00 p. m., o sábados de 9:00 a. m. a 2:00 p. m.',
   },
 
   standUp: {
@@ -201,14 +222,48 @@ const DATOS = {
   ],
 };
 
-function mensajeFormulario() {
-  return `${DATOS.formulario.mensaje}\n${DATOS.formulario.url}`;
+// Datos bancarios listos para enviar. Solo muestra los campos que tengan valor.
+function datosBancarios(c) {
+  return [
+    c?.banco && `Banco: ${c.banco}`,
+    c?.clabe && `CLABE interbancaria: ${c.clabe}`,
+    c?.cuenta && `Cuenta: ${c.cuenta}`,
+    c?.tarjeta && `Tarjeta: ${c.tarjeta}`,
+    c?.beneficiario && `Beneficiario: ${c.beneficiario}`,
+  ].filter(Boolean).join('\n');
 }
 
-function mensajeRedes() {
-  const redes = (DATOS.redesSociales?.redes || []).filter((r) => r.nombre && r.cuenta);
-  if (!redes.length) return '';
-  return `${DATOS.redesSociales.mensaje}\n${redes.map((r) => `• ${r.nombre}: ${r.cuenta}`).join('\n')}`;
+// Emoji de cada red según su nombre (si es una red nueva, usa 🔗)
+function emojiRed(nombre) {
+  const n = String(nombre || '').toLowerCase();
+  if (n.includes('youtube')) return '▶️';
+  if (n.includes('spotify')) return '🎧';
+  if (n.includes('instagram')) return '📸';
+  if (n.includes('facebook')) return '📘';
+  if (n.includes('tiktok') || n.includes('tik tok')) return '🎵';
+  if (n.includes('whatsapp')) return '💬';
+  if (n.includes('twitter') || /\bx\b/.test(n)) return '🐦';
+  if (n.includes('linkedin')) return '💼';
+  return '🔗';
+}
+
+// Mensaje con el podcast y las redes. Cada enlace va como [texto](url).
+// Si el equipo deja las listas vacías desde el panel, devuelve '' (no se muestra nada).
+function textoRedes() {
+  const r = DATOS.redes || {};
+  const enlaces = (lista) => (lista || [])
+    .filter((x) => x && x.nombre && x.url)
+    .map((x) => `${emojiRed(x.nombre)} [${x.nombre}](${x.url})`);
+  const podcast = enlaces(r.podcast);
+  const sociales = enlaces(r.sociales);
+  const bloques = [];
+  if (podcast.length) bloques.push([r.mensajePodcast && `🎙️ ${r.mensajePodcast}`, podcast.join('\n')].filter(Boolean).join('\n\n'));
+  if (sociales.length) bloques.push([r.mensajeRedes && `💙 ${r.mensajeRedes}`, sociales.join('\n')].filter(Boolean).join('\n'));
+  return bloques.join('\n\n');
+}
+
+function mensajeFormulario() {
+  return `${DATOS.formulario.mensaje}\n${DATOS.formulario.url}`;
 }
 
 function mensajeEstudio() {
@@ -269,4 +324,4 @@ function reconstruirTextos() {
   Object.assign(TEXTOS, construirTextos());
 }
 
-module.exports = { DATOS, TEXTOS, mensajeFormulario, mensajeEstudio, mensajeRedes, reconstruirTextos };
+module.exports = { DATOS, TEXTOS, mensajeFormulario, mensajeEstudio, datosBancarios, textoRedes, reconstruirTextos };

@@ -22,21 +22,22 @@ const clonar = (x) => JSON.parse(JSON.stringify(x));
 
 // ─── Secciones que se pueden editar (en el orden en que se muestran) ───
 const SECCIONES = [
-  { key: 'tarifas', icono: '💲', titulo: 'Precios y cuotas', ayuda: 'Costos que ve la usuaria y que usa la IA. Escribe el monto tal como quieres que se vea (ej. $750 MXN).' },
-  { key: 'horarios', icono: '🕐', titulo: 'Horarios', ayuda: 'Horario de atención que se muestra y que usa la IA.' },
+  { key: 'tarifas', icono: '💲', titulo: 'Cuotas de recuperación', ayuda: 'Cuotas de recuperación que ve la usuaria y que usa la IA. Escribe el monto tal como quieres que se vea (ej. $750 MXN).' },
+  { key: 'horarios', icono: '🕐', titulo: 'Horarios', ayuda: 'Horario de atención (en línea y presencial) que se muestra y que usa la IA.' },
   { key: 'cursosEmpoderamiento', icono: '📣', titulo: 'Convocatorias de empoderamiento económico', ayuda: 'El orden de la lista es el número que ve la usuaria. Apaga "Visible" para ocultar una convocatoria sin borrarla. Fechas, cuota y requisitos son opcionales: si los dejas vacíos no se muestran.' },
   { key: 'lineasEmergencia', icono: '🚨', titulo: 'Números de emergencia', ayuda: 'Se envían cuando alguien está en riesgo. Debe quedar al menos uno.' },
-  { key: 'cuentaBancaria', icono: '🏦', titulo: 'Datos bancarios', ayuda: 'Se envían para pagos de psicología, asesoría legal, biodescodificación y donativos. La CLABE debe tener 18 dígitos.' },
+  { key: 'cuentaBancaria', icono: '🏦', titulo: 'Datos bancarios: Psicología y Círculos de Reflexión', ayuda: 'Cuenta que se envía para pagos de atención psicológica y Círculos de Reflexión. También se usa en Biodescodificación y Donativos (la asesoría legal tiene su propia cuenta, abajo). La CLABE debe tener 18 dígitos. Cuenta y tarjeta son opcionales: si las dejas vacías no se muestran.' },
+  { key: 'cuentaBancariaLegal', icono: '⚖️', titulo: 'Datos bancarios: Asesoría legal', ayuda: 'Cuenta que se envía SOLO para pagos de asesoría legal. La CLABE debe tener 18 dígitos. Cuenta y tarjeta son opcionales: si las dejas vacías no se muestran.' },
+  { key: 'redes', icono: '📲', titulo: 'Podcast y redes sociales', ayuda: 'Se envían al final del menú, al terminar cada servicio y cuando alguien escribe \"redes\", \"instagram\", \"podcast\"... Cada enlace se ve con el \"Texto que se ve\" (ej. Instagram: Casa Gaviota AC) y lleva el enlace por debajo; debe empezar con https://. Puedes agregar, quitar, reordenar o cambiar redes. Si dejas las dos listas vacías, no se muestra nada.' },
   { key: 'circulosReflexion', icono: '🌸', titulo: 'Círculos de Reflexión', ayuda: 'Se ofrecen cuando la cuota valorada es muy baja.' },
   { key: 'standUp', icono: '🎤', titulo: 'Taller de Stand Up', ayuda: 'Nombre, duración y mínimo de asistentes.' },
   { key: 'empresas', icono: '🏢', titulo: 'Servicios empresariales', ayuda: 'Contacto, modalidades y catálogo de talleres (máximo 8 líneas).' },
   { key: 'rrhh', icono: '📝', titulo: 'Recursos Humanos: formulario', ayuda: 'Enlace del formulario que se muestra en Recursos Humanos para vacantes, servicio social y voluntariado.' },
   { key: 'vacantes', icono: '👩‍💼', titulo: 'Vacantes (Recursos Humanos)', ayuda: 'Si la dejas vacía, el bot avisa que no hay vacantes abiertas.' },
-  { key: 'centroContacto', icono: '🏛️', titulo: 'Servicios del centro (opción 6)', ayuda: 'Estos servicios ya no pertenecen a Casa Gaviota. Esto es lo que se le muestra a quien elige la opción 6: el mensaje y el número de contacto.' },
+  { key: 'centroContacto', icono: '🏛️', titulo: 'Servicios del centro (opción 6)', ayuda: 'Es lo que se le muestra a quien elige la opción 6: el mensaje y el número de contacto.' },
   { key: 'donativosEspecie', icono: '👕', titulo: 'Donativos en especie (ropa)', ayuda: 'Correos a los que se envían las fotos y que reciben el aviso.' },
   { key: 'estudioSocioeconomico', icono: '📋', titulo: 'Formulario del estudio socioeconómico', ayuda: 'Enlace que se manda cuando la persona dice que no puede pagar, justo después de las preguntas del estudio (psicología y asesoría legal).' },
   { key: 'formulario', icono: '📝', titulo: 'Formulario final', ayuda: 'Enlace que se manda AL TERMINAR cualquier servicio (psicología, asesoría legal, biodescodificación, Stand Up, empoderamiento, empresas, donativos y Recursos Humanos). En "Servicios donde se envía" puedes quitar los que no lo necesiten.' },
-  { key: 'redesSociales', icono: '📱', titulo: 'Redes sociales', ayuda: 'Se agregan al final de cada servicio con el mensaje "No olvides seguirnos...". Puedes agregar, quitar, reordenar o cambiar redes. Si dejas la lista vacía, no se muestra nada.' },
   { key: 'palabrasEmergencia', icono: '⚠️', titulo: 'Frases que activan la alerta de emergencia', ayuda: 'Si la usuaria escribe una de estas frases fuera de un flujo, el bot manda los números de emergencia. Se guardan en minúsculas y sin acentos.' },
 ];
 
@@ -45,22 +46,38 @@ const ETIQUETAS = {
   'tarifas.psicologiaSesion': 'Atención psicológica: 1 sesión',
   'tarifas.psicologiaPaquete4': 'Atención psicológica: paquete de 4 sesiones',
   'tarifas.asesoriaLegal': 'Asesoría legal: cuota por sesión',
-  'tarifas.biodescodificacion': 'Biodescodificación: costo por sesión',
-  'horarios.psicologia': 'Horario de atención psicológica',
+  'tarifas.biodescodificacion': 'Biodescodificación: cuota de recuperación por sesión',
+  'horarios.psicologia': 'Horario de atención psicológica en línea',
+  'horarios.presencial': 'Horario de atención presencial (psicología y asesoría legal)',
   'cursosEmpoderamiento': 'Convocatorias',
   'cursosEmpoderamiento.nombre': 'Nombre del curso',
   'cursosEmpoderamiento.detalle': 'Qué se aprende (descripción corta)',
   'cursosEmpoderamiento.fechas': 'Fechas de la convocatoria',
-  'cursosEmpoderamiento.cuota': 'Cuota o costo',
+  'cursosEmpoderamiento.cuota': 'Cuota de recuperación',
   'cursosEmpoderamiento.requisitos': 'Requisitos',
   'cursosEmpoderamiento.activo': 'Visible para las usuarias',
   'lineasEmergencia': 'Líneas',
   'lineasEmergencia.nombre': 'Nombre de la línea',
   'lineasEmergencia.numero': 'Número',
   'cuentaBancaria.banco': 'Banco',
-  'cuentaBancaria.titular': 'Titular',
-  'cuentaBancaria.clabe': 'CLABE (18 dígitos)',
-  'circulosReflexion.costo': 'Costo',
+  'cuentaBancaria.clabe': 'CLABE interbancaria (18 dígitos)',
+  'cuentaBancaria.cuenta': 'Número de cuenta',
+  'cuentaBancaria.tarjeta': 'Número de tarjeta (opcional)',
+  'cuentaBancaria.beneficiario': 'Beneficiario',
+  'cuentaBancariaLegal.banco': 'Banco',
+  'cuentaBancariaLegal.clabe': 'CLABE interbancaria (18 dígitos)',
+  'cuentaBancariaLegal.cuenta': 'Número de cuenta',
+  'cuentaBancariaLegal.tarjeta': 'Número de tarjeta (opcional)',
+  'cuentaBancariaLegal.beneficiario': 'Beneficiario',
+  'redes.mensajePodcast': 'Mensaje del podcast',
+  'redes.podcast': 'Enlaces del podcast',
+  'redes.podcast.nombre': 'Texto que se ve (ej. Velo en YouTube)',
+  'redes.podcast.url': 'Enlace (https://...)',
+  'redes.mensajeRedes': 'Mensaje antes de las redes',
+  'redes.sociales': 'Redes sociales',
+  'redes.sociales.nombre': 'Texto que se ve (ej. Instagram: Casa Gaviota AC)',
+  'redes.sociales.url': 'Enlace (https://...)',
+  'circulosReflexion.costo': 'Cuota de recuperación',
   'circulosReflexion.frecuencia': 'Frecuencia',
   'circulosReflexion.duracion': 'Duración',
   'circulosReflexion.cuotaMinima': 'Se ofrecen si la cuota valorada es menor a',
@@ -94,10 +111,6 @@ const ETIQUETAS = {
   'formulario.url': 'Enlace del formulario',
   'formulario.mensaje': 'Mensaje que acompaña al enlace',
   'formulario.flujos': 'Servicios donde se envía (psico, legal, bio, standup, empeco, servicios, empresarial, donativos, rrhh)',
-  'redesSociales.mensaje': 'Mensaje antes de las redes',
-  'redesSociales.redes': 'Redes',
-  'redesSociales.redes.nombre': 'Red social (Facebook, Instagram, TikTok...)',
-  'redesSociales.redes.cuenta': 'Nombre de la cuenta (como se verá)',
   'palabrasEmergencia': 'Frases',
 };
 
@@ -105,6 +118,8 @@ const ETIQUETAS = {
 const PLANTILLAS = {
   cursosEmpoderamiento: { nombre: '', detalle: '', fechas: '', cuota: '', requisitos: '', activo: true },
   lineasEmergencia: { nombre: '', numero: '' },
+  'redes.podcast': { nombre: '', url: '' },
+  'redes.sociales': { nombre: '', url: '' },
   'empresas.modalidades': { letra: '', nombre: '', detalle: '' },
   'empresas.avisoCorreos': '',
   'empresas.lineas': { nombre: '', talleres: [] },
@@ -112,7 +127,6 @@ const PLANTILLAS = {
   vacantes: '',
   'donativosEspecie.correos': '',
   'formulario.flujos': '',
-  'redesSociales.redes': { nombre: '', cuenta: '' },
   palabrasEmergencia: '',
 };
 
@@ -148,9 +162,22 @@ function entero(v, campo, min = 1, max = 100000) {
 
 const E = (p) => ETIQUETAS[p] || p;
 
+// Cuenta bancaria (psicología / asesoría legal): CLABE de 18 dígitos; cuenta y tarjeta son opcionales
+function validarCuenta(v, key, deQue) {
+  const clabe = texto(v?.clabe, E(key + '.clabe'), { max: 40 });
+  if (clabe.replace(/\D/g, '').length !== 18) throw new Error(`La CLABE de la cuenta ${deQue} debe tener exactamente 18 dígitos.`);
+  return {
+    banco: texto(v?.banco, E(key + '.banco'), { max: 80 }),
+    clabe,
+    cuenta: texto(v?.cuenta, E(key + '.cuenta'), { vacio: true, max: 40 }),
+    tarjeta: texto(v?.tarjeta, E(key + '.tarjeta'), { vacio: true, max: 40 }),
+    beneficiario: texto(v?.beneficiario, E(key + '.beneficiario'), { max: 120 }),
+  };
+}
+
 const VALIDADORES = {
   tarifas: (v) => Object.fromEntries(Object.keys(POR_DEFECTO.tarifas).map((k) => [k, texto(v?.[k], E('tarifas.' + k), { max: 80 })])),
-  horarios: (v) => Object.fromEntries(Object.keys(POR_DEFECTO.horarios).map((k) => [k, texto(v?.[k], E('horarios.' + k), { max: 200 })])),
+  horarios: (v) => Object.fromEntries(Object.keys(POR_DEFECTO.horarios).map((k) => [k, texto(v?.[k] ?? POR_DEFECTO.horarios[k], E('horarios.' + k), { max: 200 })])),
 
   cursosEmpoderamiento: (v) => lista(v, 'Convocatorias', { max: 30 }).map((c) => ({
     nombre: texto(c?.nombre, E('cursosEmpoderamiento.nombre'), { max: 120 }),
@@ -166,13 +193,22 @@ const VALIDADORES = {
     numero: texto(l?.numero, E('lineasEmergencia.numero'), { max: 120 }),
   })),
 
-  cuentaBancaria: (v) => {
-    const clabe = texto(v?.clabe, E('cuentaBancaria.clabe'), { max: 40 });
-    if (clabe.replace(/\D/g, '').length !== 18) throw new Error('La CLABE debe tener exactamente 18 dígitos.');
+  cuentaBancaria: (v) => validarCuenta(v, 'cuentaBancaria', 'de psicología y Círculos de Reflexión'),
+  cuentaBancariaLegal: (v) => validarCuenta(v, 'cuentaBancariaLegal', 'de asesoría legal'),
+
+  redes: (v) => {
+    const enlace = (x, seccion) => {
+      const nombre = texto(x?.nombre, E(`redes.${seccion}.nombre`), { max: 80 });
+      if (/[\[\]()]/.test(nombre)) throw new Error(`El texto "${nombre}" no puede llevar corchetes ni paréntesis.`);
+      const url = texto(x?.url, E(`redes.${seccion}.url`), { max: 500 });
+      if (!/^https?:\/\/[^\s)]+$/i.test(url)) throw new Error(`El enlace de "${nombre}" debe empezar con http:// o https:// y no llevar espacios.`);
+      return { nombre, url };
+    };
     return {
-      banco: texto(v?.banco, E('cuentaBancaria.banco'), { max: 80 }),
-      titular: texto(v?.titular, E('cuentaBancaria.titular'), { max: 120 }),
-      clabe,
+      mensajePodcast: texto(v?.mensajePodcast, E('redes.mensajePodcast'), { vacio: true, max: 300 }),
+      podcast: lista(v?.podcast, 'Enlaces del podcast', { max: 10 }).map((x) => enlace(x, 'podcast')),
+      mensajeRedes: texto(v?.mensajeRedes, E('redes.mensajeRedes'), { vacio: true, max: 300 }),
+      sociales: lista(v?.sociales, 'Redes sociales', { max: 15 }).map((x) => enlace(x, 'sociales')),
     };
   },
 
@@ -260,14 +296,6 @@ const VALIDADORES = {
     });
     return { url, mensaje: texto(v?.mensaje, E('formulario.mensaje'), { max: 300 }), flujos: [...new Set(flujos)] };
   },
-
-  redesSociales: (v) => ({
-    mensaje: texto(v?.mensaje, E('redesSociales.mensaje'), { max: 200 }),
-    redes: lista(v?.redes, 'Redes', { max: 10 }).map((r) => ({
-      nombre: texto(r?.nombre, E('redesSociales.redes.nombre'), { max: 40 }),
-      cuenta: texto(r?.cuenta, E('redesSociales.redes.cuenta'), { max: 100 }),
-    })),
-  }),
 
   palabrasEmergencia: (v) => [...new Set(lista(v, 'Frases de emergencia', { min: 1, max: 300 })
     .map((f) => quitaAcentos(limpiar(f))).filter(Boolean))],

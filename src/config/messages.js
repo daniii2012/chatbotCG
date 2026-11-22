@@ -1,11 +1,18 @@
-const { DATOS, mensajeEstudio } = require('./datos');
+const { DATOS, mensajeEstudio, datosBancarios, textoRedes: armarTextoRedes } = require('./datos');
 
 // Las tarifas, horarios y el nombre del taller salen de config/datos.js.
 // Si algo cambia, se edita allá y aquí se actualiza solo.
 function construirMensajes() {
 const t = DATOS.tarifas;
-const cb = DATOS.cuentaBancaria;
+const cuentaGeneral = datosBancarios(DATOS.cuentaBancaria); // psicología, círculos, biodescodificación y donativos
 const cr = DATOS.circulosReflexion;
+const cuentaLegal = datosBancarios(DATOS.cuentaBancariaLegal); // solo asesoría legal
+// Horario en línea de psicología sin el prefijo "en línea," ni el punto final
+const horarioEnLinea = DATOS.horarios.psicologia.replace(/^en l[ií]nea,?\s*/i, '').replace(/\.$/, '');
+const horarioPresencial = DATOS.horarios.presencial; // termina en "p. m." (el punto es de la abreviatura)
+// Enlaces con texto: [texto](url). El simulador y los canales los convierten (ver utils/enlaces.js).
+// Los textos y enlaces salen de DATOS.redes (editable en el panel admin). Puede quedar vacío.
+const textoRedes = armarTextoRedes();
 
 return {
   bienvenida: `¡Hola! Soy *Gavi*, la asistente virtual de *Casa Gaviota — Un vuelo sin violencia A.C.* 👋
@@ -26,7 +33,7 @@ Si estás ante una situación de emergencia o riesgo inmediato, puedes comunicar
 8️⃣ Donativos
 9️⃣ Recursos Humanos
 
-Escribe el número de tu opción.`,
+Escribe el número de tu opción.${textoRedes ? '\n\n' + textoRedes : ''}`,
 
   // Primer mensaje: cálido, SIN menú
   saludoInicial: `¡Hola! Soy *Gavi*, la asistente virtual de *Casa Gaviota* 💙\n\nEstoy aquí para orientarte y ayudarte a encontrar la información que necesitas.\n\n¿Qué te gustaría consultar?`,
@@ -34,6 +41,12 @@ Escribe el número de tu opción.`,
   // Comprobantes de pago
   comprobanteRecibido: `✅ ¡Gracias! Recibimos tu comprobante. El equipo de Casa Gaviota lo revisará y, una vez confirmado el pago, continuamos con tu cita. 💙`,
   recordarComprobante: `Cuando hayas hecho el pago, envíame tu *comprobante* (foto o captura) por este medio. 💙\n\nSi prefieres salir, escribe *menú*.`,
+
+  // Podcast y redes (también se envía al escribir "redes", "instagram", "podcast"...)
+  redes: textoRedes || 'Por el momento no tenemos enlaces de redes disponibles. 💙',
+
+  // Se agrega al final de cada servicio terminado (vacío = no se agrega nada)
+  redesFinal: textoRedes,
 
   menuRepeat: `Por favor escribe el número de la opción que deseas (1-9).`,
 
@@ -49,27 +62,27 @@ Escribe el número de tu opción.`,
     pedirCorreo: `Perfecto. Escribe también tu *correo electrónico*, ahí te llegará la confirmación de tu registro:`,
     pedirResidencia: `¿En qué *ciudad o municipio* vives?`,
     pedirFechaNacimiento: `Vamos muy bien. 💙 Escribe tu *fecha de nacimiento* (día/mes/año). Ejemplo: 15/03/1998:`,
-    preguntarCuota: (nombre) => `Gracias, ${nombre}. 😊\n\n*Atención psicológica ${DATOS.horarios.psicologia.replace(/\.$/, '')}.*\nEs un espacio seguro y sin juicios, con perspectiva de género, para acompañar tu proceso personal y emocional.\n\n*Costos del servicio:*\n• 1 sesión: ${t.psicologiaSesion}\n• 4 sesiones: ${t.psicologiaPaquete4}\n\n¿Puedes cubrir la cuota?\n\n1️⃣ Sí, puedo cubrir el costo\n2️⃣ No puedo cubrirla en este momento (te acompañamos con un estudio socioeconómico)`,
-    enviarCuenta: `✅ Perfecto. Te enviamos los datos para el pago:\n\n🏦 *Datos bancarios:*\nBanco: ${cb.banco}\nTitular: ${cb.titular}\nCLABE: ${cb.clabe}\n\nUna vez realizado el pago, envíanos tu *comprobante* por este medio.`,
+    preguntarCuota: (nombre) => `Gracias, ${nombre}. 😊\n\n*Atención psicológica*\n• En línea: ${horarioEnLinea}.\n• Presencial: ${horarioPresencial} (contamos con pocos espacios).\nEs un espacio seguro y sin juicios, con perspectiva de género, para acompañar tu proceso personal y emocional.\n\n*Cuota de recuperación:*\n• 1 sesión: ${t.psicologiaSesion}\n• 4 sesiones: ${t.psicologiaPaquete4}\n\n¿Puedes cubrir la cuota?\n\n1️⃣ Sí, puedo cubrir la cuota\n2️⃣ No puedo cubrirla en este momento (te acompañamos con un estudio socioeconómico)`,
+    enviarCuenta: `✅ Perfecto. Te enviamos los datos para el pago:\n\n🏦 *Datos bancarios:*\n${cuentaGeneral}\n\nUna vez realizado el pago, envíanos tu *comprobante* por este medio.`,
     confirmarPago: `¿Ya realizaste el pago?\n\n1️⃣ Sí, ya pagué\n2️⃣ Aún no he pagado`,
-    asignacion: `Perfecto. En breve una terapeuta con horario disponible se pondrá en contacto contigo para confirmar tu cita en línea. 💙\n\nTambién recibirás:\n📄 Reglamento\n📄 Carta compromiso\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
-    valoracionCuota: `¡Gracias! Hemos recibido tu información.\n\n${mensajeEstudio()}\n\nNuestro equipo la revisará para asignarte una cuota personalizada. Si resultara menor a ${cr.cuotaMinima}, te ofrecemos los *Círculos de Reflexión*:\n\n🌸 Espacios seguros donde podrás expresarte y descubrir que más mujeres están pasando por lo mismo.\n• Costo: ${cr.costo} · ${cr.frecuencia} · ${cr.duracion}\n\n¿Te interesa?\n1️⃣ Sí, quiero inscribirme\n2️⃣ Solo espero la valoración`,
+    asignacion: `Perfecto. En breve una terapeuta con horario disponible se pondrá en contacto contigo para confirmar tu cita (en línea o presencial, según los espacios disponibles). 💙\n\nTambién recibirás:\n📄 Reglamento\n📄 Carta compromiso\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
+    valoracionCuota: `¡Gracias! Hemos recibido tu información.\n\n${mensajeEstudio()}\n\nNuestro equipo la revisará para asignarte una cuota personalizada. Si resultara menor a ${cr.cuotaMinima}, te ofrecemos los *Círculos de Reflexión*:\n\n🌸 Espacios seguros donde podrás expresarte y descubrir que más mujeres están pasando por lo mismo.\n• Cuota de recuperación: ${cr.costo} · ${cr.frecuencia} · ${cr.duracion}\n\n¿Te interesa?\n1️⃣ Sí, quiero inscribirme\n2️⃣ Solo espero la valoración`,
     circulosInfo: (nombre) => `🌸 *Círculos de Reflexión*\n\n¡Listo, ${nombre}! Registramos tu inscripción con los datos que ya nos diste. En breve te contactamos con horarios disponibles. 💙\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
     soloValoracion: `Entendido. En cuanto tengamos tu valoración nos ponemos en contacto. 💙\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
   },
 
   legal: {
     // Primer mensaje al elegir asesoría legal: primero explica en qué consiste, luego pide datos
-    inicio: `⚖️ *Asesoría legal*\n\nEs una asesoría *en línea*, con perspectiva de género y sin juicios. La abogada te da información clara sobre tus derechos, los posibles pasos a seguir y las instituciones a las que puedes acudir, para que tomes decisiones informadas y seguras. Atendemos temas como guardia y custodia, divorcio, violencia familiar, violencia sexual y violencia digital.\n\nPara iniciar tu solicitud vamos paso a paso. 💙 Escribe tu *nombre completo*:`,
+    inicio: `⚖️ *Asesoría legal*\n\nEs una asesoría con perspectiva de género y sin juicios, *en línea* y también *presencial* (contamos con pocos espacios). La abogada te da información clara sobre tus derechos, los posibles pasos a seguir y las instituciones a las que puedes acudir, para que tomes decisiones informadas y seguras. Atendemos temas como guardia y custodia, divorcio, violencia familiar, violencia sexual y violencia digital.\n\nPara iniciar tu solicitud vamos paso a paso. 💙 Escribe tu *nombre completo*:`,
     pedirNombre: `Vamos paso a paso, sin prisa. 💙\n\nPara poder canalizarte con el equipo, escribe tu *nombre completo*:`,
     pedirTelefono: `Gracias. 😊 Ahora escribe tu *número de teléfono* para que podamos contactarte:`,
     pedirCorreo: `Perfecto. Escribe también tu *correo electrónico*, ahí te llegará la confirmación de tu registro:`,
     pedirResidencia: `¿En qué *ciudad o municipio* vives?`,
     pedirFechaNacimiento: `Vamos muy bien. 💙 Escribe tu *fecha de nacimiento* (día/mes/año). Ejemplo: 15/03/1998:`,
-    preguntarCuota: (nombre) => `Gracias, ${nombre}. 😊\n\n*Antes de continuar, te cuento cómo funciona:* la asesoría es en línea y te orienta sobre tus derechos y los posibles pasos a seguir. La asesoría inicial no implica que Casa Gaviota asumirá tu caso: la abogada valorará tu situación y, si es posible continuar con el acompañamiento jurídico, te enviará una propuesta de honorarios por correo electrónico.\n\n*Costo:* cuota de recuperación de ${t.asesoriaLegal} por sesión.\n\n¿Puedes cubrir la cuota?\n\n1️⃣ Sí, puedo cubrir el costo\n2️⃣ No puedo cubrirla en este momento (te acompañamos con un estudio socioeconómico)`,
-    enviarCuenta: `✅ Perfecto. Te enviamos los datos para el pago:\n\n🏦 *Datos bancarios:*\nBanco: ${cb.banco}\nTitular: ${cb.titular}\nCLABE: ${cb.clabe}\n\nUna vez realizado el pago, envíanos tu *comprobante* por este medio.`,
+    preguntarCuota: (nombre) => `Gracias, ${nombre}. 😊\n\n*Antes de continuar, te cuento cómo funciona:* la asesoría se ofrece en línea (el horario se acuerda con la abogada) y también de forma presencial: ${horarioPresencial} (contamos con pocos espacios). Te orienta sobre tus derechos y los posibles pasos a seguir. La asesoría inicial no implica que Casa Gaviota asumirá tu caso: la abogada valorará tu situación y, si es posible continuar con el acompañamiento jurídico, te enviará una propuesta de honorarios por correo electrónico.\n\n*Cuota de recuperación:* ${t.asesoriaLegal} por sesión.\n\n¿Puedes cubrir la cuota?\n\n1️⃣ Sí, puedo cubrir la cuota\n2️⃣ No puedo cubrirla en este momento (te acompañamos con un estudio socioeconómico)`,
+    enviarCuenta: `✅ Perfecto. Te enviamos los datos para el pago de la asesoría legal:\n\n🏦 *Datos bancarios:*\n${cuentaLegal}\n\nUna vez realizado el pago, envíanos tu *comprobante* por este medio.`,
     confirmarPago: `¿Ya realizaste el pago?\n\n1️⃣ Sí, ya pagué\n2️⃣ Aún no he pagado`,
-    asignacion: `Perfecto. En breve una abogada se pondrá en contacto contigo para acordar el horario de tu asesoría en línea, según tu disponibilidad y la suya. 💙\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
+    asignacion: `Perfecto. En breve una abogada se pondrá en contacto contigo para acordar la modalidad (en línea o presencial, según los espacios disponibles) y el horario de tu asesoría, según tu disponibilidad y la suya. 💙\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
     valoracionCuota: `¡Gracias! Hemos recibido tu información.\n\n${mensajeEstudio()}\n\nNuestro equipo revisará tu información. Si la cuota resultara muy baja, emitiremos una *carta de canalización* con opciones de apoyo gratuito.\n\nNos pondremos en contacto pronto.\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
   },
 
@@ -79,8 +92,8 @@ Escribe el número de tu opción.`,
     pedirCorreo: `Perfecto. Escribe también tu *correo electrónico*, ahí te llegará la confirmación de tu registro:`,
     pedirResidencia: `¿En qué *ciudad o municipio* vives?`,
     pedirFechaNacimiento: `Vamos muy bien. 💙 Escribe tu *fecha de nacimiento* (día/mes/año). Ejemplo: 15/03/1998:`,
-    preguntarAgendar: (nombre) => `Gracias, ${nombre}. 😊\n\n*Costo:* 1 sesión ${t.biodescodificacion}\nLas sesiones son en línea y están sujetas a la disponibilidad de agenda.\n\n¿Deseas agendar ahora?\n\n1️⃣ Sí\n2️⃣ No`,
-    agendarSi: `¡Genial! Te enviamos los datos para el pago:\n\n🏦 Banco: ${cb.banco}\nTitular: ${cb.titular}\nCLABE: ${cb.clabe}\n\nEnvía tu comprobante aquí para asignarte horario con la terapeuta. 💙`,
+    preguntarAgendar: (nombre) => `Gracias, ${nombre}. 😊\n\n*Cuota de recuperación:* 1 sesión ${t.biodescodificacion}\nLas sesiones son en línea y están sujetas a la disponibilidad de agenda.\n\n¿Deseas agendar ahora?\n\n1️⃣ Sí\n2️⃣ No`,
+    agendarSi: `¡Genial! Te enviamos los datos para el pago:\n\n🏦 *Datos bancarios:*\n${cuentaGeneral}\n\nEnvía tu comprobante aquí para asignarte horario con la terapeuta. 💙`,
     agendarNo: `Gracias por comunicarte con *Casa Gaviota*. Cuando estés lista, con gusto te ayudamos. 💙\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
   },
 
@@ -99,7 +112,7 @@ Escribe el número de tu opción.`,
   },
 
   empresarial: {
-    inicio: `🏢 *Servicios Empresariales*\n\nAcompañamos a empresas e instituciones con talleres y procesos de formación para construir *culturas de trabajo más humanas, seguras e inclusivas*. Trabajamos desde la Educación para la Paz, la noviolencia, los derechos humanos y el aprendizaje de personas adultas.\n\nTenemos *${DATOS.empresas.lineas.length} líneas temáticas* con más de 20 talleres. Y si buscas sensibilizar sobre el acoso callejero, también está el *${DATOS.standUp.nombreCompleto}* (sin costo), en la opción 4 del menú principal.\n\n¿Qué te gustaría hacer?\n\n1️⃣ Ver los temas de talleres\n2️⃣ Conocer las modalidades\n3️⃣ Solicitar una cotización o propuesta personalizada`,
+    inicio: `🏢 *Servicios Empresariales*\n\nAcompañamos a empresas e instituciones con talleres y procesos de formación para construir *culturas de trabajo más humanas, seguras e inclusivas*. Trabajamos desde la Educación para la Paz, la noviolencia, los derechos humanos y el aprendizaje de personas adultas.\n\nTenemos *${DATOS.empresas.lineas.length} líneas temáticas* con más de 20 talleres. Y si buscas sensibilizar sobre el acoso callejero, también está el *${DATOS.standUp.nombreCompleto}* (gratuito), en la opción 4 del menú principal.\n\n¿Qué te gustaría hacer?\n\n1️⃣ Ver los temas de talleres\n2️⃣ Conocer las modalidades\n3️⃣ Solicitar una cotización o propuesta personalizada`,
 
     menu: `¿Qué te gustaría hacer?\n\n1️⃣ Ver los temas de talleres\n2️⃣ Conocer las modalidades\n3️⃣ Solicitar una cotización o propuesta personalizada`,
 
@@ -138,7 +151,7 @@ Escribe el número de tu opción.`,
     preguntarRecibo: `💛 ¡Gracias por querer apoyar!\n\n¿Requieres *recibo de donatario*?\n\n1️⃣ Sí\n2️⃣ No`,
     pedirNombre: `Escribe tu *nombre completo*:`,
     pedirCantidad: `¿Qué *cantidad* estimada te gustaría donar?`,
-    economico: `🏦 *Datos bancarios:*\nBanco: ${cb.banco}\nTitular: ${cb.titular}\nCLABE: ${cb.clabe}\n\nEnvía tu comprobante aquí. ¡Gracias! 💛`,
+    economico: `🏦 *Datos bancarios:*\n${cuentaGeneral}\n\nEnvía tu comprobante aquí. ¡Gracias! 💛`,
     reciboPedirDatos: `Para donativos con recibo de donatario, el equipo de Casa Gaviota te indicará el procedimiento correspondiente.\n\nEscribe tu *nombre completo* y un *teléfono o correo* para que te contacten:`,
     reciboConfirmacion: `✅ ¡Gracias! El equipo de Casa Gaviota se pondrá en contacto contigo para indicarte el procedimiento para tu recibo de donatario. 💛\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
 

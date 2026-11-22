@@ -1,4 +1,5 @@
 const express = require('express');
+const { aTextoPlano, dividirMensaje } = require('../../utils/enlaces');
 const router = express.Router();
 const { verifySignature } = require('../shared/verifySignature');
 
@@ -39,20 +40,23 @@ router.post('/', verifySignature, async (req, res) => {
         console.error('Error llamando al chatbot:', err);
       }
 
-      try {
-        await fetch('https://graph.instagram.com/v23.0/me/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${process.env.INSTAGRAM_ACCESS_TOKEN}`,
-          },
-          body: JSON.stringify({
-            recipient: { id: senderId },
-            message: { text: reply.slice(0, 1000) }, // límite de Instagram
-          }),
-        });
-      } catch (err) {
-        console.error('Error enviando a Instagram:', err);
+      // Instagram no admite enlaces con texto y limita a 1000 caracteres: se manda en trozos
+      for (const trozo of dividirMensaje(aTextoPlano(reply), 1000)) {
+        try {
+          await fetch('https://graph.instagram.com/v23.0/me/messages', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${process.env.INSTAGRAM_ACCESS_TOKEN}`,
+            },
+            body: JSON.stringify({
+              recipient: { id: senderId },
+              message: { text: trozo },
+            }),
+          });
+        } catch (err) {
+          console.error('Error enviando a Instagram:', err);
+        }
       }
     }
   }
