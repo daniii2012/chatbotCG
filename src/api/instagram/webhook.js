@@ -16,16 +16,19 @@ router.get('/', (req, res) => {
   return res.sendStatus(403);
 });
 
+// Dos formas de conectar Instagram en Meta (solo una por app):
+//  - "API setup with Instagram Login": token INSTAGRAM_ACCESS_TOKEN, se envía por graph.instagram.com
+//  - "API setup with Facebook Login": se usa el token de la página (el mismo de Messenger), por graph.facebook.com
+// Si existe INSTAGRAM_ACCESS_TOKEN se usa el primero; si no, el token de la página.
 async function enviarMensaje(destinatarioId, message) {
+  const conInstagram = Boolean(process.env.INSTAGRAM_ACCESS_TOKEN);
+  const url = conInstagram
+    ? 'https://graph.instagram.com/v23.0/me/messages'
+    : `https://graph.facebook.com/v23.0/me/messages?access_token=${encodeURIComponent(process.env.MESSENGER_PAGE_ACCESS_TOKEN || '')}`;
+  const headers = { 'Content-Type': 'application/json' };
+  if (conInstagram) headers.Authorization = `Bearer ${process.env.INSTAGRAM_ACCESS_TOKEN}`;
   try {
-    const r = await fetch('https://graph.instagram.com/v23.0/me/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.INSTAGRAM_ACCESS_TOKEN}`,
-      },
-      body: JSON.stringify({ recipient: { id: destinatarioId }, message }),
-    });
+    const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ recipient: { id: destinatarioId }, message }) });
     if (!r.ok) console.error('[INSTAGRAM] Error enviando mensaje:', await r.text());
     return r.ok;
   } catch (err) {
