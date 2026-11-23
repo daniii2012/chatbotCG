@@ -43,20 +43,29 @@ function etiquetaBoton(t) {
   return (antes.length && antes.length <= 20 ? antes : t.slice(0, 20)).trim();
 }
 
-// Devuelve los mensajes de WhatsApp a enviar: el texto (sin las líneas de enlace) y,
-// por cada enlace, un mensaje con botón (cta_url), que es lo que permite ver texto en vez de URL.
-function armarMensajesWhatsApp(texto, to) {
+// Separa un texto en: el cuerpo (sin las líneas que eran solo un enlace) y la lista de enlaces.
+// Lo usan WhatsApp, Instagram y Messenger para mandar cada enlace como botón.
+function separarEnlaces(texto) {
   const t = String(texto ?? '');
   const enlaces = [...t.matchAll(RE_ENLACE)].map((m) => ({ texto: m[1], url: m[2] }));
-  if (!enlaces.length) {
-    return [{ messaging_product: 'whatsapp', to, type: 'text', text: { body: t } }];
-  }
+  if (!enlaces.length) return { cuerpo: t, enlaces };
   // quita del cuerpo las líneas que eran solo un enlace (con su emoji)
   const soloEnlace = (l) => {
     const sinEnlace = l.replace(RE_ENLACE, '');
     return sinEnlace !== l && sinEnlace.replace(/[\s\p{Extended_Pictographic}\uFE0F\u200D]/gu, '') === '';
   };
   const cuerpo = t.split('\n').filter((l) => !soloEnlace(l)).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  return { cuerpo, enlaces };
+}
+
+// Devuelve los mensajes de WhatsApp a enviar: el texto (sin las líneas de enlace) y,
+// por cada enlace, un mensaje con botón (cta_url), que es lo que permite ver texto en vez de URL.
+function armarMensajesWhatsApp(texto, to) {
+  const t = String(texto ?? '');
+  const { cuerpo, enlaces } = separarEnlaces(t);
+  if (!enlaces.length) {
+    return [{ messaging_product: 'whatsapp', to, type: 'text', text: { body: t } }];
+  }
   const mensajes = [];
   if (cuerpo) mensajes.push({ messaging_product: 'whatsapp', to, type: 'text', text: { body: cuerpo } });
   for (const e of enlaces) {
@@ -75,4 +84,18 @@ function armarMensajesWhatsApp(texto, to) {
   return mensajes;
 }
 
-module.exports = { aTextoPlano, dividirMensaje, etiquetaBoton, armarMensajesWhatsApp, RE_ENLACE };
+// Botón de enlace para Instagram y Messenger (plantilla "button": texto + botón con la URL)
+function plantillaBoton(e) {
+  return {
+    attachment: {
+      type: 'template',
+      payload: {
+        template_type: 'button',
+        text: e.texto.slice(0, 640),
+        buttons: [{ type: 'web_url', url: e.url, title: etiquetaBoton(e.texto) }],
+      },
+    },
+  };
+}
+
+module.exports = { aTextoPlano, dividirMensaje, etiquetaBoton, separarEnlaces, armarMensajesWhatsApp, plantillaBoton, RE_ENLACE };

@@ -1,8 +1,10 @@
 const express = require('express');
-const { aTextoPlano, dividirMensaje } = require('../../utils/enlaces');
 const router = express.Router();
 const { verifySignature } = require('../shared/verifySignature');
+const { plantillaBoton } = require('../../utils/enlaces');
+const { responder, yaProcesado, descargarImagen, enviarConBotones } = require('../shared/canal');
 
+// Meta verifica el webhook con este GET (se configura en developers.facebook.com)
 router.get('/', (req, res) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
@@ -14,52 +16,57 @@ router.get('/', (req, res) => {
   return res.sendStatus(403);
 });
 
-router.post('/', verifySignature, async (req, res) => {
-  res.sendStatus(200); // responde rápido a Meta
+async function enviarMensaje(destinatarioId, message) {
+  try {
+    const r = await fetch('https://graph.instagram.com/v23.0/me/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.INSTAGRAM_ACCESS_TOKEN}`,
+      },
+      body: JSON.stringify({ recipient: { id: destinatarioId }, message }),
+    });
+    if (!r.ok) console.error('[INSTAGRAM] Error enviando mensaje:', await r.text());
+    return r.ok;
+  } catch (err) {
+    console.error('[INSTAGRAM] Error enviando mensaje:', err.message);
+    return false;
+  }
+}
 
-  for (const entry of req.body.entry || []) {
+// Instagram limita a 1000 caracteres por mensaje; los enlaces salen como botón
+const enviarInstagram = (id, texto) => enviarConBotones(texto, {
+  max: 1000,
+  enviarTexto: (t) => enviarMensaje(id, { text: t }),
+  enviarBoton: (e) => enviarMensaje(id, plantillaBoton(e)),
+});
+
+async function manejar(body) {
+  for (const entry of body?.entry || []) {
     for (const ev of entry.messaging || []) {
-      if (!ev.message || ev.message.is_echo || !ev.message.text) continue;
+      if (!ev.message || ev.message.is_echo) continue; // ignora lo que manda la propia cuenta
+      if (yaProcesado(ev.message.mid)) continue;
 
       const senderId = ev.sender.id;
-      let reply = 'Perdón, ahorita no puedo responder. Intenta de nuevo en un momento.';
+      const adjunto = (ev.message.attachments || [])[0];
+      const esImagen = adjunto && adjunto.type === 'image' && adjunto.payload?.url;
 
-      try {
-        const r = await fetch(process.env.CHATBOT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: ev.message.text, // ajusta al campo que espera tu chatbot
-            userId: senderId,
-            channel: 'instagram',
-          }),
-        });
-        const data = await r.json();
-        reply = data.reply || reply; // ajusta al campo que devuelve tu chatbot
-      } catch (err) {
-        console.error('Error llamando al chatbot:', err);
-      }
-
-      // Instagram no admite enlaces con texto y limita a 1000 caracteres: se manda en trozos
-      for (const trozo of dividirMensaje(aTextoPlano(reply), 1000)) {
-        try {
-          await fetch('https://graph.instagram.com/v23.0/me/messages', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${process.env.INSTAGRAM_ACCESS_TOKEN}`,
-            },
-            body: JSON.stringify({
-              recipient: { id: senderId },
-              message: { text: trozo },
-            }),
-          });
-        } catch (err) {
-          console.error('Error enviando a Instagram:', err);
-        }
-      }
+      // "ig_" separa las sesiones de Instagram de las de otros canales
+      const respuesta = await responder({
+        userId: `ig_${senderId}`,
+        texto: ev.message.text || '',
+        imagen: esImagen ? () => descargarImagen(adjunto.payload.url) : null,
+        otro: Boolean(adjunto) && !esImagen,
+      });
+      if (respuesta) await enviarInstagram(senderId, respuesta);
     }
   }
+}
+
+router.post('/', verifySignature, (req, res) => {
+  res.sendStatus(200); // responde rápido a Meta; el mensaje se procesa después
+  manejar(req.body).catch((err) => console.error('[INSTAGRAM]', err));
 });
 
 module.exports = router;
+module.exports.manejar = manejar;

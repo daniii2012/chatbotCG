@@ -305,7 +305,8 @@ function construirTextos() {
     confirmacion: (nombre) =>
       `Gracias, ${nombre}. Recibimos tu solicitud para el ${DATOS.standUp.nombreCompleto}. ` +
       `El equipo de Casa Gaviota te contactará para coordinar la fecha, según el calendario institucional. ` +
-      `Esto es una solicitud, aún no es una fecha confirmada.`,
+      `Esto es una solicitud, aún no es una fecha confirmada.\n\n` +
+      `¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
   },
 
   empEco: {
