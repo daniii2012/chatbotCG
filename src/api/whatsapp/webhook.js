@@ -20,7 +20,7 @@ router.get('/', (req, res) => {
 async function bajarImagenWhatsApp(mediaId) {
   try {
     const auth = { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` };
-    const r = await fetch(`https://graph.facebook.com/v19.0/${mediaId}`, { headers: auth });
+    const r = await fetch(`https://graph.facebook.com/v25.0/${mediaId}`, { headers: auth });
     if (!r.ok) return null;
     const { url } = await r.json();
     return url ? await descargarImagen(url, auth) : null;
