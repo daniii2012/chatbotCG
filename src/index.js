@@ -8,7 +8,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const { getCampaignTemplate } = require('./utils/emailTemplates/campaign');
 
-const { sendWhatsAppMessage } = require('./api/whatsapp/send');
+const { enviarWhatsAppDetallado, explicarErrorWhatsApp } = require('./api/whatsapp/send');
 
 const { processMessage } = require('./flows/menu');
 const { getSession, getAllSessions, resetSession } = require('./db/sessions');
@@ -316,10 +316,10 @@ app.post('/api/admin/send-whatsapp', auth(), upload.array('archivos', 10), async
       console.log(`WhatsApp manual: se recibieron ${req.files.length} archivo(s), aún no se envían.`);
     }
 
-    const ok = await sendWhatsAppMessage(numero, mensaje);
+    const envio = await enviarWhatsAppDetallado(numero, mensaje);
 
-    if (!ok) {
-      return res.status(500).json({ success: false, error: 'No se pudo enviar el mensaje. Revisa las credenciales de WhatsApp.' });
+    if (!envio.ok) {
+      return res.status(500).json({ success: false, error: explicarErrorWhatsApp(envio) });
     }
 
     await registrarCambio(req.usuario, {
