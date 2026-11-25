@@ -17,15 +17,15 @@ const norm = (s) => String(s || '')
 const NUMEROS = {
   cero: 0, uno: 1, una: 1, primero: 1, primera: 1, primer: 1, dos: 2, segundo: 2, segunda: 2,
   tres: 3, tercero: 3, tercera: 3, tercer: 3, cuatro: 4, cuarto: 4, cuarta: 4, cinco: 5, quinto: 5, quinta: 5,
-  seis: 6, sexto: 6, siete: 7, septimo: 7, ocho: 8, octavo: 8, nueve: 9,
+  seis: 6, sexto: 6, siete: 7, septimo: 7, ocho: 8, octavo: 8, nueve: 9, diez: 10, decimo: 10, decima: 10,
 };
 
 // "2", "dos", "opción 2", "la segunda", "quiero la 2 por favor", "2️⃣"  →  '2'
 function numeroDicho(texto) {
   const n = norm(texto);
-  const m = /^(?:(?:quiero|elijo|escojo|prefiero|me quedo con|voy con|vamos con|dame|opcion|numero|la|el|#)\s+)*(\d|[a-z]+)(?:\s+(?:por favor|porfa|gracias|opcion))?$/.exec(n);
+  const m = /^(?:(?:quiero|elijo|escojo|prefiero|me quedo con|voy con|vamos con|dame|opcion|numero|la|el|#)\s+)*(\d{1,2}|[a-z]+)(?:\s+(?:por favor|porfa|gracias|opcion))?$/.exec(n);
   if (!m) return null;
-  if (/^\d$/.test(m[1])) return m[1];
+  if (/^\d{1,2}$/.test(m[1])) return m[1];
   return m[1] in NUMEROS ? String(NUMEROS[m[1]]) : null;
 }
 

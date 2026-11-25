@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { verifySignature } = require('../shared/verifySignature');
 const { plantillaBoton } = require('../../utils/enlaces');
-const { responder, yaProcesado, descargarImagen, enviarConBotones } = require('../shared/canal');
+const { responder, yaProcesado, descargarImagen, enviarConBotones, clasificarAdjuntos } = require('../shared/canal');
 
 // Meta verifica el webhook con este GET (se configura en developers.facebook.com)
 router.get('/', (req, res) => {
@@ -51,15 +51,22 @@ async function manejar(body) {
       if (yaProcesado(ev.message.mid)) continue;
 
       const senderId = ev.sender.id;
-      const adjunto = (ev.message.attachments || [])[0];
-      const esImagen = adjunto && adjunto.type === 'image' && adjunto.payload?.url;
+      const texto = ev.message.text || '';
+      const { imagenUrl, audio } = clasificarAdjuntos(ev.message.attachments);
+
+      // Menciones en historias, etiquetas, publicaciones compartidas, tarjetas de contacto, reels...
+      // NO se contestan nada: solo se atienden textos, fotos de comprobante y notas de voz.
+      if (!texto.trim() && !imagenUrl && !audio) {
+        console.log('[INSTAGRAM] Ignorado: mención, etiqueta u otro adjunto que no se contesta.');
+        continue;
+      }
 
       // "ig_" separa las sesiones de Instagram de las de otros canales
       const respuesta = await responder({
         userId: `ig_${senderId}`,
-        texto: ev.message.text || '',
-        imagen: esImagen ? () => descargarImagen(adjunto.payload.url) : null,
-        otro: Boolean(adjunto) && !esImagen,
+        texto,
+        imagen: imagenUrl ? () => descargarImagen(imagenUrl) : null,
+        otro: audio && !texto.trim() && !imagenUrl,
       });
       if (respuesta) await enviarInstagram(senderId, respuesta);
     }

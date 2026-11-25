@@ -1,3 +1,8 @@
+// ═══════════════════════════════════════════════════════════════
+// api/shared/canal.js
+// Lo que comparten WhatsApp, Instagram y Messenger: pasar el mensaje al bot,
+// recibir fotos de comprobantes, evitar mensajes repetidos y mandar los enlaces como botones.
+// ═══════════════════════════════════════════════════════════════
 const { processMessage } = require('../../flows/menu');
 const { getSession } = require('../../db/sessions');
 const { dividirMensaje, separarEnlaces } = require('../../utils/enlaces');
@@ -18,6 +23,16 @@ function yaProcesado(id) {
   vistos.add(id);
   if (vistos.size > 2000) vistos.delete(vistos.values().next().value);
   return false;
+}
+
+// De los adjuntos de un mensaje de Instagram/Messenger, solo interesan dos cosas:
+//  - una foto (posible comprobante de pago) y una nota de voz.
+// Todo lo demás (mención en historia, etiqueta, publicación o reel compartido, tarjeta de contacto
+// que Instagram arma al escribir un teléfono...) se IGNORA y no se contesta.
+function clasificarAdjuntos(adjuntos) {
+  const lista = Array.isArray(adjuntos) ? adjuntos : [];
+  const foto = lista.find((a) => a && a.type === 'image' && a.payload && a.payload.url);
+  return { imagenUrl: foto ? foto.payload.url : null, audio: lista.some((a) => a && a.type === 'audio') };
 }
 
 // Baja una imagen y la devuelve como data:image/...;base64 (así el bot la guarda igual que en el simulador)
@@ -68,4 +83,4 @@ async function enviarConBotones(texto, { max, enviarTexto, enviarBoton }) {
   }
 }
 
-module.exports = { responder, yaProcesado, descargarImagen, enviarConBotones, PASOS_COMPROBANTE };
+module.exports = { responder, yaProcesado, descargarImagen, enviarConBotones, clasificarAdjuntos, PASOS_COMPROBANTE };

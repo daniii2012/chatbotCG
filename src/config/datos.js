@@ -24,7 +24,7 @@ const DATOS = {
 
   // Donativos en especie (ropa): a estos correos se manda la foto para dar seguimiento
   donativosEspecie: {
-    correos: ['poamvi2@casagaviota.org.mx', 'pamvi@casagaviota.org.mx'],
+    correos: ['pamvi2@casagaviota.org.mx', 'pamvi@casagaviota.org.mx'],
   },
 
   // Catálogo de talleres para empresas (propuesta comercial 2026).
@@ -178,8 +178,20 @@ const DATOS = {
 
   horarios: {
     psicologia: 'en línea, de lunes a viernes de 8:00 a. m. a 10:00 p. m.',
-    // Atención presencial (psicología y asesoría legal): hay pocos espacios
+    // Atención psicológica presencial: hay pocos espacios
     presencial: 'lunes, jueves o viernes de 9:00 a. m. a 5:00 p. m., o sábados de 9:00 a. m. a 2:00 p. m.',
+    // Asesoría legal: solo en línea
+    legal: 'Las asesorías legales se brindan únicamente en modalidad en línea, con el fin de facilitar el acceso y el acompañamiento oportuno. Los horarios se acuerdan de manera individual, buscando empatar agendas y adaptarnos lo mejor posible a la disponibilidad de la usuaria.',
+  },
+
+  // Opción 10 del menú: es informativa. Todo se edita desde el panel admin.
+  // Si horarios o cuota quedan vacíos, esa línea no se muestra.
+  tallerLectura: {
+    titulo: 'Taller de lectura para Mujeres',
+    modalidad: 'En línea',
+    descripcion: 'Un espacio seguro y confidencial para compartir experiencias, fortalecer la autoestima y recibir apoyo emocional junto a otras mujeres, con escucha empática y sin juicios.',
+    horarios: 'Jueves de 04:00pm a 06:00pm y sábados de 12:00pm a 02:00pm',
+    cuota: '$50 por sesión',
   },
 
   standUp: {

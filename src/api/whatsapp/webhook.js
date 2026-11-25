@@ -35,6 +35,7 @@ async function manejar(body) {
     for (const cambio of entry.changes || []) {
       for (const m of cambio.value?.messages || []) { // "statuses" (entregado/leído) se ignoran
         if (yaProcesado(m.id)) continue;
+        if (['reaction', 'unsupported', 'system', 'request_welcome'].includes(m.type)) continue; // reacciones y avisos: no se contestan
 
         let texto = '';
         let imagen = null;

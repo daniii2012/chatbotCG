@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { verifySignature } = require('../shared/verifySignature');
 const { plantillaBoton } = require('../../utils/enlaces');
-const { responder, yaProcesado, descargarImagen, enviarConBotones } = require('../shared/canal');
+const { responder, yaProcesado, descargarImagen, enviarConBotones, clasificarAdjuntos } = require('../shared/canal');
 
 // Meta verifica el webhook con este GET (se configura en developers.facebook.com)
 router.get('/', (req, res) => {
@@ -55,15 +55,22 @@ async function manejar(body) {
       if (!ev.message || ev.message.is_echo) continue; // ignora lo que manda la propia página
       if (yaProcesado(ev.message.mid)) continue;
 
-      const adjunto = (ev.message.attachments || [])[0];
-      const esImagen = adjunto && adjunto.type === 'image' && adjunto.payload?.url;
+      const texto = ev.message.text || '';
+      const { imagenUrl, audio } = clasificarAdjuntos(ev.message.attachments);
+
+      // Menciones en historias, etiquetas, publicaciones compartidas, tarjetas de contacto, reels...
+      // NO se contestan nada: solo se atienden textos, fotos de comprobante y notas de voz.
+      if (!texto.trim() && !imagenUrl && !audio) {
+        console.log('[MESSENGER] Ignorado: mención, etiqueta u otro adjunto que no se contesta.');
+        continue;
+      }
 
       // "fb_" separa las sesiones de Facebook de las de otros canales
       const respuesta = await responder({
         userId: `fb_${senderId}`,
-        texto: ev.message.text || '',
-        imagen: esImagen ? () => descargarImagen(adjunto.payload.url) : null,
-        otro: Boolean(adjunto) && !esImagen,
+        texto,
+        imagen: imagenUrl ? () => descargarImagen(imagenUrl) : null,
+        otro: audio && !texto.trim() && !imagenUrl,
       });
       if (respuesta) await enviarMessenger(senderId, respuesta);
     }

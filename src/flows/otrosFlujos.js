@@ -246,6 +246,14 @@ async function handleServicios(session) {
   return response;
 }
 
+// ─── TALLER DE LECTURA PARA MUJERES (opción 10) ───────────────────────────────
+// Es solo informativo: se muestra la información y se ofrece regresar al menú.
+async function handleLectura(session) {
+  const { data } = session;
+  updateSession(session.userId, { step: 'menu', data });
+  return M.bienvenida;
+}
+
 // ─── SERVICIOS EMPRESARIALES ──────────────────────────────────────────────────
 async function handleEmpresarial(session, userMessage) {
   const { step, data } = session;
@@ -473,4 +481,4 @@ async function handleRRHH(session, userMessage) {
   return response;
 }
 
-module.exports = { handleBio, handleStandup, handleEmpEco, handleServicios, handleEmpresarial, handleDonativos, handleRRHH };
+module.exports = { handleBio, handleStandup, handleEmpEco, handleServicios, handleLectura, handleEmpresarial, handleDonativos, handleRRHH };

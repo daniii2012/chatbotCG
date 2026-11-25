@@ -14,7 +14,7 @@ const { saveBotRecord } = require('../db/mongo');
 
 const { handlePsico } = require('./psicologica');
 const { handleLegal } = require('./legal');
-const { handleBio, handleStandup, handleEmpEco, handleServicios, handleEmpresarial, handleDonativos, handleRRHH } = require('./otrosFlujos');
+const { handleBio, handleStandup, handleEmpEco, handleServicios, handleEmpresarial, handleDonativos, handleRRHH, handleLectura } = require('./otrosFlujos');
 
 const COMANDOS_CANCELAR = ['cancelar', 'salir', 'menu', 'menú', 'regresar', 'volver'];
 
@@ -50,6 +50,7 @@ const MENU_MAP = {
   '6': { flow: 'servicios', step: 'servicios_fin', get msg() { return M.servicios.derivar; }, get servicio() { return 'Servicios del centro'; }, keywords: ['servicios del centro', 'centro de empoderamiento'] },
   '7': { flow: 'empresarial', step: 'empresarial_menu', get msg() { return M.empresarial.inicio; }, get servicio() { return 'Servicios empresariales'; }, keywords: ['servicios empresariales', 'empresarial', 'empresa'] },
   '8': { flow: 'donativos', step: 'donativos_tipo', get msg() { return M.donativos.inicio; }, get servicio() { return 'Donativos'; }, keywords: ['donativ', 'donar', 'donacion'] },
+  '10': { flow: 'lectura', step: 'lectura_fin', get msg() { return M.lectura.info; }, get servicio() { return DATOS.tallerLectura.titulo; }, keywords: ['taller de lectura', 'lectura para mujeres', 'club de lectura'] },
   '9': { flow: 'rrhh', step: 'rrhh_opcion', get msg() { return M.rrhh.inicio; }, get servicio() { return 'Recursos Humanos'; }, keywords: ['recursos humanos', 'rrhh', 'vacante', 'bolsa de trabajo'] },
 };
 
@@ -92,6 +93,7 @@ async function dispatchFlow(session, userMessage, media) {
     case 'empresarial': response = await handleEmpresarial(session, userMessage); break;
     case 'donativos': response = await handleDonativos(session, userMessage, media); break;
     case 'rrhh': response = await handleRRHH(session, userMessage); break;
+    case 'lectura': response = await handleLectura(session, userMessage); break;
     default: return M.bienvenida;
   }
 
@@ -240,6 +242,15 @@ async function processMessage(userId, userMessage, media = null) {
       return M.redes;
     }
 
+    // Pide el menú ("menú", "opciones", "inicio", "qué opciones tienen"): se envía el menú oficial,
+    // no una lista inventada por la IA
+    const palabrasMenu = norm(trimmed).split(/\s+/);
+    if (palabrasMenu.length <= 4 && /\b(menu|opciones|inicio)\b/.test(norm(trimmed))
+      || (palabrasMenu.length <= 2 && /\bservicios\b/.test(norm(trimmed)))) {
+      updateSession(userId, { data: { ...session.data, saludoEnviado: true, menuMostrado: true } });
+      return M.bienvenida;
+    }
+
     // ── PRIMER MENSAJE: saludo cálido, sin menú ──────────────────────────
     const esPrimerMensaje = !session.data?.saludoEnviado;
     const pideMenu = /\b(menu|opciones|servicios|que ofrecen|que hacen)\b/.test(norm(trimmed));
@@ -279,7 +290,7 @@ function detectarOpcionMencionada(texto) {
 
   // 1. Número solo si viene como opción (ej. "es la 3", "opcion 3", "numero 3"),
   //    para no confundir "me pegó 3 veces" con la opción 3 del menú
-  const matchNumero = lower.match(/\b(?:opcion|numero|num|la|el)\s+([1-9])\b/);
+  const matchNumero = lower.match(/\b(?:opcion|numero|num|la|el)\s+(10|[1-9])\b/);
   if (matchNumero && MENU_MAP[matchNumero[1]]) {
     return matchNumero[1];
   }

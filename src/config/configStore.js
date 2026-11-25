@@ -30,6 +30,7 @@ const SECCIONES = [
   { key: 'cuentaBancariaLegal', icono: '⚖️', titulo: 'Datos bancarios: Asesoría legal', ayuda: 'Cuenta que se envía SOLO para pagos de asesoría legal. La CLABE debe tener 18 dígitos. Cuenta y tarjeta son opcionales: si las dejas vacías no se muestran.' },
   { key: 'redes', icono: '📲', titulo: 'Podcast y redes sociales', ayuda: 'Se envían al final del menú, al terminar cada servicio y cuando alguien escribe \"redes\", \"instagram\", \"podcast\"... Cada enlace se ve con el \"Texto que se ve\" (ej. Instagram: Casa Gaviota AC) y lleva el enlace por debajo; debe empezar con https://. Puedes agregar, quitar, reordenar o cambiar redes. Si dejas las dos listas vacías, no se muestra nada.' },
   { key: 'circulosReflexion', icono: '🌸', titulo: 'Círculos de Reflexión', ayuda: 'Se ofrecen cuando la cuota valorada es muy baja.' },
+  { key: 'tallerLectura', icono: '🌷', titulo: 'Taller de lectura para Mujeres (opción 10)', ayuda: 'Nombre, modalidad, descripción, horarios y cuota de recuperación de la opción 10 del menú. Si dejas vacíos los horarios o la cuota, esa línea no se muestra.' },
   { key: 'standUp', icono: '🎤', titulo: 'Taller de Stand Up', ayuda: 'Nombre, duración y mínimo de asistentes.' },
   { key: 'empresas', icono: '🏢', titulo: 'Servicios empresariales', ayuda: 'Contacto, modalidades y catálogo de talleres (máximo 8 líneas).' },
   { key: 'rrhh', icono: '📝', titulo: 'Recursos Humanos: formulario', ayuda: 'Enlace del formulario que se muestra en Recursos Humanos para vacantes, servicio social y voluntariado.' },
@@ -48,7 +49,13 @@ const ETIQUETAS = {
   'tarifas.asesoriaLegal': 'Asesoría legal: cuota por sesión',
   'tarifas.biodescodificacion': 'Biodescodificación: cuota de recuperación por sesión',
   'horarios.psicologia': 'Horario de atención psicológica en línea',
-  'horarios.presencial': 'Horario de atención presencial (psicología y asesoría legal)',
+  'horarios.presencial': 'Horario de atención presencial (solo psicología)',
+  'horarios.legal': 'Asesoría legal: modalidad y horarios (solo en línea)',
+  'tallerLectura.titulo': 'Nombre del taller',
+  'tallerLectura.modalidad': 'Modalidad (ej. En línea; puede quedar vacío)',
+  'tallerLectura.descripcion': 'Descripción',
+  'tallerLectura.horarios': 'Horarios',
+  'tallerLectura.cuota': 'Cuota de recuperación (ej. $50 por sesión)',
   'cursosEmpoderamiento': 'Convocatorias',
   'cursosEmpoderamiento.nombre': 'Nombre del curso',
   'cursosEmpoderamiento.detalle': 'Qué se aprende (descripción corta)',
@@ -177,7 +184,7 @@ function validarCuenta(v, key, deQue) {
 
 const VALIDADORES = {
   tarifas: (v) => Object.fromEntries(Object.keys(POR_DEFECTO.tarifas).map((k) => [k, texto(v?.[k], E('tarifas.' + k), { max: 80 })])),
-  horarios: (v) => Object.fromEntries(Object.keys(POR_DEFECTO.horarios).map((k) => [k, texto(v?.[k] ?? POR_DEFECTO.horarios[k], E('horarios.' + k), { max: 200 })])),
+  horarios: (v) => Object.fromEntries(Object.keys(POR_DEFECTO.horarios).map((k) => [k, texto(v?.[k] ?? POR_DEFECTO.horarios[k], E('horarios.' + k), { max: 500 })])),
 
   cursosEmpoderamiento: (v) => lista(v, 'Convocatorias', { max: 30 }).map((c) => ({
     nombre: texto(c?.nombre, E('cursosEmpoderamiento.nombre'), { max: 120 }),
@@ -213,6 +220,14 @@ const VALIDADORES = {
   },
 
   circulosReflexion: (v) => Object.fromEntries(Object.keys(POR_DEFECTO.circulosReflexion).map((k) => [k, texto(v?.[k], E('circulosReflexion.' + k), { max: 80 })])),
+
+  tallerLectura: (v) => ({
+    titulo: texto(v?.titulo, E('tallerLectura.titulo'), { max: 120 }),
+    modalidad: texto(v?.modalidad, E('tallerLectura.modalidad'), { vacio: true, max: 60 }),
+    descripcion: texto(v?.descripcion, E('tallerLectura.descripcion'), { max: 600 }),
+    horarios: texto(v?.horarios, E('tallerLectura.horarios'), { vacio: true, max: 300 }),
+    cuota: texto(v?.cuota, E('tallerLectura.cuota'), { vacio: true, max: 120 }),
+  }),
 
   standUp: (v) => ({
     nombreCompleto: texto(v?.nombreCompleto, E('standUp.nombreCompleto'), { max: 150 }),

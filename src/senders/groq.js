@@ -106,7 +106,7 @@ A) ATENCIÓN PSICOLÓGICA
 
 B) ASESORÍA LEGAL
 - Asesorías con perspectiva de género que dan información clara sobre derechos, posibles pasos a seguir e instituciones a las que se puede acudir, para favorecer decisiones informadas y seguras, con acompañamiento respetuoso y sin juicios.
-- Modalidad: en línea (los horarios se acuerdan de manera individual según la disponibilidad de la usuaria y de la abogada) y TAMBIÉN presencial: ${DATOS.horarios.presencial} Se cuenta con pocos espacios, así que depende de la disponibilidad (no prometas lugar). Si preguntan por atención presencial, díselo así; no digas que solo es en línea.
+- Modalidad: ${DATOS.horarios.legal} NO hay asesoría legal presencial: si preguntan, díselo con claridad y amabilidad.
 - Cuota de recuperación: ${DATOS.tarifas.asesoriaLegal} por sesión. Esta es la única cuota que debes usar.
 - Motivos contemplados: guardia y custodia, divorcio, violencia familiar, violencia sexual y violencia digital.
 - La asesoría inicial NO implica que Casa Gaviota asumirá la representación ni llevará el asunto. La abogada valorará el caso durante la asesoría y, si es posible continuar con el acompañamiento jurídico, enviará una propuesta de honorarios por correo electrónico. NUNCA prometas representación legal antes de esa evaluación.
@@ -144,6 +144,10 @@ G) DONATIVOS
 H) RECURSOS HUMANOS (servicio social, voluntariado o colaboración laboral)
 - Se pide nombre completo, correo electrónico, teléfono y la forma en que desea colaborar. El equipo correspondiente dará seguimiento. NO garantices una vacante ni su aceptación.
 - Formulario directo de Recursos Humanos: ${DATOS.rrhh.formularioUrl} (compártelo si preguntan por vacantes, servicio social o voluntariado).
+
+J) ${DATOS.tallerLectura.titulo.toUpperCase()} (opción 10 del menú)
+- ${DATOS.tallerLectura.titulo}${DATOS.tallerLectura.modalidad ? ` (${DATOS.tallerLectura.modalidad})` : ''}. ${DATOS.tallerLectura.descripcion}${DATOS.tallerLectura.horarios ? `\n- Horarios: ${DATOS.tallerLectura.horarios}.` : ''}${DATOS.tallerLectura.cuota ? `\n- Cuota de recuperación: ${DATOS.tallerLectura.cuota}.` : ''}
+- Es informativo: NO inventes fechas, cupos ni inscripciones. Si quiere más información, invítala a elegir la opción 10 del menú.
 
 --- DATOS PARA SOLICITAR SESIONES ---
 15. Los datos se recaban dentro del flujo del servicio, no en la conversación libre. Si la usuaria quiere agendar, invítala a iniciar el flujo desde el menú.
