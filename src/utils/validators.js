@@ -114,15 +114,11 @@ function esOpcionLikertValida(texto) {
   return ['1', '2', '3', '4', '5'].includes(texto.trim());
 }
 
-// ¿El mensaje cuenta como "ya mandé mi comprobante"? (imagen adjunta o texto tipo "ya pagué").
-// Es la ÚNICA definición: psicología, asesoría legal, biodescodificación y donativos la usan.
+// ¿El mensaje cuenta como "ya mandé mi comprobante"? SOLO si trae la foto o captura de pantalla:
+// escribir "ya pagué" ya no basta. Es la ÚNICA definición: psicología, taller de lectura, asesoría legal,
+// biodescodificación y donativos la usan.
 function esComprobante(texto, media) {
-  if (media) return true;
-  const t = String(texto || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-  if (!t) return false;
-  return t === '1'
-    || /^ya\b/.test(t)                       // "ya", "ya pagué", "ya lo envié"
-    || /\b(pago|pague|pagado|comprobante|transferencia|deposito|foto|captura|listo|envie|adjunto)\b/.test(t);
+  return Boolean(media && media.url);
 }
 
 module.exports = {
