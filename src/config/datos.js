@@ -12,7 +12,7 @@ const DATOS = {
     url: 'https://casagaviota.tfaforms.net/33',
     mensaje: '📝 Para terminar, por favor llena este formulario de atención individual personalizada:',
     // Se envía al terminar CUALQUIER servicio que cierra una solicitud (la opción 6 solo da un número, no cierra solicitud)
-    flujos: ['psico', 'legal', 'bio', 'standup', 'empeco', 'empresarial', 'donativos', 'rrhh'],
+    flujos: ['psico', 'lectura', 'legal', 'bio', 'standup', 'empeco', 'empresarial', 'donativos', 'rrhh'],
   },
 
   // Formulario del estudio socioeconómico: se envía cuando la persona dice que no puede pagar,

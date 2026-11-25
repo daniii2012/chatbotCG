@@ -42,7 +42,7 @@ Escribe el número de tu opción.${textoRedes ? '\n\n' + textoRedes : ''}`,
 
   // Comprobantes de pago
   comprobanteRecibido: `✅ ¡Gracias! Recibimos tu comprobante. El equipo de Casa Gaviota lo revisará y, una vez confirmado el pago, continuamos con tu cita. 💙`,
-  recordarComprobante: `Cuando hayas hecho el pago, envíame una *foto o captura de pantalla* de tu *comprobante* por este medio. 💙\n\nSi prefieres salir, escribe *menú*.`,
+  recordarComprobante: `Para registrar tu pago necesito la *foto o captura de pantalla* de tu *comprobante* (no basta con escribir que ya pagaste). Envíala por este medio cuando la tengas. 💙\n\nSi prefieres salir, escribe *menú*.`,
 
   // Podcast y redes (también se envía al escribir "redes", "instagram", "podcast"...)
   redes: textoRedes || 'Por el momento no tenemos enlaces de redes disponibles. 💙',
@@ -50,7 +50,7 @@ Escribe el número de tu opción.${textoRedes ? '\n\n' + textoRedes : ''}`,
   // Se agrega al final de cada servicio terminado (vacío = no se agrega nada)
   redesFinal: textoRedes,
 
-  menuRepeat: `Por favor escribe el número de la opción que deseas (1-9).`,
+  menuRepeat: `Por favor escribe el número de la opción que deseas (1-10).`,
 
   // ─── Mensajes compartidos entre flujos (cuestionarios largos) ─────────
   socioeconomicoIntro: `Entendemos tu situación, no te preocupes. 💙\n\nVamos a hacerte algunas preguntas para valorar tu cuota.`,
@@ -108,19 +108,30 @@ Escribe el número de tu opción.${textoRedes ? '\n\n' + textoRedes : ''}`,
     confirmacion: (nombre, programa) => `✅ ¡Gracias, ${nombre}!\n\nTu interés en *${programa}* fue registrado. El equipo responsable te compartirá información sobre las convocatorias vigentes; la disponibilidad depende del calendario institucional.\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
   },
 
-  // Opción 10: informativa. Todo sale de DATOS.tallerLectura (editable en el panel admin).
-  lectura: {
-    info: (() => {
-      const l = DATOS.tallerLectura;
-      const titulo = l.modalidad ? `${l.titulo} (${l.modalidad})` : l.titulo;
-      const datos = [
-        l.horarios && `📅 *Horarios:* ${l.horarios}`,
-        l.cuota && `💰 *Cuota de recuperación:* ${l.cuota}`,
-      ].filter(Boolean).join('\n');
-      return [`🌷 *${titulo}* 🌷`, l.descripcion, datos, '¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú']
-        .filter(Boolean).join('\n\n');
-    })(),
-  },
+  // Opción 10: Taller de lectura para Mujeres. Todo sale de DATOS.tallerLectura (editable en el panel admin)
+  // y el pago usa la misma cuenta que psicología (cuentaGeneral).
+  lectura: (() => {
+    const l = DATOS.tallerLectura;
+    const nombreTaller = l.modalidad ? `${l.titulo} (${l.modalidad})` : l.titulo;
+    const datos = [
+      l.horarios && `📅 *Horarios:* ${l.horarios}`,
+      l.cuota && `💰 *Cuota de recuperación:* ${l.cuota}`,
+    ].filter(Boolean).join('\n');
+    const regresar = '¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú';
+    return {
+      // Se muestra al elegir la opción 10: la información y la invitación a inscribirse
+      inicio: [`🌷 *${nombreTaller}* 🌷`, l.descripcion, datos,
+        'Si quieres inscribirte, escribe tu *nombre completo*. 💙\nSi solo querías la información, escribe *menú* para regresar.']
+        .filter(Boolean).join('\n\n'),
+      pedirNombre: 'Para inscribirte, escribe tu *nombre completo*:',
+      preguntarCuota: (nombre) => [`Gracias, ${nombre}. 😊`, `*${nombreTaller}*`, datos,
+        '¿Puedes cubrir la cuota?\n\n1️⃣ Sí, puedo cubrir la cuota\n2️⃣ No puedo cubrirla en este momento (te acompañamos con un estudio socioeconómico)']
+        .filter(Boolean).join('\n\n'),
+      comprobanteRecibido: '✅ ¡Gracias! Recibimos tu comprobante. El equipo de Casa Gaviota lo revisará y, una vez confirmado el pago, te confirmamos tu lugar en el taller. 💙',
+      confirmacion: (nombre) => `🌷 ¡Listo, ${nombre}! Tu inscripción al taller quedó registrada. En cuanto el equipo confirme tu pago, te contactamos con los detalles para conectarte. 💙\n\n${regresar}`,
+      valoracionCuota: `¡Gracias! Hemos recibido tu información.\n\n${mensajeEstudio()}\n\nNuestro equipo la revisará para asignarte una cuota personalizada y se pondrá en contacto contigo. 💙\n\n${regresar}`,
+    };
+  })(),
 
   servicios: {
     // Opción 6: estos servicios ya no pertenecen a Casa Gaviota → se comparte el número de contacto

@@ -67,7 +67,7 @@ const FIJAS_REGISTROS = [
 
 // Nombre de la pestaña por flujo
 const PESTANAS = {
-  psico: 'Atención psicológica', legal: 'Asesoría legal', bio: 'Biodescodificación',
+  psico: 'Atención psicológica', lectura: 'Taller de lectura', legal: 'Asesoría legal', bio: 'Biodescodificación',
   standup: 'Taller Stand Up', empeco: 'Empoderamiento económico', servicios: 'Servicios del centro',
   empresarial: 'Servicios empresariales', donativos: 'Donativos', rrhh: 'Recursos Humanos',
 };

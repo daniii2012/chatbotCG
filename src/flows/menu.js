@@ -14,7 +14,8 @@ const { saveBotRecord } = require('../db/mongo');
 
 const { handlePsico } = require('./psicologica');
 const { handleLegal } = require('./legal');
-const { handleBio, handleStandup, handleEmpEco, handleServicios, handleEmpresarial, handleDonativos, handleRRHH, handleLectura } = require('./otrosFlujos');
+const { handleBio, handleStandup, handleEmpEco, handleServicios, handleEmpresarial, handleDonativos, handleRRHH } = require('./otrosFlujos');
+const { handleLectura } = require('./lectura');
 
 const COMANDOS_CANCELAR = ['cancelar', 'salir', 'menu', 'menú', 'regresar', 'volver'];
 
@@ -50,7 +51,7 @@ const MENU_MAP = {
   '6': { flow: 'servicios', step: 'servicios_fin', get msg() { return M.servicios.derivar; }, get servicio() { return 'Servicios del centro'; }, keywords: ['servicios del centro', 'centro de empoderamiento'] },
   '7': { flow: 'empresarial', step: 'empresarial_menu', get msg() { return M.empresarial.inicio; }, get servicio() { return 'Servicios empresariales'; }, keywords: ['servicios empresariales', 'empresarial', 'empresa'] },
   '8': { flow: 'donativos', step: 'donativos_tipo', get msg() { return M.donativos.inicio; }, get servicio() { return 'Donativos'; }, keywords: ['donativ', 'donar', 'donacion'] },
-  '10': { flow: 'lectura', step: 'lectura_fin', get msg() { return M.lectura.info; }, get servicio() { return DATOS.tallerLectura.titulo; }, keywords: ['taller de lectura', 'lectura para mujeres', 'club de lectura'] },
+  '10': { flow: 'lectura', step: 'lectura_nombre', get msg() { return M.lectura.inicio; }, get servicio() { return DATOS.tallerLectura.titulo; }, keywords: ['taller de lectura', 'lectura para mujeres', 'club de lectura'] },
   '9': { flow: 'rrhh', step: 'rrhh_opcion', get msg() { return M.rrhh.inicio; }, get servicio() { return 'Recursos Humanos'; }, keywords: ['recursos humanos', 'rrhh', 'vacante', 'bolsa de trabajo'] },
 };
 
@@ -93,7 +94,7 @@ async function dispatchFlow(session, userMessage, media) {
     case 'empresarial': response = await handleEmpresarial(session, userMessage); break;
     case 'donativos': response = await handleDonativos(session, userMessage, media); break;
     case 'rrhh': response = await handleRRHH(session, userMessage); break;
-    case 'lectura': response = await handleLectura(session, userMessage); break;
+    case 'lectura': response = await handleLectura(session, userMessage, media); break;
     default: return M.bienvenida;
   }
 

@@ -147,7 +147,7 @@ H) RECURSOS HUMANOS (servicio social, voluntariado o colaboración laboral)
 
 J) ${DATOS.tallerLectura.titulo.toUpperCase()} (opción 10 del menú)
 - ${DATOS.tallerLectura.titulo}${DATOS.tallerLectura.modalidad ? ` (${DATOS.tallerLectura.modalidad})` : ''}. ${DATOS.tallerLectura.descripcion}${DATOS.tallerLectura.horarios ? `\n- Horarios: ${DATOS.tallerLectura.horarios}.` : ''}${DATOS.tallerLectura.cuota ? `\n- Cuota de recuperación: ${DATOS.tallerLectura.cuota}.` : ''}
-- Es informativo: NO inventes fechas, cupos ni inscripciones. Si quiere más información, invítala a elegir la opción 10 del menú.
+- NO inventes fechas, cupos ni datos. Para inscribirse, invítala a elegir la opción 10 del menú: ahí se registra, ve la cuota y los datos de pago.
 
 --- DATOS PARA SOLICITAR SESIONES ---
 15. Los datos se recaban dentro del flujo del servicio, no en la conversación libre. Si la usuaria quiere agendar, invítala a iniciar el flujo desde el menú.

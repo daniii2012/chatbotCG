@@ -8,7 +8,7 @@ const { getSession } = require('../../db/sessions');
 const { dividirMensaje, separarEnlaces } = require('../../utils/enlaces');
 
 // Pasos donde el bot espera la foto del comprobante de pago
-const PASOS_COMPROBANTE = ['psico_cuenta_enviada', 'legal_cuenta_enviada', 'bio_comprobante', 'donativos_comprobante'];
+const PASOS_COMPROBANTE = ['psico_cuenta_enviada', 'lectura_cuenta_enviada', 'legal_cuenta_enviada', 'bio_comprobante', 'donativos_comprobante'];
 
 const MSG_ERROR = 'Perdón, ahorita no puedo responder. Intenta de nuevo en un momento. 💙';
 const MSG_OTRO = 'Por este medio puedo leer mensajes de texto y fotos de comprobantes de pago. 💙 Si es un comprobante, envíalo como foto o captura de pantalla. Para ver las opciones, escribe *menú*.';

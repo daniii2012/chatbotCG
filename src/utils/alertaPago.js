@@ -16,6 +16,7 @@ const HEADERS = [
 
 const montos = () => ({
   psico: `${DATOS.tarifas.psicologiaSesion} (1 sesión) / ${DATOS.tarifas.psicologiaPaquete4} (4 sesiones)`,
+  lectura: DATOS.tallerLectura.cuota || '',
   legal: `${DATOS.tarifas.asesoriaLegal} por sesión`,
   bio: `${DATOS.tarifas.biodescodificacion} por sesión`,
   donativos: 'Donativo (cantidad indicada por la usuaria)',

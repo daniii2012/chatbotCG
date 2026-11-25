@@ -47,6 +47,7 @@ const PUEDE_PAGAR = /(puedo cubrir|puedo pagar|si puedo|cubrir el costo|lo pago|
 
 const REGLAS = {
   psico_cuota: { validos: ['1', '2'], reconocer: (n) => (NO_PUEDE_PAGAR.test(n) || NEGATIVO.test(n)) ? '2' : (AFIRMATIVO.test(n) || PUEDE_PAGAR.test(n)) ? '1' : null },
+  lectura_cuota: { validos: ['1', '2'], reconocer: (n) => (NO_PUEDE_PAGAR.test(n) || NEGATIVO.test(n)) ? '2' : (AFIRMATIVO.test(n) || PUEDE_PAGAR.test(n)) ? '1' : null },
   legal_cuota: { validos: ['1', '2'], reconocer: (n) => (NO_PUEDE_PAGAR.test(n) || NEGATIVO.test(n)) ? '2' : (AFIRMATIVO.test(n) || PUEDE_PAGAR.test(n)) ? '1' : null },
 
   psico_valoracion: {
