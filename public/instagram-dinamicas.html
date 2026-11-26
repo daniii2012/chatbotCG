@@ -1,0 +1,2100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Casa Gaviota — Dinámicas de Instagram (Mockup)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════════════════════════════════
+       ESTILOS BASE DEL CONTENEDOR INDEPENDIENTE (mismas variables que admin.html)
+       Al traspasar a admin.html, esta sección YA EXISTE allá y NO se copia.
+       ═══════════════════════════════════════════════════════════════════════ */
+    :root {
+      --primary: #d63381;
+      --primary-dark: #a3225e;
+      --primary-hover: #b82a6c;
+      --teal: #16aab4;
+      --teal-hover: #12909a;
+      --teal-pale: #E1F5F4;
+      --bg: #FDF4F8;
+      --card-bg: #ffffff;
+      --text: #3A2430;
+      --text-muted: #8A7480;
+      --border: #F0DCE6;
+      --radius: 12px;
+      --font-display: 'DM Serif Display', serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    .standalone-shell {
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      min-height: 100vh;
+    }
+
+    .standalone-side {
+      background: linear-gradient(160deg, #16aab4 0%, #12909a 100%);
+      color: #FDF4F8;
+      padding: 36px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .standalone-deco {
+      position: absolute;
+      width: 90px;
+      height: 90px;
+      background: rgba(214, 51, 129, 0.5);
+      transform: rotate(45deg);
+      border-radius: 18px;
+      pointer-events: none;
+    }
+    .standalone-deco.d1 { top: -30px; right: 20px; }
+    .standalone-deco.d2 { bottom: 110px; right: -25px; width: 52px; height: 52px; }
+
+    .standalone-logo {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 12px 16px;
+      display: inline-flex;
+      align-items: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+      margin-bottom: 24px;
+      position: relative;
+      z-index: 2;
+    }
+    .standalone-logo img { height: 32px; width: auto; display: block; }
+
+    .standalone-eyebrow {
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #8FE3DE;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 2;
+    }
+    .standalone-side h1 {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 1.85rem;
+      line-height: 1.18;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 2;
+    }
+    .standalone-side p {
+      font-size: 0.88rem;
+      line-height: 1.55;
+      color: rgba(253, 244, 248, 0.85);
+      position: relative;
+      z-index: 2;
+    }
+
+    .standalone-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 26px;
+      position: relative;
+      z-index: 2;
+    }
+    .standalone-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: rgba(253, 244, 248, 0.82);
+      font-size: 0.88rem;
+      font-weight: 500;
+      padding: 11px 14px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+      text-align: left;
+    }
+    .standalone-nav-item:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }
+    .standalone-nav-item.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(214, 51, 129, 0.4);
+    }
+
+    .standalone-foot {
+      padding-top: 18px;
+      border-top: 1px solid rgba(253, 244, 248, 0.25);
+      position: relative;
+      z-index: 2;
+      font-size: 0.78rem;
+      color: rgba(253, 244, 248, 0.82);
+      line-height: 1.5;
+    }
+    .standalone-foot strong { color: #fff; display: block; margin-bottom: 4px; }
+
+    .standalone-main {
+      padding: 36px 36px 56px;
+      overflow-y: auto;
+    }
+    .standalone-card {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: 18px;
+      padding: 34px 36px;
+      box-shadow: 0 10px 34px rgba(166, 42, 108, 0.08);
+      border: 1px solid var(--border);
+    }
+
+    @media (max-width: 960px) {
+      .standalone-shell { grid-template-columns: 1fr; }
+      .standalone-side { padding: 24px 22px; }
+      .standalone-foot { display: none; }
+      .standalone-main { padding: 20px 16px 40px; }
+      .standalone-card { padding: 22px 18px; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       INICIO CSS TRASPASABLE A admin.html (todo con prefijo .ig-*)
+       ═══════════════════════════════════════════════════════════════════════ */
+    .ig-hidden { display: none !important; }
+
+    .ig-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+    }
+    .ig-kicker {
+      display: inline-block;
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--teal-hover);
+      background: var(--teal-pale);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .ig-head h2 {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 2rem;
+      color: var(--primary);
+      line-height: 1.15;
+    }
+    .ig-head p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 6px;
+      max-width: 62ch;
+      line-height: 1.5;
+    }
+    .ig-head-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* Banner de modo mockup */
+    .ig-demo-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      background: #FFF8EC;
+      border: 1px solid #F6DCAA;
+      color: #7D5511;
+      border-radius: var(--radius);
+      padding: 11px 15px;
+      font-size: 0.84rem;
+      margin-bottom: 20px;
+    }
+    .ig-demo-banner strong { color: #5C3D06; }
+
+    /* Alerta */
+    .ig-alert {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 0.88rem;
+      margin-bottom: 18px;
+      display: none;
+    }
+    .ig-alert.show { display: block; }
+    .ig-alert.ok { background: var(--teal-pale); color: #0E6E75; border: 1px solid #B8E0DE; }
+    .ig-alert.err { background: #FBEEEE; color: #8C3A35; border: 1px solid #E3C6C4; }
+
+    /* Botones */
+    .ig-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      background: linear-gradient(135deg, var(--teal) 0%, var(--teal-hover) 100%);
+      color: #fff;
+      border: none;
+      padding: 11px 20px;
+      border-radius: var(--radius);
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 5px 14px rgba(22, 170, 180, 0.28);
+    }
+    .ig-btn:hover { transform: translateY(-1px); box-shadow: 0 7px 18px rgba(22, 170, 180, 0.38); }
+    .ig-btn.primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+      box-shadow: 0 5px 14px rgba(214, 51, 129, 0.28);
+    }
+    .ig-btn.primary:hover { box-shadow: 0 7px 18px rgba(214, 51, 129, 0.38); }
+    .ig-btn.secondary {
+      background: #fff;
+      color: var(--text);
+      border: 1.5px solid var(--border);
+      box-shadow: none;
+    }
+    .ig-btn.secondary:hover { border-color: var(--teal); color: var(--teal-hover); transform: none; box-shadow: none; }
+    .ig-btn.ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid transparent;
+      box-shadow: none;
+      padding: 7px 12px;
+      font-size: 0.83rem;
+    }
+    .ig-btn.ghost:hover { background: #FDF4F8; color: var(--primary-dark); transform: none; box-shadow: none; }
+    .ig-btn.sm { padding: 7px 12px; font-size: 0.82rem; border-radius: 9px; box-shadow: none; }
+    .ig-btn.danger { background: #fff; color: #8C3A35; border: 1.5px solid #E3C6C4; box-shadow: none; }
+    .ig-btn.danger:hover { background: #FBEEEE; transform: none; box-shadow: none; }
+
+    /* Tarjetas de resumen */
+    .ig-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    .ig-stat {
+      background: #FFFAFD;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 15px 16px;
+    }
+    .ig-stat-lbl {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .ig-stat-num {
+      font-family: var(--font-display);
+      font-size: 1.85rem;
+      color: var(--primary-dark);
+      margin-top: 4px;
+      line-height: 1.1;
+    }
+    .ig-stat-num.teal { color: var(--teal-hover); }
+    .ig-stat-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* Barra de filtros */
+    .ig-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .ig-tabs {
+      display: inline-flex;
+      background: #FDF4F8;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 3px;
+    }
+    .ig-tab {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.84rem;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .ig-tab.active { background: #fff; color: var(--primary-dark); box-shadow: 0 2px 6px rgba(58, 36, 48, 0.08); }
+    .ig-search {
+      flex: 1;
+      max-width: 300px;
+      min-width: 190px;
+      padding: 9px 13px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      color: var(--text);
+      outline: none;
+    }
+    .ig-search:focus { border-color: var(--teal); }
+
+    /* Lista de dinámicas */
+    .ig-list { display: flex; flex-direction: column; gap: 12px; }
+    .ig-empty {
+      text-align: center;
+      padding: 44px 20px;
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      background: #FFFAFD;
+      color: var(--text-muted);
+    }
+    .ig-empty h3 { font-family: var(--font-display); color: var(--primary); font-size: 1.4rem; margin-bottom: 6px; font-weight: 400; }
+    .ig-empty p { font-size: 0.9rem; margin-bottom: 16px; }
+
+    .ig-item {
+      display: grid;
+      grid-template-columns: 84px 1fr auto;
+      gap: 16px;
+      align-items: center;
+      padding: 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      background: #fff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .ig-item:hover { border-color: #E2B8CE; box-shadow: 0 6px 18px rgba(166, 42, 108, 0.06); }
+    .ig-item.paused { opacity: 0.78; background: #FCFAFB; }
+
+    .ig-thumb {
+      width: 84px;
+      height: 84px;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.72rem;
+      text-align: center;
+      padding: 8px;
+      line-height: 1.25;
+    }
+    .ig-thumb-type {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      background: rgba(20, 12, 18, 0.72);
+      color: #fff;
+      font-size: 0.62rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 6px;
+      letter-spacing: 0.03em;
+    }
+
+    .ig-item-body { min-width: 0; }
+    .ig-item-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 5px;
+    }
+    .ig-item-title { font-weight: 700; font-size: 1rem; color: var(--text); }
+    .ig-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+    .ig-badge.on { background: var(--teal-pale); color: #0E6E75; }
+    .ig-badge.off { background: #EFEAED; color: #75646E; }
+    .ig-badge.follow { background: #FDE7F1; color: var(--primary-dark); }
+    .ig-badge.global { background: #EDE9FE; color: #5B21B6; }
+
+    .ig-item-caption {
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 8px;
+    }
+    .ig-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+    .ig-kw {
+      font-size: 0.76rem;
+      font-weight: 600;
+      background: #FFF2F8;
+      color: var(--primary-dark);
+      border: 1px solid #F3CFE0;
+      padding: 2px 9px;
+      border-radius: 8px;
+    }
+    .ig-meta {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .ig-meta strong { color: var(--text); }
+
+    .ig-item-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+    }
+    .ig-item-btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+
+    /* Switch */
+    .ig-switch-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 0.84rem;
+      font-weight: 600;
+      user-select: none;
+    }
+    .ig-switch {
+      position: relative;
+      width: 42px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .ig-switch input { opacity: 0; width: 0; height: 0; }
+    .ig-slider {
+      position: absolute;
+      inset: 0;
+      background: #D8C7D0;
+      border-radius: 999px;
+      transition: background 0.2s;
+    }
+    .ig-slider::before {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+    .ig-switch input:checked + .ig-slider { background: var(--teal); }
+    .ig-switch input:checked + .ig-slider::before { transform: translateX(18px); }
+
+    /* ─── Vista de editor + vista previa en vivo ─── */
+    .ig-editor-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .ig-section {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+      background: #FFFCFE;
+    }
+    .ig-section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .ig-section-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ig-step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.74rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+    .ig-help { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.45; }
+
+    .ig-field { margin-bottom: 14px; }
+    .ig-field:last-child { margin-bottom: 0; }
+    .ig-field label {
+      display: block;
+      font-size: 0.83rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .ig-field input[type="text"],
+    .ig-field input[type="url"],
+    .ig-field input[type="date"],
+    .ig-field select,
+    .ig-field textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .ig-field textarea { min-height: 76px; resize: vertical; line-height: 1.45; }
+    .ig-field input:focus, .ig-field select:focus, .ig-field textarea:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(22, 170, 180, 0.12);
+    }
+    .ig-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .ig-char-count { font-size: 0.74rem; color: var(--text-muted); text-align: right; margin-top: 4px; }
+    .ig-char-count.warn { color: #B45309; font-weight: 600; }
+
+    /* Post seleccionado */
+    .ig-selected-post {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+    }
+    .ig-selected-post .ig-thumb { width: 66px; height: 66px; border-radius: 10px; font-size: 0.64rem; }
+    .ig-selected-info { flex: 1; min-width: 0; }
+    .ig-selected-info strong { display: block; font-size: 0.9rem; margin-bottom: 3px; }
+    .ig-selected-info span {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Listas dinámicas (respuestas / enlaces) */
+    .ig-dyn-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+    .ig-dyn-row { display: flex; gap: 8px; align-items: center; }
+    .ig-dyn-row input {
+      flex: 1;
+      padding: 9px 11px;
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      font-family: inherit;
+      font-size: 0.87rem;
+      color: var(--text);
+      outline: none;
+      background: #fff;
+    }
+    .ig-dyn-row input:focus { border-color: var(--teal); }
+    .ig-link-row {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+    .ig-icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: #8C3A35;
+      cursor: pointer;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+    .ig-icon-btn:hover { background: #FBEEEE; border-color: #E3C6C4; }
+    .ig-add-dashed {
+      width: 100%;
+      border: 1.5px dashed var(--teal);
+      background: var(--teal-pale);
+      color: #0E6E75;
+      border-radius: 10px;
+      padding: 9px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .ig-add-dashed:hover { background: #CFEFED; }
+
+    .ig-follow-box {
+      margin-top: 12px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border);
+    }
+
+    .ig-form-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 6px;
+    }
+
+    /* ─── Simulador / Vista previa de teléfono ─── */
+    .ig-preview-sticky { position: sticky; top: 20px; }
+    .ig-phone {
+      background: #1B1519;
+      border-radius: 28px;
+      padding: 12px;
+      box-shadow: 0 18px 40px rgba(58, 36, 48, 0.22);
+      color: #fff;
+    }
+    .ig-phone-screen {
+      background: #fff;
+      color: #1F1F1F;
+      border-radius: 20px;
+      overflow: hidden;
+      min-height: 510px;
+      display: flex;
+      flex-direction: column;
+    }
+    .ig-phone-top {
+      background: #FAFAFA;
+      border-bottom: 1px solid #EFEFEF;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .ig-phone-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: #F4F1F3;
+      padding: 4px;
+      gap: 4px;
+    }
+    .ig-phone-tab {
+      border: none;
+      background: transparent;
+      padding: 7px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.77rem;
+      font-weight: 600;
+      color: #6B5B64;
+      cursor: pointer;
+    }
+    .ig-phone-tab.active { background: #fff; color: var(--primary-dark); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); }
+
+    .ig-phone-body {
+      padding: 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.8rem;
+      overflow-y: auto;
+      max-height: 440px;
+    }
+
+    /* Vista previa Comentario */
+    .ig-sim-post {
+      border: 1px solid #EFEFEF;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .ig-sim-post-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+    .ig-sim-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--teal));
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .ig-sim-post-art {
+      height: 112px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      color: #fff;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      line-height: 1.3;
+    }
+    .ig-sim-post-cap {
+      padding: 8px 10px;
+      font-size: 0.74rem;
+      color: #444;
+      line-height: 1.4;
+      background: #FAFAFA;
+    }
+    .ig-sim-comment-box {
+      display: flex;
+      gap: 6px;
+    }
+    .ig-sim-comment-box input {
+      flex: 1;
+      padding: 7px 10px;
+      border: 1px solid #DDD;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-family: inherit;
+      outline: none;
+    }
+    .ig-sim-comment-box button {
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .ig-sim-thread { display: flex; flex-direction: column; gap: 8px; }
+    .ig-sim-cmt { font-size: 0.77rem; line-height: 1.4; }
+    .ig-sim-cmt.reply {
+      margin-left: 20px;
+      padding-left: 10px;
+      border-left: 2px solid var(--border);
+    }
+    .ig-sim-match {
+      font-size: 0.72rem;
+      padding: 6px 9px;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+    .ig-sim-match.yes { background: var(--teal-pale); color: #0E6E75; }
+    .ig-sim-match.no { background: #FBEEEE; color: #8C3A35; }
+
+    /* Vista previa DM */
+    .ig-sim-user-state {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: #F8F3F6;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: 0.73rem;
+    }
+    .ig-sim-pill-btn {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 0.71rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text);
+    }
+    .ig-sim-pill-btn.following { background: var(--teal-pale); border-color: #9DD8D5; color: #0E6E75; }
+    .ig-sim-pill-btn.not-following { background: #FDE7F1; border-color: #F0B6D0; color: var(--primary-dark); }
+
+    .ig-dm-stream { display: flex; flex-direction: column; gap: 8px; }
+    .ig-dm-bubble {
+      max-width: 88%;
+      padding: 9px 11px;
+      border-radius: 14px;
+      font-size: 0.77rem;
+      line-height: 1.42;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .ig-dm-bubble.bot {
+      align-self: flex-start;
+      background: #F1F1F3;
+      color: #1F1F1F;
+      border-bottom-left-radius: 4px;
+    }
+    .ig-dm-bubble.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, #833AB4, #D63381);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .ig-dm-card {
+      align-self: flex-start;
+      width: 90%;
+      background: #F4F4F6;
+      border: 1px solid #E5E5EA;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .ig-dm-card-text {
+      padding: 10px 11px;
+      font-size: 0.77rem;
+      line-height: 1.42;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .ig-dm-card-btn {
+      display: block;
+      width: 100%;
+      border: none;
+      border-top: 1px solid #E0E0E5;
+      background: #fff;
+      color: #0095F6;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 9px 10px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+    .ig-dm-card-btn:hover { background: #F7FBFF; }
+    .ig-dm-note {
+      font-size: 0.7rem;
+      color: #8A7480;
+      text-align: center;
+      padding: 2px 6px;
+    }
+
+    /* ─── Modal selector de publicaciones ─── */
+    .ig-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(34, 18, 28, 0.52);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 999;
+    }
+    .ig-modal {
+      width: 100%;
+      max-width: 780px;
+      max-height: 86vh;
+      background: #fff;
+      border-radius: 18px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+    }
+    .ig-modal-head {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .ig-modal-head h3 { font-family: var(--font-display); font-weight: 400; font-size: 1.45rem; color: var(--primary); }
+    .ig-modal-body { padding: 18px 22px; overflow-y: auto; }
+    .ig-posts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 14px;
+    }
+    .ig-post-card {
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      background: #fff;
+      text-align: left;
+      font-family: inherit;
+      transition: border-color 0.15s, transform 0.15s;
+      display: flex;
+      flex-direction: column;
+    }
+    .ig-post-card:hover { border-color: var(--teal); transform: translateY(-2px); }
+    .ig-post-card.selected { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(214, 51, 129, 0.16); }
+    .ig-post-art {
+      height: 126px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.9rem;
+      line-height: 1.3;
+      position: relative;
+    }
+    .ig-post-meta { padding: 11px 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; }
+    .ig-post-cap {
+      font-size: 0.8rem;
+      color: var(--text);
+      line-height: 1.38;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .ig-post-date { font-size: 0.72rem; color: var(--text-muted); }
+
+    @media (max-width: 1080px) {
+      .ig-editor-layout { grid-template-columns: 1fr; }
+      .ig-preview-sticky { position: static; max-width: 380px; margin: 0 auto; }
+    }
+    @media (max-width: 720px) {
+      .ig-stats { grid-template-columns: repeat(2, 1fr); }
+      .ig-item { grid-template-columns: 68px 1fr; }
+      .ig-item-right { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; width: 100%; }
+      .ig-row-2 { grid-template-columns: 1fr; }
+      .ig-link-row { grid-template-columns: 1fr; }
+    }
+    /* ═══════════════════════════════════════════════════════════════════════
+       FIN CSS TRASPASABLE A admin.html
+       ═══════════════════════════════════════════════════════════════════════ */
+  </style>
+</head>
+<body>
+
+<div class="standalone-shell">
+  <!-- Barra lateral independiente (emula admin.html sin tocarlo) -->
+  <aside class="standalone-side">
+    <div class="standalone-deco d1"></div>
+    <div class="standalone-deco d2"></div>
+
+    <div>
+      <div class="standalone-logo">
+        <img src="logo-casagaviota.png" alt="Casa Gaviota" onerror="this.style.display='none'">
+      </div>
+      <div class="standalone-eyebrow">Vista previa · Módulo separado</div>
+      <h1>Dinámicas de<br>Instagram</h1>
+      <p>Prototipo interactivo para gestionar comentarios con palabra clave y respuestas automáticas por DM.</p>
+
+      <nav class="standalone-nav">
+        <button type="button" class="standalone-nav-item active" id="navListado" onclick="IG_DINAMICAS.irAListado()">
+          <span>📸</span> Dinámicas IG
+        </button>
+        <button type="button" class="standalone-nav-item" id="navNueva" onclick="IG_DINAMICAS.abrirFormulario()">
+          <span>➕</span> Crear nueva dinámica
+        </button>
+        <a class="standalone-nav-item" href="admin.html">
+          <span>⬅️</span> Volver al panel principal
+        </a>
+      </nav>
+    </div>
+
+    <div class="standalone-foot">
+      <strong>Archivo independiente</strong>
+      Esta vista está aislada de <code>admin.html</code> y guarda los cambios de prueba en tu navegador (<code>localStorage</code>).
+    </div>
+  </aside>
+
+  <main class="standalone-main">
+    <div class="standalone-card">
+
+      <!-- ═══════════════════════════════════════════════════════════════════
+           INICIO HTML TRASPASABLE A admin.html
+           ═══════════════════════════════════════════════════════════════════ -->
+      <section id="igDinamicasCard" class="ig-module">
+
+        <!-- Banner informativo de mockup (se elimina al conectar Fase 2) -->
+        <div class="ig-demo-banner">
+          <div>
+            <strong>Modo demostración (solo interfaz):</strong>
+            las publicaciones y métricas son de ejemplo; tus ediciones se guardan localmente en este navegador.
+          </div>
+          <button type="button" class="ig-btn secondary sm" onclick="IG_DINAMICAS.restaurarDemo()">
+            ↺ Restaurar ejemplos
+          </button>
+        </div>
+
+        <div id="igAlert" class="ig-alert"></div>
+
+        <!-- ─── VISTA 1: LISTADO DE DINÁMICAS ─── -->
+        <div id="igVistaLista">
+          <div class="ig-head">
+            <div>
+              <div class="ig-kicker">Instagram · Comentarios a DM</div>
+              <h2>Dinámicas de Instagram</h2>
+              <p>Elige una publicación ya subida a Instagram, define la palabra clave y configura el mensaje y enlaces que enviará el bot por DM.</p>
+            </div>
+            <div class="ig-head-actions">
+              <button type="button" class="ig-btn primary" onclick="IG_DINAMICAS.abrirFormulario()">
+                + Nueva dinámica
+              </button>
+            </div>
+          </div>
+
+          <div class="ig-stats" id="igStats"></div>
+
+          <div class="ig-toolbar">
+            <div class="ig-tabs" role="tablist">
+              <button type="button" class="ig-tab active" data-filtro="todas" onclick="IG_DINAMICAS.filtrar('todas', this)">Todas</button>
+              <button type="button" class="ig-tab" data-filtro="activas" onclick="IG_DINAMICAS.filtrar('activas', this)">Activas</button>
+              <button type="button" class="ig-tab" data-filtro="pausadas" onclick="IG_DINAMICAS.filtrar('pausadas', this)">Pausadas</button>
+            </div>
+            <input type="text" id="igBusqueda" class="ig-search" placeholder="Buscar por nombre o palabra clave..." oninput="IG_DINAMICAS.renderLista()">
+          </div>
+
+          <div id="igLista" class="ig-list"></div>
+        </div>
+
+        <!-- ─── VISTA 2: EDITOR + SIMULADOR EN VIVO ─── -->
+        <div id="igVistaEditor" class="ig-hidden">
+          <div class="ig-head">
+            <div>
+              <div class="ig-kicker" id="igEditorKicker">Nueva dinámica</div>
+              <h2 id="igEditorTitulo">Configurar dinámica</h2>
+              <p>Lo que escribas se refleja al instante en la vista previa interactiva de la derecha.</p>
+            </div>
+            <div class="ig-head-actions">
+              <button type="button" class="ig-btn secondary" onclick="IG_DINAMICAS.irAListado()">← Volver al listado</button>
+            </div>
+          </div>
+
+          <div class="ig-editor-layout">
+            <!-- Columna izquierda: formulario -->
+            <form id="igForm" onsubmit="IG_DINAMICAS.guardarFormulario(event)">
+              <input type="hidden" id="igId">
+
+              <!-- Paso 1: Publicación -->
+              <div class="ig-section">
+                <div class="ig-section-head">
+                  <div class="ig-section-title"><span class="ig-step-num">1</span> Publicación de Instagram</div>
+                  <button type="button" class="ig-btn secondary sm" onclick="IG_DINAMICAS.abrirSelectorPosts()">
+                    Cambiar publicación
+                  </button>
+                </div>
+                <p class="ig-help">Publica primero tu foto o Reel en Instagram como siempre y selecciónalo aquí (así conservas música, portada y calidad original).</p>
+                <div id="igPostSeleccionadoBox"></div>
+              </div>
+
+              <!-- Paso 2: Nombre y vigencia -->
+              <div class="ig-section">
+                <div class="ig-section-head">
+                  <div class="ig-section-title"><span class="ig-step-num">2</span> Datos generales</div>
+                  <label class="ig-switch-wrap">
+                    <span class="ig-switch">
+                      <input type="checkbox" id="igActiva" checked onchange="IG_DINAMICAS.actualizarPreview()">
+                      <span class="ig-slider"></span>
+                    </span>
+                    <span id="igActivaLabel">Dinámica activa</span>
+                  </label>
+                </div>
+                <div class="ig-row-2">
+                  <div class="ig-field">
+                    <label for="igNombre">Nombre interno de la dinámica *</label>
+                    <input type="text" id="igNombre" required placeholder="Ej. Convocatoria Taller de Lectura" oninput="IG_DINAMICAS.actualizarPreview()">
+                  </div>
+                  <div class="ig-field">
+                    <label for="igExpira">Pausar automáticamente el (opcional)</label>
+                    <input type="date" id="igExpira">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Paso 3: Palabras clave -->
+              <div class="ig-section">
+                <div class="ig-section-head">
+                  <div class="ig-section-title"><span class="ig-step-num">3</span> Palabra clave en comentarios</div>
+                </div>
+                <div class="ig-row-2">
+                  <div class="ig-field">
+                    <label for="igModo">Cuándo activar</label>
+                    <select id="igModo" onchange="IG_DINAMICAS.alCambiarModo()">
+                      <option value="contiene">Si el comentario contiene la palabra</option>
+                      <option value="exacta">Solo si comenta la palabra exacta</option>
+                      <option value="cualquiera">Con cualquier comentario</option>
+                    </select>
+                  </div>
+                  <div class="ig-field" id="igPalabrasWrap">
+                    <label for="igPalabras">Palabra(s) clave (separadas por coma) *</label>
+                    <input type="text" id="igPalabras" placeholder="Ej. gaviota, info, taller" oninput="IG_DINAMICAS.actualizarChipsPalabras()">
+                  </div>
+                </div>
+                <div id="igPalabrasChips" class="ig-chips" style="margin-top:8px; margin-bottom:0"></div>
+              </div>
+
+              <!-- Paso 4: Respuestas públicas -->
+              <div class="ig-section">
+                <div class="ig-section-head">
+                  <div class="ig-section-title"><span class="ig-step-num">4</span> Respuestas públicas al comentario</div>
+                </div>
+                <p class="ig-help">Agrega varias variantes para que el bot las rote al azar y evitar bloqueos anti-spam de Instagram. Conviene recordar que revisen su carpeta de Solicitudes.</p>
+                <div id="igRespuestasList" class="ig-dyn-list"></div>
+                <button type="button" class="ig-add-dashed" onclick="IG_DINAMICAS.agregarRespuesta('')">+ Agregar otra variante de respuesta</button>
+              </div>
+
+              <!-- Paso 5: Verificación de seguidor -->
+              <div class="ig-section">
+                <div class="ig-section-head">
+                  <div class="ig-section-title"><span class="ig-step-num">5</span> Verificación de seguidor (Follow-gate)</div>
+                  <label class="ig-switch-wrap">
+                    <span class="ig-switch">
+                      <input type="checkbox" id="igPedirSeguir" checked onchange="IG_DINAMICAS.toggleFollowGate()">
+                      <span class="ig-slider"></span>
+                    </span>
+                    <span>Exigir que nos siga</span>
+                  </label>
+                </div>
+                <p class="ig-help">Por reglas de Meta, primero se envía un DM con un botón para confirmar interacción; al tocarlo se verifica si sigue la cuenta.</p>
+
+                <div id="igFollowFields" class="ig-follow-box">
+                  <div class="ig-field">
+                    <label for="igMsgInicial">Mensaje inicial por DM (antes de verificar)</label>
+                    <textarea id="igMsgInicial" oninput="IG_DINAMICAS.actualizarPreview()"></textarea>
+                  </div>
+                  <div class="ig-field">
+                    <label for="igBtnInicial">Texto del botón inicial (máx. 20 caracteres)</label>
+                    <input type="text" id="igBtnInicial" maxlength="20" oninput="IG_DINAMICAS.actualizarPreview()">
+                  </div>
+                  <div class="ig-field">
+                    <label for="igMsgNoSigue">Mensaje si todavía NO nos sigue</label>
+                    <textarea id="igMsgNoSigue" oninput="IG_DINAMICAS.actualizarPreview()"></textarea>
+                  </div>
+                  <div class="ig-field">
+                    <label for="igBtnReintentar">Texto del botón para volver a verificar (máx. 20 caracteres)</label>
+                    <input type="text" id="igBtnReintentar" maxlength="20" oninput="IG_DINAMICAS.actualizarPreview()">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Paso 6: Entrega final -->
+              <div class="ig-section">
+                <div class="ig-section-head">
+                  <div class="ig-section-title"><span class="ig-step-num">6</span> Mensaje y enlaces a enviar por DM</div>
+                </div>
+                <div class="ig-field">
+                  <label for="igMsgEntrega">Mensaje final *</label>
+                  <textarea id="igMsgEntrega" required maxlength="1000" oninput="IG_DINAMICAS.actualizarPreview()"></textarea>
+                  <div class="ig-char-count" id="igCharCount">0 / 1000 caracteres (límite de Instagram)</div>
+                </div>
+
+                <div class="ig-field">
+                  <label>Botones con enlace (opcional)</label>
+                  <div id="igEnlacesList" class="ig-dyn-list"></div>
+                  <button type="button" class="ig-add-dashed" onclick="IG_DINAMICAS.agregarEnlace('', '')">+ Agregar botón con enlace</button>
+                </div>
+              </div>
+
+              <div class="ig-form-actions">
+                <button type="submit" class="ig-btn primary">Guardar dinámica</button>
+                <button type="button" class="ig-btn secondary" onclick="IG_DINAMICAS.irAListado()">Cancelar</button>
+              </div>
+            </form>
+
+            <!-- Columna derecha: Simulador interactivo -->
+            <aside class="ig-preview-sticky">
+              <div class="ig-phone">
+                <div class="ig-phone-screen">
+                  <div class="ig-phone-top">
+                    <span>@casagaviotaac</span>
+                    <span style="color:#8A7480; font-weight:500;">Vista previa</span>
+                  </div>
+
+                  <div class="ig-phone-tabs">
+                    <button type="button" class="ig-phone-tab active" id="igPrevTabCmt" onclick="IG_DINAMICAS.cambiarTabPreview('comentario')">1. Comentario</button>
+                    <button type="button" class="ig-phone-tab" id="igPrevTabDm" onclick="IG_DINAMICAS.cambiarTabPreview('dm')">2. Flujo DM</button>
+                  </div>
+
+                  <!-- Tab Preview Comentario -->
+                  <div class="ig-phone-body" id="igPrevComentario">
+                    <div class="ig-sim-post">
+                      <div class="ig-sim-post-bar">
+                        <span class="ig-sim-avatar">CG</span>
+                        <span>casagaviotaac</span>
+                      </div>
+                      <div class="ig-sim-post-art" id="igSimPostArt"></div>
+                      <div class="ig-sim-post-cap" id="igSimPostCap"></div>
+                    </div>
+
+                    <div class="ig-sim-comment-box">
+                      <input type="text" id="igSimCommentInput" placeholder="Prueba comentar aquí..." value="Gaviota!!">
+                      <button type="button" onclick="IG_DINAMICAS.simularComentario()">Probar</button>
+                    </div>
+
+                    <div id="igSimMatchBadge"></div>
+                    <div class="ig-sim-thread" id="igSimThread"></div>
+                  </div>
+
+                  <!-- Tab Preview DM -->
+                  <div class="ig-phone-body ig-hidden" id="igPrevDm">
+                    <div class="ig-sim-user-state">
+                      <span>Simular persona:</span>
+                      <button type="button" id="igSimFollowToggle" class="ig-sim-pill-btn not-following" onclick="IG_DINAMICAS.alternarSimSeguidor()">
+                        No nos sigue
+                      </button>
+                    </div>
+                    <div class="ig-dm-stream" id="igDmStream"></div>
+                    <div style="margin-top:auto; padding-top:8px; text-align:center;">
+                      <button type="button" class="ig-btn ghost sm" onclick="IG_DINAMICAS.reiniciarSimDM()">↺ Reiniciar conversación DM</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p class="ig-help" style="text-align:center; margin-top:10px; margin-bottom:0;">
+                Puedes dar clic en los botones dentro del teléfono para probar el flujo de quien <strong>sí sigue</strong> y quien <strong>no sigue</strong>.
+              </p>
+            </aside>
+          </div>
+        </div>
+
+        <!-- ─── MODAL: SELECTOR DE PUBLICACIONES DE INSTAGRAM ─── -->
+        <div id="igPostsModal" class="ig-modal-backdrop ig-hidden" onclick="if(event.target===this) IG_DINAMICAS.cerrarSelectorPosts()">
+          <div class="ig-modal">
+            <div class="ig-modal-head">
+              <div>
+                <h3>Elegir publicación de Instagram</h3>
+                <p style="font-size:0.82rem; color:var(--text-muted); margin-top:2px;">Publicaciones recientes de @casagaviotaac (ejemplos en modo mockup).</p>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <button type="button" class="ig-btn secondary sm" id="igRefreshPostsBtn" onclick="IG_DINAMICAS.refrescarPostsDemo()">↻ Actualizar</button>
+                <button type="button" class="ig-icon-btn" onclick="IG_DINAMICAS.cerrarSelectorPosts()" title="Cerrar">✕</button>
+              </div>
+            </div>
+            <div class="ig-modal-body">
+              <div id="igPostsGrid" class="ig-posts-grid"></div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+      <!-- ═══════════════════════════════════════════════════════════════════
+           FIN HTML TRASPASABLE A admin.html
+           ═══════════════════════════════════════════════════════════════════ -->
+
+    </div>
+  </main>
+</div>
+
+<script>
+  /* ═════════════════════════════════════════════════════════════════════════
+     INICIO JS TRASPASABLE A admin.html (encapsulado en IG_DINAMICAS)
+     Al pasar a Fase 2, solo se sustituyen los 5 métodos de DATA_ADAPTER
+     para que consuman /api/admin/instagram/... usando el helper api().
+     ═════════════════════════════════════════════════════════════════════════ */
+  const IG_DINAMICAS = (() => {
+    const STORAGE_KEY = 'gaviota_ig_dinamicas_mockup_v1';
+
+    // Publicaciones demo (en Fase 2 vienen de GET /api/admin/instagram/posts -> Meta GET /me/media)
+    const DEMO_POSTS = [
+      {
+        id: '*',
+        mediaType: 'GLOBAL',
+        tituloCorto: 'Cualquier publicación',
+        caption: 'Aplica a cualquier Post, Reel o anuncio de la cuenta donde comenten la palabra clave.',
+        fecha: 'Siempre disponible',
+        gradient: 'linear-gradient(135deg, #5B21B6 0%, #D63381 100%)',
+        permalink: '#',
+      },
+      {
+        id: '18024190011223344',
+        mediaType: 'REEL',
+        tituloCorto: 'Taller de Lectura para Mujeres',
+        caption: '🌷 ¿Te gustaría sumarte al Taller de Lectura para Mujeres? Comenta "GAVIOTA" y te enviamos toda la información por DM.',
+        fecha: 'Hace 2 días',
+        gradient: 'linear-gradient(135deg, #D63381 0%, #FF7AA8 100%)',
+        permalink: 'https://instagram.com/casagaviotaac',
+      },
+      {
+        id: '18024190055667788',
+        mediaType: 'POST',
+        tituloCorto: 'Convocatoria Empoderamiento Económico',
+        caption: '📣 ¡Abrimos nueva convocatoria de cursos de empoderamiento económico! Comenta "CURSO" para recibir fechas, requisitos y enlace de registro.',
+        fecha: 'Hace 5 días',
+        gradient: 'linear-gradient(135deg, #16AAB4 0%, #0E6E75 100%)',
+        permalink: 'https://instagram.com/casagaviotaac',
+      },
+      {
+        id: '18024190099887766',
+        mediaType: 'REEL',
+        tituloCorto: 'Nuevo episodio: Desobedientes',
+        caption: '🎙️ Ya salió el nuevo episodio de nuestro podcast. Comenta "PODCAST" y te mandamos el enlace directo a Spotify y YouTube.',
+        fecha: 'Hace 1 semana',
+        gradient: 'linear-gradient(135deg, #A3225E 0%, #16AAB4 100%)',
+        permalink: 'https://instagram.com/casagaviotaac',
+      },
+      {
+        id: '18024190044332211',
+        mediaType: 'CARRUSEL',
+        tituloCorto: '5 señales para cuidar tu bienestar',
+        caption: '💙 Recuerda que no estás sola. Comenta "APOYO" si quieres conocer nuestros horarios y cuotas de atención psicológica.',
+        fecha: 'Hace 2 semanas',
+        gradient: 'linear-gradient(135deg, #3A2430 0%, #D63381 100%)',
+        permalink: 'https://instagram.com/casagaviotaac',
+      },
+      {
+        id: '18024190077112299',
+        mediaType: 'POST',
+        tituloCorto: 'Donativos con causa',
+        caption: '✨ Con tu apoyo más mujeres acceden a atención gratuita o de bajo costo. Comenta "DONAR" para recibir los datos.',
+        fecha: 'Hace 3 semanas',
+        gradient: 'linear-gradient(135deg, #12909A 0%, #5EC9C5 100%)',
+        permalink: 'https://instagram.com/casagaviotaac',
+      },
+    ];
+
+    const DEMO_DINAMICAS = [
+      {
+        id: 'din-1',
+        mediaId: '18024190011223344',
+        nombre: 'Taller de Lectura — Palabra GAVIOTA',
+        activa: true,
+        expiraEn: '',
+        modoCoincidencia: 'contiene',
+        palabrasClave: ['gaviota', 'lectura'],
+        respuestasComentario: [
+          '¡Listo! Te envié la info por DM 💙 Si aún no nos sigues, revisa tu carpeta de Solicitudes.',
+          '¡Enviado! Revisa tus mensajes privados ✨ (si no aparece, checa Solicitudes de mensajes).',
+          'Ya te mandé todos los detalles por DM 📩💙',
+        ],
+        pedirSeguir: true,
+        mensajeInicialDM: '¡Hola! 💙 Gracias por comentar en nuestra publicación del Taller de Lectura. Toca el botón de abajo para enviarte el enlace:',
+        textoBotonInicial: 'Quiero la info 💙',
+        mensajeNoSigue: '¡Casi listo! Antes de enviarte el enlace, síguenos en @casagaviotaac para enterarte de más talleres gratuitos y toca aquí para verificar 💜',
+        textoBotonReintentar: 'Ya los sigo ✅',
+        mensajeEntrega: '¡Gracias por seguirnos! 🌷 Aquí tienes toda la información e inscripción al Taller de Lectura para Mujeres:',
+        enlaces: [
+          { texto: 'Inscribirme al taller', url: 'https://casagaviota.org.mx/taller-lectura' },
+        ],
+        stats: { comentarios: 148, entregas: 119 },
+      },
+      {
+        id: 'din-2',
+        mediaId: '18024190055667788',
+        nombre: 'Convocatoria Empoderamiento Económico',
+        activa: true,
+        expiraEn: '',
+        modoCoincidencia: 'contiene',
+        palabrasClave: ['curso', 'convocatoria'],
+        respuestasComentario: [
+          '¡Te mandamos la convocatoria por DM! ✨ Revisa tus mensajes o solicitudes.',
+          '¡Listo! Ya tienes los detalles en tus mensajes 💙',
+        ],
+        pedirSeguir: true,
+        mensajeInicialDM: '¡Hola! Qué gusto que te interese nuestra convocatoria de Empoderamiento Económico ✨ Toca aquí para recibir el enlace:',
+        textoBotonInicial: 'Ver convocatoria',
+        mensajeNoSigue: 'Para desbloquear el enlace de registro, primero síguenos en @casagaviotaac y luego presiona el botón de abajo 💜',
+        textoBotonReintentar: 'Ya los sigo ✅',
+        mensajeEntrega: '¡Excelente! Aquí puedes consultar requisitos, fechas y registrarte a los cursos:',
+        enlaces: [
+          { texto: 'Ver convocatoria', url: 'https://casagaviota.org.mx/empoderamiento' },
+          { texto: 'Escribir por WhatsApp', url: 'https://wa.me/525500000000' },
+        ],
+        stats: { comentarios: 94, entregas: 81 },
+      },
+      {
+        id: 'din-3',
+        mediaId: '18024190099887766',
+        nombre: 'Episodio Podcast Desobedientes',
+        activa: false,
+        expiraEn: '',
+        modoCoincidencia: 'contiene',
+        palabrasClave: ['podcast'],
+        respuestasComentario: [
+          '¡Enviado por DM! 🎙️ Ojalá te guste mucho el episodio.',
+        ],
+        pedirSeguir: false,
+        mensajeInicialDM: '¡Hola! Toca abajo para recibir los enlaces del episodio:',
+        textoBotonInicial: 'Escuchar ahora',
+        mensajeNoSigue: 'Síguenos en @casagaviotaac y toca aquí para verificar 💜',
+        textoBotonReintentar: 'Ya los sigo ✅',
+        mensajeEntrega: '🎙️ ¡Aquí tienes el nuevo episodio de Desobedientes en tu plataforma favorita!',
+        enlaces: [
+          { texto: 'Escuchar en Spotify', url: 'https://open.spotify.com' },
+          { texto: 'Ver en YouTube', url: 'https://youtube.com' },
+        ],
+        stats: { comentarios: 63, entregas: 63 },
+      },
+    ];
+
+    // ─── Capa de datos desacoplada (reemplazar por fetch/api en Fase 2) ───
+    const DATA_ADAPTER = {
+      listarPosts() {
+        return DEMO_POSTS.slice();
+      },
+      listarDinamicas() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) return parsed;
+          }
+        } catch (e) { /* fallback demo */ }
+        const copia = JSON.parse(JSON.stringify(DEMO_DINAMICAS));
+        this._guardarTodo(copia);
+        return copia;
+      },
+      _guardarTodo(lista) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(lista)); } catch (e) { /* ignore */ }
+      },
+      guardarDinamica(item) {
+        const lista = this.listarDinamicas();
+        const idx = lista.findIndex((d) => d.id === item.id);
+        if (idx >= 0) {
+          lista[idx] = { ...lista[idx], ...item };
+        } else {
+          item.id = 'din-' + Date.now();
+          item.stats = { comentarios: 0, entregas: 0 };
+          lista.unshift(item);
+        }
+        this._guardarTodo(lista);
+        return item;
+      },
+      cambiarEstado(id, activa) {
+        const lista = this.listarDinamicas();
+        const d = lista.find((x) => x.id === id);
+        if (d) d.activa = activa;
+        this._guardarTodo(lista);
+      },
+      eliminarDinamica(id) {
+        const lista = this.listarDinamicas().filter((x) => x.id !== id);
+        this._guardarTodo(lista);
+      },
+      restaurarDemo() {
+        const copia = JSON.parse(JSON.stringify(DEMO_DINAMICAS));
+        this._guardarTodo(copia);
+        return copia;
+      },
+    };
+
+    // ─── Estado local de la UI ───
+    let posts = [];
+    let dinamicas = [];
+    let filtroActual = 'todas';
+    let postSeleccionadoId = DEMO_POSTS[1].id;
+    let simTab = 'comentario';
+    let simUserFollows = false;
+    let simDmStep = 'initial'; // 'initial' | 'asked_follow' | 'delivered'
+
+    const $ = (id) => document.getElementById(id);
+    const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    function mostrarAlerta(msg, ok = true) {
+      const box = $('igAlert');
+      box.textContent = msg;
+      box.className = 'ig-alert show ' + (ok ? 'ok' : 'err');
+      clearTimeout(box._t);
+      box._t = setTimeout(() => box.classList.remove('show'), 4500);
+    }
+
+    function obtenerPost(mediaId) {
+      return posts.find((p) => p.id === mediaId) || posts[0];
+    }
+
+    // ─── Navegación interna ───
+    function irAListado() {
+      $('igVistaEditor').classList.add('ig-hidden');
+      $('igVistaLista').classList.remove('ig-hidden');
+      const navL = $('navListado');
+      const navN = $('navNueva');
+      if (navL && navN) { navL.classList.add('active'); navN.classList.remove('active'); }
+      renderStats();
+      renderLista();
+    }
+
+    function abrirFormulario(id = null, duplicar = false) {
+      const d = id ? dinamicas.find((x) => x.id === id) : null;
+      $('igVistaLista').classList.add('ig-hidden');
+      $('igVistaEditor').classList.remove('ig-hidden');
+      const navL = $('navListado');
+      const navN = $('navNueva');
+      if (navL && navN) { navL.classList.remove('active'); navN.classList.add('active'); }
+
+      $('igId').value = d && !duplicar ? d.id : '';
+      $('igEditorKicker').textContent = d ? (duplicar ? 'Duplicar dinámica' : 'Editando dinámica') : 'Nueva dinámica';
+      $('igEditorTitulo').textContent = d ? (duplicar ? 'Duplicar dinámica' : 'Editar dinámica') : 'Crear nueva dinámica';
+
+      postSeleccionadoId = d ? d.mediaId : DEMO_POSTS[1].id;
+      $('igNombre').value = d ? (duplicar ? d.nombre + ' (copia)' : d.nombre) : '';
+      $('igActiva').checked = d ? d.activa : true;
+      $('igExpira').value = d?.expiraEn || '';
+      $('igModo').value = d?.modoCoincidencia || 'contiene';
+      $('igPalabras').value = d ? (d.palabrasClave || []).join(', ') : 'gaviota';
+
+      $('igRespuestasList').innerHTML = '';
+      const respuestas = d?.respuestasComentario?.length ? d.respuestasComentario : [
+        '¡Listo! Te envié la info por DM 💙 Si aún no nos sigues, revisa tu carpeta de Solicitudes.',
+        '¡Enviado! Chécalo en tus mensajes privados ✨',
+      ];
+      respuestas.forEach((r) => agregarRespuesta(r, false));
+
+      $('igPedirSeguir').checked = d ? Boolean(d.pedirSeguir) : true;
+      $('igMsgInicial').value = d?.mensajeInicialDM || '¡Hola! 💙 Gracias por comentar. Toca el botón de abajo para enviarte el enlace:';
+      $('igBtnInicial').value = d?.textoBotonInicial || 'Quiero la info 💙';
+      $('igMsgNoSigue').value = d?.mensajeNoSigue || '¡Casi listo! Antes de enviarte el enlace, síguenos en @casagaviotaac y toca el botón para verificar 💜';
+      $('igBtnReintentar').value = d?.textoBotonReintentar || 'Ya los sigo ✅';
+      $('igMsgEntrega').value = d?.mensajeEntrega || '¡Gracias por escribirnos! 💙 Aquí tienes toda la información que solicitaste:';
+
+      $('igEnlacesList').innerHTML = '';
+      const enlaces = d?.enlaces?.length ? d.enlaces : [{ texto: 'Ver información', url: 'https://casagaviota.org.mx' }];
+      enlaces.forEach((e) => agregarEnlace(e.texto, e.url, false));
+
+      alCambiarModo();
+      toggleFollowGate();
+      renderPostSeleccionado();
+      actualizarChipsPalabras();
+
+      const primeraKw = leerPalabras()[0] || 'Gaviota';
+      $('igSimCommentInput').value = primeraKw.charAt(0).toUpperCase() + primeraKw.slice(1) + '!!';
+      simDmStep = 'initial';
+      simUserFollows = false;
+      cambiarTabPreview('comentario');
+      actualizarPreview();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ─── Render de estadísticas y listado ───
+    function renderStats() {
+      const activas = dinamicas.filter((d) => d.activa).length;
+      const pausadas = dinamicas.length - activas;
+      const comentarios = dinamicas.reduce((acc, d) => acc + (d.stats?.comentarios || 0), 0);
+      const entregas = dinamicas.reduce((acc, d) => acc + (d.stats?.entregas || 0), 0);
+
+      $('igStats').innerHTML = `
+        <div class="ig-stat">
+          <div class="ig-stat-lbl">Dinámicas activas</div>
+          <div class="ig-stat-num teal">${activas}</div>
+          <div class="ig-stat-sub">Escuchando comentarios</div>
+        </div>
+        <div class="ig-stat">
+          <div class="ig-stat-lbl">Pausadas</div>
+          <div class="ig-stat-num">${pausadas}</div>
+          <div class="ig-stat-sub">Guardadas sin responder</div>
+        </div>
+        <div class="ig-stat">
+          <div class="ig-stat-lbl">Comentarios atendidos</div>
+          <div class="ig-stat-num">${comentarios}</div>
+          <div class="ig-stat-sub">Datos de ejemplo</div>
+        </div>
+        <div class="ig-stat">
+          <div class="ig-stat-lbl">Enlaces entregados</div>
+          <div class="ig-stat-num teal">${entregas}</div>
+          <div class="ig-stat-sub">Conversión estimada: ${comentarios ? Math.round((entregas / comentarios) * 100) : 0}%</div>
+        </div>
+      `;
+    }
+
+    function filtrar(tipo, btn) {
+      filtroActual = tipo;
+      document.querySelectorAll('.ig-tab').forEach((b) => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderLista();
+    }
+
+    function renderLista() {
+      const q = norm($('igBusqueda').value);
+      const filtradas = dinamicas.filter((d) => {
+        if (filtroActual === 'activas' && !d.activa) return false;
+        if (filtroActual === 'pausadas' && d.activa) return false;
+        if (!q) return true;
+        const post = obtenerPost(d.mediaId);
+        const texto = norm(`${d.nombre} ${(d.palabrasClave || []).join(' ')} ${post.tituloCorto}`);
+        return texto.includes(q);
+      });
+
+      if (!filtradas.length) {
+        $('igLista').innerHTML = `
+          <div class="ig-empty">
+            <h3>No hay dinámicas para mostrar</h3>
+            <p>${dinamicas.length ? 'Prueba cambiando el filtro o el texto de búsqueda.' : 'Crea tu primera dinámica para responder comentarios automáticamente.'}</p>
+            <button type="button" class="ig-btn primary" onclick="IG_DINAMICAS.abrirFormulario()">+ Crear dinámica</button>
+          </div>
+        `;
+        return;
+      }
+
+      $('igLista').innerHTML = filtradas.map((d) => {
+        const post = obtenerPost(d.mediaId);
+        const kws = d.modoCoincidencia === 'cualquiera'
+          ? '<span class="ig-kw">Cualquier comentario</span>'
+          : (d.palabrasClave || []).map((k) => `<span class="ig-kw"># ${esc(k)}</span>`).join('');
+        const badges = [
+          d.activa ? '<span class="ig-badge on">● Activa</span>' : '<span class="ig-badge off">Pausada</span>',
+          d.pedirSeguir ? '<span class="ig-badge follow">🔒 Verifica seguidor</span>' : '',
+          d.mediaId === '*' ? '<span class="ig-badge global">🌐 Global</span>' : '',
+        ].join('');
+
+        return `
+          <article class="ig-item ${d.activa ? '' : 'paused'}">
+            <div class="ig-thumb" style="background:${post.gradient}">
+              <span class="ig-thumb-type">${esc(post.mediaType)}</span>
+              <span>${esc(post.tituloCorto)}</span>
+            </div>
+
+            <div class="ig-item-body">
+              <div class="ig-item-top">
+                <span class="ig-item-title">${esc(d.nombre)}</span>
+                ${badges}
+              </div>
+              <div class="ig-item-caption">${esc(post.caption)}</div>
+              <div class="ig-chips">${kws}</div>
+              <div class="ig-meta">
+                <span>💬 <strong>${d.stats?.comentarios || 0}</strong> comentarios</span>
+                <span>📩 <strong>${d.stats?.entregas || 0}</strong> entregas</span>
+                <span>🔗 <strong>${(d.enlaces || []).length}</strong> enlace(s)</span>
+                ${d.expiraEn ? `<span>📅 Expira: <strong>${esc(d.expiraEn)}</strong></span>` : ''}
+              </div>
+            </div>
+
+            <div class="ig-item-right">
+              <label class="ig-switch-wrap" title="Activar o pausar dinámica">
+                <span class="ig-switch">
+                  <input type="checkbox" ${d.activa ? 'checked' : ''} onchange="IG_DINAMICAS.toggleEstado('${esc(d.id)}', this.checked)">
+                  <span class="ig-slider"></span>
+                </span>
+              </label>
+              <div class="ig-item-btns">
+                <button type="button" class="ig-btn secondary sm" onclick="IG_DINAMICAS.abrirFormulario('${esc(d.id)}')">Editar</button>
+                <button type="button" class="ig-btn ghost sm" onclick="IG_DINAMICAS.abrirFormulario('${esc(d.id)}', true)">Duplicar</button>
+                <button type="button" class="ig-btn danger sm" onclick="IG_DINAMICAS.eliminar('${esc(d.id)}')">Eliminar</button>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function toggleEstado(id, activa) {
+      DATA_ADAPTER.cambiarEstado(id, activa);
+      dinamicas = DATA_ADAPTER.listarDinamicas();
+      renderStats();
+      renderLista();
+      mostrarAlerta(activa ? 'Dinámica activada.' : 'Dinámica pausada.');
+    }
+
+    function eliminar(id) {
+      const d = dinamicas.find((x) => x.id === id);
+      if (!d) return;
+      if (!confirm(`¿Eliminar la dinámica "${d.nombre}"?`)) return;
+      DATA_ADAPTER.eliminarDinamica(id);
+      dinamicas = DATA_ADAPTER.listarDinamicas();
+      renderStats();
+      renderLista();
+      mostrarAlerta('Dinámica eliminada.');
+    }
+
+    function restaurarDemo() {
+      dinamicas = DATA_ADAPTER.restaurarDemo();
+      irAListado();
+      mostrarAlerta('Se restauraron las dinámicas de ejemplo.');
+    }
+
+    // ─── Controles del formulario ───
+    function renderPostSeleccionado() {
+      const post = obtenerPost(postSeleccionadoId);
+      $('igPostSeleccionadoBox').innerHTML = `
+        <div class="ig-selected-post">
+          <div class="ig-thumb" style="background:${post.gradient}">
+            <span class="ig-thumb-type">${esc(post.mediaType)}</span>
+            <span>${esc(post.tituloCorto)}</span>
+          </div>
+          <div class="ig-selected-info">
+            <strong>${esc(post.tituloCorto)}</strong>
+            <span>${esc(post.caption)}</span>
+            <span style="margin-top:3px; font-size:0.74rem;">${esc(post.fecha)} · ID: ${esc(post.id)}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function abrirSelectorPosts() {
+      $('igPostsGrid').innerHTML = posts.map((p) => `
+        <button type="button" class="ig-post-card ${p.id === postSeleccionadoId ? 'selected' : ''}" onclick="IG_DINAMICAS.seleccionarPost('${esc(p.id)}')">
+          <div class="ig-post-art" style="background:${p.gradient}">
+            <span class="ig-thumb-type">${esc(p.mediaType)}</span>
+            <span>${esc(p.tituloCorto)}</span>
+          </div>
+          <div class="ig-post-meta">
+            <div class="ig-post-cap">${esc(p.caption)}</div>
+            <div class="ig-post-date">${esc(p.fecha)}</div>
+          </div>
+        </button>
+      `).join('');
+      $('igPostsModal').classList.remove('ig-hidden');
+    }
+
+    function cerrarSelectorPosts() {
+      $('igPostsModal').classList.add('ig-hidden');
+    }
+
+    function seleccionarPost(id) {
+      postSeleccionadoId = id;
+      renderPostSeleccionado();
+      cerrarSelectorPosts();
+      actualizarPreview();
+    }
+
+    function refrescarPostsDemo() {
+      const btn = $('igRefreshPostsBtn');
+      btn.textContent = 'Actualizando...';
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.textContent = '↻ Actualizar';
+        btn.disabled = false;
+        mostrarAlerta('Publicaciones sincronizadas (en modo mockup se usan ejemplos locales).');
+      }, 450);
+    }
+
+    function alCambiarModo() {
+      const cualquiera = $('igModo').value === 'cualquiera';
+      $('igPalabrasWrap').classList.toggle('ig-hidden', cualquiera);
+      $('igPalabras').required = !cualquiera;
+      actualizarChipsPalabras();
+    }
+
+    function leerPalabras() {
+      return $('igPalabras').value
+        .split(',')
+        .map((w) => norm(w))
+        .filter((w, i, arr) => w && arr.indexOf(w) === i);
+    }
+
+    function actualizarChipsPalabras() {
+      const box = $('igPalabrasChips');
+      if ($('igModo').value === 'cualquiera') {
+        box.innerHTML = '<span class="ig-kw">Se activará con cualquier comentario en esta publicación</span>';
+      } else {
+        const kws = leerPalabras();
+        box.innerHTML = kws.length
+          ? kws.map((k) => `<span class="ig-kw">Normalizada: ${esc(k)}</span>`).join('')
+          : '<span style="font-size:0.78rem; color:var(--text-muted)">Escribe al menos una palabra clave (sin importar acentos ni mayúsculas).</span>';
+      }
+      actualizarPreview();
+    }
+
+    function agregarRespuesta(valor = '', enfocar = true) {
+      const row = document.createElement('div');
+      row.className = 'ig-dyn-row';
+      row.innerHTML = `
+        <input type="text" class="ig-resp-input" placeholder="Ej. ¡Listo! Te envié DM 💙" value="${esc(valor)}" oninput="IG_DINAMICAS.actualizarPreview()">
+        <button type="button" class="ig-icon-btn" title="Quitar variante" onclick="IG_DINAMICAS.quitarFila(this)">✕</button>
+      `;
+      $('igRespuestasList').appendChild(row);
+      if (enfocar) row.querySelector('input').focus();
+      actualizarPreview();
+    }
+
+    function agregarEnlace(texto = '', url = '', enfocar = true) {
+      const row = document.createElement('div');
+      row.className = 'ig-link-row';
+      row.innerHTML = `
+        <input type="text" class="ig-enlace-texto" placeholder="Texto del botón (máx. 20)" maxlength="20" value="${esc(texto)}" oninput="IG_DINAMICAS.actualizarPreview()">
+        <input type="url" class="ig-enlace-url" placeholder="https://casagaviota.org.mx/..." value="${esc(url)}" oninput="IG_DINAMICAS.actualizarPreview()">
+        <button type="button" class="ig-icon-btn" title="Quitar enlace" onclick="IG_DINAMICAS.quitarFila(this)">✕</button>
+      `;
+      $('igEnlacesList').appendChild(row);
+      if (enfocar) row.querySelector('input').focus();
+      actualizarPreview();
+    }
+
+    function quitarFila(btn) {
+      const parent = btn.parentElement.parentElement;
+      if (parent.id === 'igRespuestasList' && parent.children.length <= 1) {
+        mostrarAlerta('Debe quedar al menos una respuesta pública al comentario.', false);
+        return;
+      }
+      btn.parentElement.remove();
+      actualizarPreview();
+    }
+
+    function toggleFollowGate() {
+      $('igFollowFields').classList.toggle('ig-hidden', !$('igPedirSeguir').checked);
+      simDmStep = 'initial';
+      actualizarPreview();
+    }
+
+    function leerEstadoFormulario() {
+      const respuestas = [...document.querySelectorAll('.ig-resp-input')]
+        .map((i) => i.value.trim())
+        .filter(Boolean);
+      const enlaces = [...document.querySelectorAll('#igEnlacesList .ig-link-row')]
+        .map((r) => ({
+          texto: r.querySelector('.ig-enlace-texto').value.trim(),
+          url: r.querySelector('.ig-enlace-url').value.trim(),
+        }))
+        .filter((e) => e.texto || e.url);
+
+      return {
+        id: $('igId').value || null,
+        mediaId: postSeleccionadoId,
+        nombre: $('igNombre').value.trim(),
+        activa: $('igActiva').checked,
+        expiraEn: $('igExpira').value,
+        modoCoincidencia: $('igModo').value,
+        palabrasClave: $('igModo').value === 'cualquiera' ? [] : leerPalabras(),
+        respuestasComentario: respuestas,
+        pedirSeguir: $('igPedirSeguir').checked,
+        mensajeInicialDM: $('igMsgInicial').value.trim(),
+        textoBotonInicial: $('igBtnInicial').value.trim() || 'Quiero la info',
+        mensajeNoSigue: $('igMsgNoSigue').value.trim(),
+        textoBotonReintentar: $('igBtnReintentar').value.trim() || 'Ya los sigo ✅',
+        mensajeEntrega: $('igMsgEntrega').value.trim(),
+        enlaces,
+      };
+    }
+
+    function guardarFormulario(e) {
+      e.preventDefault();
+      const data = leerEstadoFormulario();
+
+      if (!data.nombre) return mostrarAlerta('Escribe un nombre para identificar la dinámica.', false);
+      if (data.modoCoincidencia !== 'cualquiera' && !data.palabrasClave.length) {
+        return mostrarAlerta('Agrega al menos una palabra clave.', false);
+      }
+      if (!data.respuestasComentario.length) {
+        return mostrarAlerta('Agrega al menos una respuesta pública al comentario.', false);
+      }
+      if (!data.mensajeEntrega) {
+        return mostrarAlerta('Escribe el mensaje final que se enviará por DM.', false);
+      }
+      for (const link of data.enlaces) {
+        if (!link.texto || !/^https?:\/\/\S+$/i.test(link.url)) {
+          return mostrarAlerta('Cada botón de enlace debe tener texto y una URL válida que empiece con https://', false);
+        }
+      }
+
+      const eraEdicion = Boolean(data.id);
+      DATA_ADAPTER.guardarDinamica(data);
+      dinamicas = DATA_ADAPTER.listarDinamicas();
+      irAListado();
+      mostrarAlerta(eraEdicion ? 'Cambios guardados en la dinámica.' : 'Dinámica creada correctamente.');
+    }
+
+    // ─── Simulador interactivo de teléfono ───
+    function cambiarTabPreview(tab) {
+      simTab = tab;
+      $('igPrevTabCmt').classList.toggle('active', tab === 'comentario');
+      $('igPrevTabDm').classList.toggle('active', tab === 'dm');
+      $('igPrevComentario').classList.toggle('ig-hidden', tab !== 'comentario');
+      $('igPrevDm').classList.toggle('ig-hidden', tab !== 'dm');
+      actualizarPreview();
+    }
+
+    function coincideComentario(texto, data) {
+      if (data.modoCoincidencia === 'cualquiera') return Boolean(norm(texto));
+      const t = norm(texto);
+      if (!t) return false;
+      if (data.modoCoincidencia === 'exacta') return data.palabrasClave.includes(t);
+      const palabras = t.split(' ');
+      return data.palabrasClave.some((kw) => kw.includes(' ') ? t.includes(kw) : palabras.includes(kw));
+    }
+
+    function actualizarPreview() {
+      const data = leerEstadoFormulario();
+      $('igActivaLabel').textContent = data.activa ? 'Dinámica activa' : 'Dinámica pausada';
+
+      const len = $('igMsgEntrega').value.length;
+      const counter = $('igCharCount');
+      counter.textContent = `${len} / 1000 caracteres (límite de Instagram)`;
+      counter.classList.toggle('warn', len > 850);
+
+      // Preview post
+      const post = obtenerPost(data.mediaId);
+      $('igSimPostArt').style.background = post.gradient;
+      $('igSimPostArt').textContent = post.tituloCorto;
+      $('igSimPostCap').textContent = post.caption;
+
+      simularComentario();
+      renderSimDM(data);
+    }
+
+    function simularComentario() {
+      const data = leerEstadoFormulario();
+      const texto = $('igSimCommentInput').value.trim();
+      const match = coincideComentario(texto, data);
+
+      $('igSimMatchBadge').innerHTML = match
+        ? '<div class="ig-sim-match yes">✓ Coincide: el bot responderá el comentario y enviará DM.</div>'
+        : '<div class="ig-sim-match no">✕ No coincide con la palabra clave: el bot ignorará este comentario.</div>';
+
+      const variante = data.respuestasComentario.length
+        ? data.respuestasComentario[Math.floor(Math.random() * data.respuestasComentario.length)]
+        : '(Agrega una respuesta pública)';
+
+      $('igSimThread').innerHTML = texto ? `
+        <div class="ig-sim-cmt"><strong>usuaria_demo</strong> ${esc(texto)}</div>
+        ${match ? `
+          <div class="ig-sim-cmt reply">
+            <strong>casagaviotaac</strong> ${esc(variante)}
+            <div style="margin-top:6px;">
+              <button type="button" class="ig-sim-pill-btn following" onclick="IG_DINAMICAS.cambiarTabPreview('dm')">Ver lo que llega por DM →</button>
+            </div>
+          </div>
+        ` : ''}
+      ` : '';
+    }
+
+    function alternarSimSeguidor() {
+      simUserFollows = !simUserFollows;
+      const btn = $('igSimFollowToggle');
+      btn.textContent = simUserFollows ? 'Sí nos sigue ✓' : 'No nos sigue';
+      btn.className = 'ig-sim-pill-btn ' + (simUserFollows ? 'following' : 'not-following');
+      renderSimDM(leerEstadoFormulario());
+    }
+
+    function reiniciarSimDM() {
+      simDmStep = 'initial';
+      renderSimDM(leerEstadoFormulario());
+    }
+
+    function simClickBotonInicial() {
+      simDmStep = simUserFollows ? 'delivered' : 'asked_follow';
+      renderSimDM(leerEstadoFormulario());
+    }
+
+    function simClickYaSigo() {
+      // Simula que la persona dio clic en Seguir y vuelve a verificar
+      simUserFollows = true;
+      const btn = $('igSimFollowToggle');
+      btn.textContent = 'Sí nos sigue ✓';
+      btn.className = 'ig-sim-pill-btn following';
+      simDmStep = 'delivered';
+      renderSimDM(leerEstadoFormulario());
+    }
+
+    function renderSimDM(data) {
+      const html = [];
+
+      if (!data.pedirSeguir) {
+        html.push('<div class="ig-dm-note">Private Reply directo (sin verificación de seguidor)</div>');
+        html.push(renderTarjetaEntrega(data));
+      } else {
+        html.push('<div class="ig-dm-note">1. Private Reply inicial (1 solo mensaje permitido por Meta)</div>');
+        html.push(`
+          <div class="ig-dm-card">
+            <div class="ig-dm-card-text">${esc(data.mensajeInicialDM || 'Escribe tu mensaje inicial...')}</div>
+            <button type="button" class="ig-dm-card-btn" onclick="IG_DINAMICAS.simClickBotonInicial()">${esc(data.textoBotonInicial)}</button>
+          </div>
+        `);
+
+        if (simDmStep === 'asked_follow') {
+          html.push(`<div class="ig-dm-bubble user">${esc(data.textoBotonInicial)}</div>`);
+          html.push('<div class="ig-dm-note">API consulta is_user_follow_business → false</div>');
+          html.push(`
+            <div class="ig-dm-card">
+              <div class="ig-dm-card-text">${esc(data.mensajeNoSigue || 'Escribe el mensaje cuando no sigue...')}</div>
+              <button type="button" class="ig-dm-card-btn" onclick="IG_DINAMICAS.simClickYaSigo()">${esc(data.textoBotonReintentar)}</button>
+            </div>
+          `);
+        }
+
+        if (simDmStep === 'delivered') {
+          html.push(`<div class="ig-dm-bubble user">${esc(data.textoBotonInicial)}</div>`);
+          html.push('<div class="ig-dm-note">API consulta is_user_follow_business → true ✓</div>');
+          html.push(renderTarjetaEntrega(data));
+        }
+      }
+
+      $('igDmStream').innerHTML = html.join('');
+    }
+
+    function renderTarjetaEntrega(data) {
+      const botones = (data.enlaces || [])
+        .filter((e) => e.texto && e.url)
+        .map((e) => `<a class="ig-dm-card-btn" href="${esc(e.url)}" target="_blank" rel="noopener noreferrer">${esc(e.texto)} ↗</a>`)
+        .join('');
+
+      if (botones) {
+        return `
+          <div class="ig-dm-card">
+            <div class="ig-dm-card-text">${esc(data.mensajeEntrega || 'Escribe el mensaje final...')}</div>
+            ${botones}
+          </div>
+        `;
+      }
+      return `<div class="ig-dm-bubble bot">${esc(data.mensajeEntrega || 'Escribe el mensaje final...')}</div>`;
+    }
+
+    // ─── Inicialización ───
+    function init() {
+      posts = DATA_ADAPTER.listarPosts();
+      dinamicas = DATA_ADAPTER.listarDinamicas();
+      irAListado();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+
+    return {
+      irAListado,
+      abrirFormulario,
+      filtrar,
+      renderLista,
+      toggleEstado,
+      eliminar,
+      restaurarDemo,
+      abrirSelectorPosts,
+      cerrarSelectorPosts,
+      seleccionarPost,
+      refrescarPostsDemo,
+      alCambiarModo,
+      actualizarChipsPalabras,
+      agregarRespuesta,
+      agregarEnlace,
+      quitarFila,
+      toggleFollowGate,
+      guardarFormulario,
+      cambiarTabPreview,
+      actualizarPreview,
+      simularComentario,
+      alternarSimSeguidor,
+      reiniciarSimDM,
+      simClickBotonInicial,
+      simClickYaSigo,
+    };
+  })();
+  /* ═════════════════════════════════════════════════════════════════════════
+     FIN JS TRASPASABLE A admin.html
+     ═════════════════════════════════════════════════════════════════════════ */
+</script>
+</body>
+</html>
