@@ -9,6 +9,7 @@ const cr = DATOS.circulosReflexion;
 const cuentaLegal = datosBancarios(DATOS.cuentaBancariaLegal); // solo asesoría legal
 // Horario en línea de psicología sin el prefijo "en línea," ni el punto final
 const horarioEnLinea = DATOS.horarios.psicologia.replace(/^en l[ií]nea,?\s*/i, '').replace(/\.$/, '');
+const sufijoEmpoderamiento = DATOS.menuTextos.empoderamiento ? ` (${DATOS.menuTextos.empoderamiento})` : '';
 const horarioLegal = DATOS.horarios.legal; // asesoría legal: solo en línea
 const horarioPresencial = DATOS.horarios.presencial; // termina en "p. m." (el punto es de la abreviatura)
 // Enlaces con texto: [texto](url). El simulador y los canales los convierten (ver utils/enlaces.js).
@@ -28,7 +29,7 @@ Si estás ante una situación de emergencia o riesgo inmediato, puedes comunicar
 2️⃣ Asesoría legal
 3️⃣ Biodescodificación biológica
 4️⃣ ${DATOS.standUp.nombreCompleto}
-5️⃣ Empoderamiento económico
+5️⃣ Empoderamiento económico${sufijoEmpoderamiento}
 6️⃣ Servicios del centro de empoderamiento
 7️⃣ Servicios empresariales
 8️⃣ Donativos
@@ -107,6 +108,9 @@ Escribe el número de tu opción.${textoRedes ? '\n\n' + textoRedes : ''}`,
     pedirTelefono: `Gracias. 😊 Ahora escribe tu *número de teléfono* para que podamos contactarte:`,
     confirmacion: (nombre, programa) => `✅ ¡Gracias, ${nombre}!\n\nTu interés en *${programa}* fue registrado. El equipo responsable te compartirá información sobre las convocatorias vigentes; la disponibilidad depende del calendario institucional.\n\n¿Deseas regresar al menú principal?\n1️⃣ Sí, regresar al menú`,
   },
+
+  // Cuando piden "talleres", "cursos" o "capacitaciones" sin decir cuál: se aclara en vez de asumir uno
+  aclararTaller: `¿Qué taller o capacitación te interesa? 😊\n\n4️⃣ ${DATOS.standUp.nombreCompleto} (taller para grupos)\n5️⃣ Empoderamiento económico${sufijoEmpoderamiento}\n🔟 ${DATOS.tallerLectura.titulo}\n7️⃣ Servicios empresariales (talleres para empresas e instituciones)\n\nEscribe el *número* de la opción que te interese.`,
 
   // Opción 10: Taller de lectura para Mujeres. Todo sale de DATOS.tallerLectura (editable en el panel admin)
   // y el pago usa la misma cuenta que psicología (cuentaGeneral).

@@ -184,7 +184,12 @@ const DATOS = {
     legal: 'Las asesorías legales se brindan únicamente en modalidad en línea, con el fin de facilitar el acceso y el acompañamiento oportuno. Los horarios se acuerdan de manera individual, buscando empatar agendas y adaptarnos lo mejor posible a la disponibilidad de la usuaria.',
   },
 
-  // Opción 10 del menú: es informativa. Todo se edita desde el panel admin.
+  // Textos que acompañan algunas opciones del menú principal (puede quedar vacío)
+  menuTextos: {
+    empoderamiento: 'capacitaciones en maquillaje, masoterapia, diseño de corte, y más',
+  },
+
+  // Opción 10 del menú: Taller de lectura para Mujeres. Todo se edita desde el panel admin.
   // Si horarios o cuota quedan vacíos, esa línea no se muestra.
   tallerLectura: {
     titulo: 'Taller de lectura para Mujeres',

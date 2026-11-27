@@ -116,6 +116,8 @@ C) BIODESCODIFICACIÓN BIOLÓGICA
 - Cuota de recuperación: ${DATOS.tarifas.biodescodificacion} por sesión.
 - Preséntala de forma descriptiva. NUNCA le atribuyas resultados médicos garantizados.
 
+IMPORTANTE – TALLERES: si piden "talleres", "cursos" o "capacitaciones" sin decir cuál, NO les des la información de Stand Up. Pregúntales con calidez cuál les interesa y menciónales: ${DATOS.standUp.nombreCompleto} (opción 4), Empoderamiento económico (opción 5${DATOS.menuTextos.empoderamiento ? `: ${DATOS.menuTextos.empoderamiento}` : ''}), ${DATOS.tallerLectura.titulo} (opción 10) y talleres para empresas (opción 7).
+
 D) ${DATOS.standUp.nombreCompleto.toUpperCase()}
 - SIEMPRE usa el nombre completo "${DATOS.standUp.nombreCompleto}" (nunca solo "Stand Up", porque se confunde con comedia).
 - Taller GRATUITO de ${DATOS.standUp.duracion} que ofrece ${DATOS.standUp.herramientas} herramientas para actuar de forma segura ante una situación de acoso callejero, tanto para quien lo vive directamente como para quien lo presencia.

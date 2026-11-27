@@ -47,7 +47,7 @@ const MENU_MAP = {
   '2': { flow: 'legal', step: 'legal_nombre', get msg() { return M.legal.inicio; }, get servicio() { return 'Asesoría legal'; }, keywords: ['legal', 'abogad', 'juridic', 'asesoria legal'] },
   '3': { flow: 'bio', step: 'bio_nombre', get msg() { return M.bio.pedirNombre; }, get servicio() { return 'Biodescodificación biológica'; }, keywords: ['biodescodificaci', 'biodecodificaci', 'biodesc', 'biologica'] },
   '4': { flow: 'standup', step: 'standup_modalidad', get msg() { return TEXTOS.standup.intro; }, get servicio() { return DATOS.standUp.nombreCompleto; }, keywords: ['stand up', 'standup', 'stand-up', 'acoso callejero', 'taller de stand'] },
-  '5': { flow: 'empeco', step: 'empeco_programa', get msg() { return TEXTOS.empEco.inicio; }, get servicio() { return 'Empoderamiento económico'; }, keywords: ['empoderamiento económico', 'empoderamiento economico', 'empoderamiento financiero'] },
+  '5': { flow: 'empeco', step: 'empeco_programa', get msg() { return TEXTOS.empEco.inicio; }, get servicio() { return 'Empoderamiento económico'; }, keywords: ['empoderamiento económico', 'empoderamiento economico', 'empoderamiento financiero', 'maquillaje', 'masoterapia', 'diseño de corte'] },
   '6': { flow: 'servicios', step: 'servicios_fin', get msg() { return M.servicios.derivar; }, get servicio() { return 'Servicios del centro'; }, keywords: ['servicios del centro', 'centro de empoderamiento'] },
   '7': { flow: 'empresarial', step: 'empresarial_menu', get msg() { return M.empresarial.inicio; }, get servicio() { return 'Servicios empresariales'; }, keywords: ['servicios empresariales', 'empresarial', 'empresa'] },
   '8': { flow: 'donativos', step: 'donativos_tipo', get msg() { return M.donativos.inicio; }, get servicio() { return 'Donativos'; }, keywords: ['donativ', 'donar', 'donacion'] },
@@ -250,6 +250,13 @@ async function processMessage(userId, userMessage, media = null) {
       || (palabrasMenu.length <= 2 && /\bservicios\b/.test(norm(trimmed)))) {
       updateSession(userId, { data: { ...session.data, saludoEnviado: true, menuMostrado: true } });
       return M.bienvenida;
+    }
+
+    // Piden "talleres", "cursos" o "capacitaciones" sin decir cuál: se pregunta cuál (antes se asumía Stand Up)
+    if (palabrasMenu.length <= 6 && /\b(talleres?|capacitaci(?:on|ones)|cursos?)\b/.test(norm(trimmed))
+      && !/\b(empresa|empresas|instituci(?:on|ones)|cotiz\w*)\b/.test(norm(trimmed))) {
+      updateSession(userId, { data: { ...session.data, saludoEnviado: true, menuMostrado: true } });
+      return M.aclararTaller;
     }
 
     // ── PRIMER MENSAJE: saludo cálido, sin menú ──────────────────────────

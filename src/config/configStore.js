@@ -30,6 +30,7 @@ const SECCIONES = [
   { key: 'cuentaBancariaLegal', icono: '⚖️', titulo: 'Datos bancarios: Asesoría legal', ayuda: 'Cuenta que se envía SOLO para pagos de asesoría legal. La CLABE debe tener 18 dígitos. Cuenta y tarjeta son opcionales: si las dejas vacías no se muestran.' },
   { key: 'redes', icono: '📲', titulo: 'Podcast y redes sociales', ayuda: 'Se envían al final del menú, al terminar cada servicio y cuando alguien escribe \"redes\", \"instagram\", \"podcast\"... Cada enlace se ve con el \"Texto que se ve\" (ej. Instagram: Casa Gaviota AC) y lleva el enlace por debajo; debe empezar con https://. Puedes agregar, quitar, reordenar o cambiar redes. Si dejas las dos listas vacías, no se muestra nada.' },
   { key: 'circulosReflexion', icono: '🌸', titulo: 'Círculos de Reflexión', ayuda: 'Se ofrecen cuando la cuota valorada es muy baja.' },
+  { key: 'menuTextos', icono: '📋', titulo: 'Menú principal: textos de apoyo', ayuda: 'Texto que aparece entre paréntesis junto a Empoderamiento económico en el menú, para que quede claro de qué se trata. Si lo dejas vacío, no se muestra.' },
   { key: 'tallerLectura', icono: '🌷', titulo: 'Taller de lectura para Mujeres (opción 10)', ayuda: 'Nombre, modalidad, descripción, horarios y cuota de recuperación de la opción 10 del menú. Si dejas vacíos los horarios o la cuota, esa línea no se muestra. La inscripción usa la misma cuenta bancaria de psicología (sección Datos bancarios).' },
   { key: 'standUp', icono: '🎤', titulo: 'Taller de Stand Up', ayuda: 'Nombre, duración y mínimo de asistentes.' },
   { key: 'empresas', icono: '🏢', titulo: 'Servicios empresariales', ayuda: 'Contacto, modalidades y catálogo de talleres (máximo 8 líneas).' },
@@ -51,6 +52,7 @@ const ETIQUETAS = {
   'horarios.psicologia': 'Horario de atención psicológica en línea',
   'horarios.presencial': 'Horario de atención presencial (solo psicología)',
   'horarios.legal': 'Asesoría legal: modalidad y horarios (solo en línea)',
+  'menuTextos.empoderamiento': 'Texto junto a "Empoderamiento económico" (sin paréntesis; puede quedar vacío)',
   'tallerLectura.titulo': 'Nombre del taller',
   'tallerLectura.modalidad': 'Modalidad (ej. En línea; puede quedar vacío)',
   'tallerLectura.descripcion': 'Descripción',
@@ -220,6 +222,10 @@ const VALIDADORES = {
   },
 
   circulosReflexion: (v) => Object.fromEntries(Object.keys(POR_DEFECTO.circulosReflexion).map((k) => [k, texto(v?.[k], E('circulosReflexion.' + k), { max: 80 })])),
+
+  menuTextos: (v) => ({
+    empoderamiento: texto(v?.empoderamiento, E('menuTextos.empoderamiento'), { vacio: true, max: 160 }),
+  }),
 
   tallerLectura: (v) => ({
     titulo: texto(v?.titulo, E('tallerLectura.titulo'), { max: 120 }),
