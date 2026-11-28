@@ -3,6 +3,7 @@ const router = express.Router();
 const { verifySignature } = require('../shared/verifySignature');
 const { plantillaBoton } = require('../../utils/enlaces');
 const { responder, yaProcesado, descargarImagen, enviarConBotones, clasificarAdjuntos } = require('../shared/canal');
+const { manejarComentario, manejarPostbackDinamica, esPostbackDinamica } = require('./dinamicas');
 
 // Meta verifica el webhook con este GET (se configura en developers.facebook.com)
 router.get('/', (req, res) => {
@@ -46,7 +47,22 @@ const enviarInstagram = (id, texto) => enviarConBotones(texto, {
 
 async function manejar(body) {
   for (const entry of body?.entry || []) {
+    // 1. Comentarios en publicaciones/Reels (dinámicas IG; separado de los DMs de Gavi)
+    for (const ch of entry.changes || []) {
+      if (ch?.field === 'comments' && ch.value) {
+        try { await manejarComentario(ch.value); }
+        catch (err) { console.error('[INSTAGRAM DINAMICAS] Error en comentario:', err.message); }
+      }
+    }
+
     for (const ev of entry.messaging || []) {
+      // 2. Clic en botones de dinámicas IG (prefijo "DINAMICA:"): no entra al flujo de Gavi
+      if (ev.postback?.payload && esPostbackDinamica(ev.postback.payload)) {
+        try { await manejarPostbackDinamica(ev.sender?.id, ev.postback.payload); }
+        catch (err) { console.error('[INSTAGRAM DINAMICAS] Error en postback:', err.message); }
+        continue;
+      }
+
       if (!ev.message || ev.message.is_echo) continue; // ignora lo que manda la propia cuenta
       if (yaProcesado(ev.message.mid)) continue;
 
