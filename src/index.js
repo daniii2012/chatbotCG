@@ -22,7 +22,7 @@ const { router: adminAuthRouter, auth, registrarCambio } = require('./api/admin/
 const whatsappWebhook = require('./api/whatsapp/webhook');
 const instagramWebhook = require('./api/instagram/webhook');
 const messengerWebhook = require('./api/messenger/webhook');
-const { listarPublicacionesInstagram } = require('./api/instagram/posts');
+const instagramAdminRouter = require('./api/instagram/adminRoutes');
 
 
 const app = express();
@@ -123,24 +123,8 @@ app.post('/api/admin/config/:key/restaurar', auth(), async (req, res) => {
   res.json({ success: true, valor: r.valor });
 });
 
-// Publicaciones reales de Instagram para elegir en qué post activar dinámicas
-app.get('/api/admin/instagram/posts', auth(), async (req, res) => {
-  const resultado = await listarPublicacionesInstagram({
-    limit: req.query.limit,
-    after: req.query.after || '',
-    refresh: req.query.refresh === '1' || req.query.refresh === 'true',
-  });
-  if (!resultado.ok) {
-    const status = resultado.codigo === 'FALTA_TOKEN' ? 503 : 502;
-    return res.status(status).json({
-      success: false,
-      codigo: resultado.codigo,
-      error: resultado.error,
-      detalleMeta: resultado.detalleMeta || null,
-    });
-  }
-  res.json({ success: true, ...resultado });
-});
+// Publicaciones reales y CRUD de dinámicas de Instagram
+app.use('/api/admin/instagram', instagramAdminRouter);
 
 // Envio de correos desde la interfaz admin
 app.post('/api/admin/send-campaign', auth(), upload.array('imagen', 10), async (req, res) => {
