@@ -448,10 +448,11 @@
       height: 100%;
       object-fit: cover;
       display: block;
+      z-index: 1;
     }
     .ig-media-fallback {
       position: relative;
-      z-index: 1;
+      z-index: 0;
       padding: 10px;
       line-height: 1.28;
       text-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
@@ -1163,7 +1164,7 @@
 
     <div class="standalone-foot">
       <strong>Estado actual</strong>
-      Las <b>publicaciones</b> ya se consultan directo a Instagram. Las <b>dinámicas</b> aún se guardan localmente (siguiente paso: MongoDB + webhook).
+      Publicaciones en vivo desde Instagram y dinámicas guardadas en la base de datos (MongoDB). Siguiente paso: conectar webhook de comentarios.
     </div>
   </aside>
 
@@ -1256,7 +1257,7 @@
               <div>
                 <div class="ig-kicker">Comentarios a DM</div>
                 <h2>Dinámicas configuradas</h2>
-                <p>Administra todas tus dinámicas activas y pausadas. (Por ahora se guardan en este navegador; en el siguiente paso se guardan en MongoDB.)</p>
+                <p>Administra todas tus dinámicas activas y pausadas guardadas en la base de datos compartida por el equipo.</p>
               </div>
               <div class="ig-head-actions">
                 <button type="button" class="ig-btn secondary" onclick="IG_DINAMICAS.irAPublicaciones()">📸 Ver publicaciones</button>
@@ -1410,7 +1411,7 @@
                 </div>
 
                 <div class="ig-form-actions">
-                  <button type="submit" class="ig-btn primary">Guardar dinámica</button>
+                  <button type="submit" id="igGuardarBtn" class="ig-btn primary">Guardar dinámica</button>
                   <button type="button" class="ig-btn secondary" onclick="IG_DINAMICAS.volverDesdeEditor()">Cancelar</button>
                 </div>
               </form>
@@ -1616,15 +1617,11 @@
       return { ok: res.ok, status: res.status, data };
     }
 
-    // ─── Capa de datos (posts: API real; dinámicas: localStorage hasta Fase 2) ───
-    const DATA_ADAPTER = {
-      async listarPostsReales({ after = '', refresh = false } = {}) {
-        const qs = new URLSearchParams({ limit: '24' });
-        if (after) qs.set('after', after);
-        if (refresh) qs.set('refresh', '1');
-        return apiFetch(`/api/admin/instagram/posts?${qs.toString()}`);
-      },
-      listarDinamicas() {
+    // ─── Capa de datos (API real -> MongoDB; localStorage solo en modoDemo) ───
+    let tipoAlmacen = 'mongo'; // 'mongo' | 'archivo' | 'demo'
+
+    const DEMO_STORAGE = {
+      leer() {
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
           if (raw) {
@@ -1634,31 +1631,75 @@
         } catch { /* fallback */ }
         return [];
       },
-      _guardarTodo(lista) {
+      escribir(lista) {
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(lista)); } catch { /* ignore */ }
       },
-      guardarDinamica(item) {
-        const lista = this.listarDinamicas();
-        const idx = lista.findIndex((d) => d.id === item.id);
-        if (idx >= 0) {
-          lista[idx] = { ...lista[idx], ...item };
-        } else {
-          item.id = 'din-' + Date.now();
-          item.stats = { comentarios: 0, entregas: 0 };
-          lista.unshift(item);
+    };
+
+    const DATA_ADAPTER = {
+      async listarPostsReales({ after = '', refresh = false } = {}) {
+        const qs = new URLSearchParams({ limit: '24' });
+        if (after) qs.set('after', after);
+        if (refresh) qs.set('refresh', '1');
+        return apiFetch(`/api/admin/instagram/posts?${qs.toString()}`);
+      },
+      async listarDinamicas() {
+        if (modoDemo) {
+          tipoAlmacen = 'demo';
+          return DEMO_STORAGE.leer();
         }
-        this._guardarTodo(lista);
-        return item;
+        const { ok, data } = await apiFetch('/api/admin/instagram/dinamicas');
+        if (!ok || !data.success) throw new Error(data.error || 'No se pudieron cargar las dinámicas.');
+        tipoAlmacen = data.almacen || 'mongo';
+        return Array.isArray(data.dinamicas) ? data.dinamicas : [];
       },
-      cambiarEstado(id, activa) {
-        const lista = this.listarDinamicas();
-        const d = lista.find((x) => x.id === id);
-        if (d) d.activa = activa;
-        this._guardarTodo(lista);
+      async guardarDinamica(item) {
+        if (modoDemo) {
+          const lista = DEMO_STORAGE.leer();
+          const idx = lista.findIndex((d) => d.id === item.id);
+          if (idx >= 0) {
+            lista[idx] = { ...lista[idx], ...item };
+          } else {
+            item.id = 'din-' + Date.now();
+            item.stats = { comentarios: 0, dmsEnviados: 0, entregas: 0 };
+            lista.unshift(item);
+          }
+          DEMO_STORAGE.escribir(lista);
+          return item;
+        }
+        const ruta = item.id
+          ? `/api/admin/instagram/dinamicas/${encodeURIComponent(item.id)}`
+          : '/api/admin/instagram/dinamicas';
+        const method = item.id ? 'PUT' : 'POST';
+        const { ok, data } = await apiFetch(ruta, { method, body: item });
+        if (!ok || !data.success) throw new Error(data.error || 'No se pudo guardar la dinámica.');
+        if (data.almacen) tipoAlmacen = data.almacen;
+        return data.dinamica;
       },
-      eliminarDinamica(id) {
-        const lista = this.listarDinamicas().filter((x) => x.id !== id);
-        this._guardarTodo(lista);
+      async cambiarEstado(id, activa) {
+        if (modoDemo) {
+          const lista = DEMO_STORAGE.leer();
+          const d = lista.find((x) => x.id === id);
+          if (d) d.activa = activa;
+          DEMO_STORAGE.escribir(lista);
+          return d;
+        }
+        const { ok, data } = await apiFetch(`/api/admin/instagram/dinamicas/${encodeURIComponent(id)}/estado`, {
+          method: 'PATCH',
+          body: { activa },
+        });
+        if (!ok || !data.success) throw new Error(data.error || 'No se pudo cambiar el estado.');
+        return data.dinamica;
+      },
+      async eliminarDinamica(id) {
+        if (modoDemo) {
+          DEMO_STORAGE.escribir(DEMO_STORAGE.leer().filter((x) => x.id !== id));
+          return;
+        }
+        const { ok, data } = await apiFetch(`/api/admin/instagram/dinamicas/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+        });
+        if (!ok || !data.success) throw new Error(data.error || 'No se pudo eliminar la dinámica.');
       },
     };
 
@@ -1796,7 +1837,7 @@
         $('igAppWrap').classList.remove('ig-hidden');
         actualizarSidebarSesion();
         irAPublicaciones();
-        await cargarPostsReales({ refresh: false });
+        await Promise.all([cargarDinamicasReales(), cargarPostsReales({ refresh: false })]);
       } catch (err) {
         errBox.textContent = err.message || 'No se pudo conectar con el servidor.';
         errBox.classList.add('show');
@@ -1816,19 +1857,33 @@
 
     function entrarModoDemo() {
       modoDemo = true;
+      tipoAlmacen = 'demo';
       estadoConexion = 'demo';
       errorConexion = null;
       cuentaIG = { username: 'casagaviotaac', name: 'Casa Gaviota (Ejemplo)' };
       postsCuenta = JSON.parse(JSON.stringify(DEMO_POSTS));
       pagingIG = { nextCursor: null, hayMas: false };
+      dinamicas = DEMO_STORAGE.leer();
       if (!dinamicas.length) {
         dinamicas = JSON.parse(JSON.stringify(DEMO_DINAMICAS));
-        DATA_ADAPTER._guardarTodo(dinamicas);
+        DEMO_STORAGE.escribir(dinamicas);
       }
       $('igVistaLogin').classList.add('ig-hidden');
       $('igAppWrap').classList.remove('ig-hidden');
       renderConnBar();
       irAPublicaciones();
+    }
+
+    async function cargarDinamicasReales() {
+      try {
+        dinamicas = await DATA_ADAPTER.listarDinamicas();
+        renderConnBar();
+        renderFeed();
+        renderStats();
+        renderLista();
+      } catch (err) {
+        mostrarAlerta(err.message || 'No se pudieron cargar las dinámicas.', false);
+      }
     }
 
     // ─── Carga REAL de publicaciones desde Instagram (/api/admin/instagram/posts) ───
@@ -1917,7 +1972,7 @@
             </div>
           </div>
           <div class="ig-conn-actions">
-            <span style="font-size:0.78rem; opacity:0.9;">Dinámicas guardadas localmente (MongoDB en Fase 2)</span>
+            <span style="font-size:0.78rem; opacity:0.95; font-weight:600;">${tipoAlmacen === 'mongo' ? '🗄️ Guardado en MongoDB Atlas' : '📁 Archivo local del servidor'}</span>
           </div>
         `;
       } else if (estadoConexion === 'loading') {
@@ -1954,7 +2009,7 @@
     function intentarConectarReal() {
       modoDemo = false;
       if (sesion?.token) {
-        cargarPostsReales({ refresh: true });
+        Promise.all([cargarDinamicasReales(), cargarPostsReales({ refresh: true })]);
       } else {
         mostrarVistaLogin();
       }
@@ -2250,6 +2305,8 @@
               <div class="ig-item-caption">${esc(post.caption)}</div>
               <div class="ig-chips">${kws}</div>
               <div class="ig-meta">
+                <span>💬 <strong>${d.stats?.comentarios || 0}</strong> comentarios</span>
+                <span>📩 <strong>${d.stats?.entregas || 0}</strong> entregas</span>
                 <span>🔗 <strong>${(d.enlaces || []).length}</strong> enlace(s)</span>
                 ${post.fecha ? `<span>📸 ${esc(post.fecha)}</span>` : ''}
                 ${d.expiraEn ? `<span>📅 Expira: <strong>${esc(d.expiraEn)}</strong></span>` : ''}
@@ -2274,25 +2331,35 @@
       }).join('');
     }
 
-    function toggleEstado(id, activa) {
-      DATA_ADAPTER.cambiarEstado(id, activa);
-      dinamicas = DATA_ADAPTER.listarDinamicas();
-      renderStats();
-      renderLista();
-      renderFeed();
-      mostrarAlerta(activa ? 'Dinámica activada.' : 'Dinámica pausada.');
+    async function toggleEstado(id, activa) {
+      try {
+        await DATA_ADAPTER.cambiarEstado(id, activa);
+        dinamicas = await DATA_ADAPTER.listarDinamicas();
+        renderStats();
+        renderLista();
+        renderFeed();
+        mostrarAlerta(activa ? 'Dinámica activada.' : 'Dinámica pausada.');
+      } catch (err) {
+        renderLista();
+        renderFeed();
+        mostrarAlerta(err.message || 'No se pudo cambiar el estado.', false);
+      }
     }
 
-    function eliminar(id) {
+    async function eliminar(id) {
       const d = dinamicas.find((x) => x.id === id);
       if (!d) return;
       if (!confirm(`¿Eliminar la dinámica "${d.nombre}"?`)) return;
-      DATA_ADAPTER.eliminarDinamica(id);
-      dinamicas = DATA_ADAPTER.listarDinamicas();
-      renderStats();
-      renderLista();
-      renderFeed();
-      mostrarAlerta('Dinámica eliminada.');
+      try {
+        await DATA_ADAPTER.eliminarDinamica(id);
+        dinamicas = await DATA_ADAPTER.listarDinamicas();
+        renderStats();
+        renderLista();
+        renderFeed();
+        mostrarAlerta('Dinámica eliminada.');
+      } catch (err) {
+        mostrarAlerta(err.message || 'No se pudo eliminar la dinámica.', false);
+      }
     }
 
     // ─── Controles del formulario ───
@@ -2461,7 +2528,7 @@
       };
     }
 
-    function guardarFormulario(e) {
+    async function guardarFormulario(e) {
       e.preventDefault();
       const data = leerEstadoFormulario();
 
@@ -2481,11 +2548,19 @@
         }
       }
 
+      const btn = $('igGuardarBtn');
       const eraEdicion = Boolean(data.id);
-      DATA_ADAPTER.guardarDinamica(data);
-      dinamicas = DATA_ADAPTER.listarDinamicas();
-      volverDesdeEditor();
-      mostrarAlerta(eraEdicion ? 'Cambios guardados en la dinámica.' : 'Dinámica guardada (almacenamiento local por ahora).');
+      if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+      try {
+        await DATA_ADAPTER.guardarDinamica(data);
+        dinamicas = await DATA_ADAPTER.listarDinamicas();
+        volverDesdeEditor();
+        mostrarAlerta(eraEdicion ? 'Cambios guardados en la dinámica.' : 'Dinámica guardada correctamente.');
+      } catch (err) {
+        mostrarAlerta(err.message || 'No se pudo guardar la dinámica.', false);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Guardar dinámica'; }
+      }
     }
 
     // ─── Simulador interactivo de teléfono ───
@@ -2636,8 +2711,6 @@
 
     // ─── Inicialización ───
     async function init() {
-      dinamicas = DATA_ADAPTER.listarDinamicas();
-
       // Si se abrió el archivo directo (file://), entra en modo demo automáticamente
       if (location.protocol === 'file:') {
         entrarModoDemo();
@@ -2650,7 +2723,7 @@
         $('igAppWrap').classList.remove('ig-hidden');
         actualizarSidebarSesion();
         irAPublicaciones();
-        await cargarPostsReales({ refresh: false });
+        await Promise.all([cargarDinamicasReales(), cargarPostsReales({ refresh: false })]);
       } else {
         mostrarVistaLogin();
       }
